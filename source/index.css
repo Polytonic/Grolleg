@@ -3,6 +3,16 @@
 html, body { overflow-x: hidden; }
 input, button, select, textarea { font: inherit; }
 
+/* Site-wide page styling shared across all tools */
+body {
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: var(--color-bg);
+    min-height: 100vh;
+    padding: 32px 16px;
+    overscroll-behavior: none;
+}
+
 /* Font Rendering
    Grayscale antialiasing keeps button labels crisp on macOS, where the
    default subpixel AA can smear against colored pill backgrounds during
@@ -15,7 +25,6 @@ html {
 /* Design tokens — referenced from component CSS via var(). */
 :root {
     --color-bg:              #E8E9E1;
-    --color-bg-gradient-end: #E2E3DB;
     --color-card:            #FFFFFF;
     --color-border:          #CBCDCA;
     --color-border-subtle:   rgba(0, 0, 0, 0.06);

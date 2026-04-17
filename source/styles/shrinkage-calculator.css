@@ -4,12 +4,6 @@
    without colliding. */
 
 .shrinkage-calculator {
-    /* Root + page background */
-    font-family: var(--font-sans);
-    background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-gradient-end) 100%);
-    min-height: 100vh;
-    padding: 32px 16px;
-    color: var(--color-text);
 
     .container {
         max-width: 640px;
