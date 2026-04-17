@@ -217,16 +217,19 @@
         justify-content: center;
         line-height: 1;
 
-        &.active {
+        &.active, &.active:hover {
             border-color: var(--color-accent);
             background: var(--color-accent);
             color: var(--color-accent-text);
+            transition: none;
         }
 
-        &:hover:not([aria-pressed="true"]) {
-            border-color: var(--color-accent);
-            background: var(--color-bg);
-            color: var(--color-text);
+        @media (hover: hover) {
+            &:hover:not(.active) {
+                border-color: var(--color-accent);
+                background: var(--color-accent-soft);
+                color: var(--color-text);
+            }
         }
     }
 
