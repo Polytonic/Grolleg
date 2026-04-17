@@ -1,0 +1,50 @@
+/* Global Resets */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: hidden; }
+input, button, select, textarea { font: inherit; }
+
+/* Font Rendering
+   Grayscale antialiasing keeps button labels crisp on macOS, where the
+   default subpixel AA can smear against colored pill backgrounds during
+   transitions. */
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Design tokens — referenced from component CSS via var(). */
+:root {
+    --color-bg:              #E8E9E1;
+    --color-bg-gradient-end: #E2E3DB;
+    --color-card:            #FFFFFF;
+    --color-border:          #CBCDCA;
+    --color-border-subtle:   rgba(0, 0, 0, 0.06);
+    --color-text:            #2A2D2E;
+    --color-muted:           #4A4D4F;
+    --color-accent:          #386B8C;
+    --color-accent-text:     #FFFFFF;
+    --color-accent-soft:     rgba(56, 107, 140, 0.12);
+    --color-tooltip-bg:      #1A3344;
+    --color-error-text:      #c53030;
+    --color-error-bg:        #fff5f5;
+    --color-warning-text:    #7a5a00;
+    --color-warning-bg:      #fef3c7;
+
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Focus Ring
+   Inherits each element's own border-radius so circular and rectangular
+   targets get matching ring shapes. */
+*:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--color-accent);
+    border-radius: inherit;
+}
+
+/* Squircle Progressive Enhancement
+   Browsers that support corner-shape get squircles automatically. */
+@supports (corner-shape: squircle) {
+    * { corner-shape: squircle; }
+}

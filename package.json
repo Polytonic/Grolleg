@@ -1,0 +1,17 @@
+{
+    "source": "source/index.html",
+    "browserslist": "> 0.5%, last 2 versions, not dead",
+    "scripts": {
+        "build": "parcel build --no-source-maps",
+        "start": "parcel",
+        "clean": "rm -rf .parcel-cache dist"
+    },
+    "devDependencies": {
+        "@types/mithril": "^2.2.7",
+        "parcel": "^2.16.0",
+        "typescript": "^6.0.2"
+    },
+    "dependencies": {
+        "mithril": "^2.3.7"
+    }
+}

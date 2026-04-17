@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "moduleResolution": "bundler",
+        "module": "esnext",
+        "target": "esnext",
+        "skipLibCheck": true
+    },
+    "include": ["source/**/*"]
+}
