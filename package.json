@@ -1,5 +1,8 @@
 {
     "source": "source/index.html",
+    "alias": {
+        "@css/*": "./styles/$1"
+    },
     "browserslist": "> 0.5%, last 2 versions, not dead",
     "scripts": {
         "build": "parcel build --no-source-maps --public-url ./",

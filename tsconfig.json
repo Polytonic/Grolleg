@@ -8,5 +8,5 @@
         "target": "esnext",
         "skipLibCheck": true
     },
-    "include": ["source/**/*"]
+    "include": ["source/**/*", "styles/**/*"]
 }
