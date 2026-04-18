@@ -1,0 +1,8 @@
+{
+    "name": "Grolleg",
+    "short_name": "Grolleg",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#E8E9E1",
+    "theme_color": "#386B8C"
+}
