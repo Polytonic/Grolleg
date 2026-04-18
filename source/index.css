@@ -1,13 +1,20 @@
-/* Global Resets */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* modern-normalize handles box-sizing, text-size-adjust, form font
+   inheritance, and cross-browser consistency for elements we may use later */
+@import "npm:modern-normalize";
+
+/* Shared visual primitives available to all tools */
+@import "../styles/typography.css";
+@import "../styles/controls.css";
+
+/* Project-specific resets on top of normalize */
+*, *::before, *::after { margin: 0; padding: 0; }
 html, body { overflow-x: hidden; }
-input, button, select, textarea { font: inherit; }
 
 /* Site-wide page styling shared across all tools */
 body {
-    font-family: var(--font-sans);
     color: var(--color-text);
     background: var(--color-bg);
+    line-height: 1.4;
     min-height: 100vh;
     padding: 32px 16px;
     overscroll-behavior: none;

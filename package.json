@@ -21,6 +21,7 @@
         "typescript": "^6.0.2"
     },
     "dependencies": {
-        "mithril": "^2.3.7"
+        "mithril": "^2.3.7",
+        "modern-normalize": "^3.0.1"
     }
 }

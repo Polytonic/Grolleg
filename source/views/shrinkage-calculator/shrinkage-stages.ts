@@ -26,7 +26,7 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
                 }),
                 m("span.dimension-unit", "%"),
             ),
-            m("span.stage-hint", field.hint),
+            m("span.hint-text", field.hint),
         )),
         // Firing percentage is derived, not user-entered
         m(".stage-field",
@@ -38,7 +38,7 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
                 ),
                 derived.firingPercent !== null && m("span.dimension-unit", "%"),
             ),
-            m("span.stage-hint", "Bisque → Fired"),
+            m("span.hint-text", "Bisque → Fired"),
         ),
         derived.stagesWarning && m(".stage-warning",
             { role: "alert" },

@@ -1,0 +1,51 @@
+/* Typography
+   Shared text styles used across all tools. Unscoped so any element
+   with these classes gets consistent styling regardless of context. */
+
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--color-muted);
+    margin-bottom: 20px;
+}
+
+/* Uppercase section labels for field labels, section headers, and titles */
+:is(.label, .section-label, .section-title) {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-muted);
+}
+
+.hint-text {
+    font-size: 11px;
+    color: var(--color-muted);
+    font-style: italic;
+}
+
+.hint-box {
+    font-size: 14px;
+    color: var(--color-muted);
+    text-align: center;
+    padding: 24px 16px;
+    margin-bottom: 20px;
+    border: 1px dashed var(--color-border);
+    border-radius: 14px;
+    font-style: italic;
+}
+
+.disclaimer {
+    font-size: 12px;
+    color: var(--color-muted);
+    text-align: center;
+    font-style: italic;
+    margin-top: 4px;
+}
