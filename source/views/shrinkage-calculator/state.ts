@@ -80,10 +80,10 @@ export const SHAPE_MODES: ShapeMode[] = [
 
 /* ── Pure Math ── */
 
-const applyRate = (dimension: number, percent: number): number =>
+export const applyRate = (dimension: number, percent: number): number =>
     dimension * (1 - percent / 100);
 
-const reverseRate = (dimension: number, percent: number): number =>
+export const reverseRate = (dimension: number, percent: number): number =>
     dimension / (1 - percent / 100);
 
 // Locale-aware number formatter for display output.
@@ -99,7 +99,7 @@ export const format = (value: number | null): string =>
 // Normalizes locale number formats before parsing. Detects whether comma
 // is a decimal or thousands separator based on position, then strips
 // grouping separators and normalizes the decimal to a period.
-const parseLocaleNumber = (value: string): number => {
+export const parseLocaleNumber = (value: string): number => {
     const trimmed = value.trim();
     // If the last separator is a comma, treat it as decimal (e.g., "1.500,75" or "12,5")
     const lastComma = trimmed.lastIndexOf(",");
@@ -111,7 +111,7 @@ const parseLocaleNumber = (value: string): number => {
     return parseFloat(trimmed.replace(/,/g, ""));
 };
 
-const calculateVolume = (dimensions: number[], shapeId: ShapeMode["id"]): number | null => {
+export const calculateVolume = (dimensions: number[], shapeId: ShapeMode["id"]): number | null => {
     if (shapeId === "rect" && dimensions.length >= 3) return dimensions[0] * dimensions[1] * dimensions[2];
     if (shapeId === "cylinder" && dimensions.length >= 2) return Math.PI * (dimensions[0] / 2) ** 2 * dimensions[1];
     return null;
@@ -119,7 +119,7 @@ const calculateVolume = (dimensions: number[], shapeId: ShapeMode["id"]): number
 
 // (1 - total) == (1 - greenware) * (1 - bisque) * (1 - firing).
 // Guard against 0/0 (total=100 and a stage=100) producing NaN that slips past range checks.
-const deriveFiringPercent = (
+export const deriveFiringPercent = (
     totalPercent: number,
     greenwarePercent: number,
     bisquePercent: number,
@@ -134,17 +134,17 @@ const deriveFiringPercent = (
 /* ── Progressive Enhancements ── */
 
 // iOS Safari silently ignores vibration, so no error handling needed.
-const haptic = () => { navigator.vibrate?.(15); };
+const haptic = () => { navigator?.vibrate?.(15); };
 
 // US/Canada default to inches, everywhere else to centimeters.
 const defaultUnit: Unit = (() => {
-    const language = navigator.language;
+    const language = navigator?.language ?? "";
     return language.startsWith("en-US") || language.startsWith("en-CA") ? "in" : "cm";
 })();
 
 // Defer focus to next tick so the DOM reflects the latest state mutation.
 const focusLater = (id: string) =>
-    setTimeout(() => { document.getElementById(id)?.focus(); }, 0);
+    setTimeout(() => { globalThis.document?.getElementById(id)?.focus(); }, 0);
 
 
 /* ── State ── */
@@ -163,7 +163,8 @@ interface StateShape {
     pulseKey: number;  // monotonic counter that triggers CSS pulse animation on direction change
 }
 
-export const state: StateShape = {
+// Shared initial values so tests can reset to the same defaults
+export const INITIAL_STATE: StateShape = {
     direction: "fired-to-wet",
     shapeIndex: 1,
     presetIndex: 1,
@@ -176,6 +177,8 @@ export const state: StateShape = {
     shrinkTouched: false,
     pulseKey: 0,
 };
+
+export const state: StateShape = { ...INITIAL_STATE };
 
 
 /* ── Event Handlers ── */
@@ -261,7 +264,7 @@ export const handleDimensionKey = (fieldIndex: number, event: KeyboardEvent) => 
         (event.currentTarget as HTMLInputElement).blur();
         return;
     }
-    document.getElementById(`dimension-${fields[fieldIndex + 1].toLowerCase()}`)?.focus();
+    globalThis.document?.getElementById(`dimension-${fields[fieldIndex + 1].toLowerCase()}`)?.focus();
 };
 
 

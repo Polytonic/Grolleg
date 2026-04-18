@@ -118,7 +118,7 @@ interface TooltipTriggerAttrs {
 
 // Detect touch capability to prevent mouseenter from racing with click on mobile.
 // Touch devices fire mouseenter → click in sequence, causing open-then-close.
-const hasHover = window.matchMedia("(hover: hover)").matches;
+const hasHover = typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches;
 
 export const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
     return {
@@ -160,7 +160,7 @@ export const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
     let latestChildren: m.Children = null;
 
     const mountPortal = (groupId: string) => {
-        if (portalDiv) return;
+        if (portalDiv || typeof document === "undefined") return;
         portalDiv = document.createElement("div");
         portalDiv.className = "tooltip-portal";
         document.body.appendChild(portalDiv);

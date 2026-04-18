@@ -6,7 +6,10 @@
         "moduleResolution": "bundler",
         "module": "esnext",
         "target": "esnext",
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "paths": {
+            "@css/*": ["./styles/*"]
+        }
     },
-    "include": ["source/**/*", "styles/**/*"]
+    "include": ["source/**/*", "styles/**/*", "tests/**/*"]
 }

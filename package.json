@@ -5,12 +5,15 @@
     },
     "browserslist": "> 0.5%, last 2 versions, not dead",
     "scripts": {
+        "test": "bun test",
         "build": "parcel build --no-source-maps --public-url ./",
         "start": "parcel",
         "clean": "rm -rf .parcel-cache dist"
     },
     "devDependencies": {
+        "@types/bun": "^1.3.12",
         "@types/mithril": "^2.2.7",
+        "mithril-query": "^4.0.1",
         "parcel": "^2.16.0",
         "typescript": "^6.0.2"
     },
