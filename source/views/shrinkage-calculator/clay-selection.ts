@@ -10,8 +10,8 @@ import type { Derived } from "./state";
 // Preset dropdown grouped by generic and brand-name clay bodies
 export const ClayBodyField: m.Component = {
     view: () => m(".field-group",
-        m("div",
-            m("label.label", { for: "clay-body" }, "Clay Body"),
+        m("label.label", { for: "clay-body" },
+            "Clay Body",
             m(Tooltip, {
                 label: "clay body",
                 text: "Select a preset to auto-fill shrinkage rates, or choose Custom. Presets also populate staged shrinkage values when enabled.",
@@ -37,11 +37,9 @@ export const ClayBodyField: m.Component = {
 // Numeric input for total wet-to-fired shrinkage percentage
 export const ShrinkageField: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".field-group",
-        m("div",
-            m("label.label", { for: "shrinkage-rate" },
-                "Shrinkage Rate",
-                derived.shrinkInvalid && m("span.required", " *"),
-            ),
+        m("label.label", { for: "shrinkage-rate" },
+            "Shrinkage Rate",
+            derived.shrinkInvalid && m("span.required", " *"),
             m(Tooltip, {
                 label: "shrinkage rate",
                 text: "Wet-to-fired shrinkage combining drying and firing. Most clay bodies publish this on their spec sheet. To measure yourself: scratch a known length into a wet test bar, fire to maturity, measure again. Shrinkage = (wet − fired) ÷ wet × 100.",

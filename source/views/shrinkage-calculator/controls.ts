@@ -16,10 +16,8 @@ export const ClayControls: m.Component<{ derived: Derived }> = {
             m(ShapeSection),
             m(DirectionSection),
         ),
-        m(".section-header",
-            m("span.section-title",
-                `Enter ${state.direction === "fired-to-wet" ? "fired" : "wet"} dimensions`,
-            ),
+        m("span.section-title",
+            `Enter ${state.direction === "fired-to-wet" ? "fired" : "wet"} dimensions`,
             m(UnitToggle),
         ),
         m(".dimensions-row",
@@ -61,46 +59,44 @@ const ShapeSection: m.Component = {
 };
 
 // Pill toggle for Fired→Wet / Wet→Fired conversion direction
+const DIRECTION_OPTIONS: [Direction, string, string][] = [
+    ["fired-to-wet", "Fired → Wet", "Fired to wet"],
+    ["wet-to-fired", "Wet → Fired", "Wet to fired"],
+];
+
 const DirectionSection: m.Component = {
-    view: () => {
-        const options: [Direction, string, string][] = [
-            ["fired-to-wet", "Fired → Wet", "Fired to wet"],
-            ["wet-to-fired", "Wet → Fired", "Wet to fired"],
-        ];
-        return m("div",
-            m(".section-label", "Direction"),
-            m(".shape-pills",
-                options.map(([value, label, ariaLabel]) => {
-                    const isActive = state.direction === value;
-                    return m(`button.shape-pill${isActive ? ".active" : ""}`,
-                        {
-                            key: value,
-                            type: "button",
-                            "aria-pressed": isActive,
-                            "aria-label": ariaLabel,
-                            onclick: () => handleDirectionChange(value),
-                        },
-                        label,
-                    );
-                }),
-            ),
-        );
-    },
+    view: () => m("div",
+        m(".section-label", "Direction"),
+        m(".shape-pills",
+            DIRECTION_OPTIONS.map(([value, label, ariaLabel]) => {
+                const isActive = state.direction === value;
+                return m(`button.shape-pill${isActive ? ".active" : ""}`,
+                    {
+                        key: value,
+                        type: "button",
+                        "aria-pressed": isActive,
+                        "aria-label": ariaLabel,
+                        onclick: () => handleDirectionChange(value),
+                    },
+                    label,
+                );
+            }),
+        ),
+    ),
 };
 
 // Inline mm | cm | in selector next to the dimension header
+const UNIT_OPTIONS: [Unit, string, string][] = [
+    ["mm", "mm", "millimeters"],
+    ["cm", "cm", "centimeters"],
+    ["in", "in", "inches"],
+];
+
 const UnitToggle: m.Component = {
     view: () => {
-        const units: [Unit, string, string][] = [
-            ["mm", "mm", "millimeters"],
-            ["cm", "cm", "centimeters"],
-            ["in", "in", "inches"],
-        ];
         const children: m.Children[] = [];
-        units.forEach(([value, label, ariaLabel], index) => {
-            if (index > 0) {
-                children.push(m("span.unit-separator", { key: `${value}-separator` }, "|"));
-            }
+        UNIT_OPTIONS.forEach(([value, label, ariaLabel], index) => {
+            if (index > 0) children.push(m("span.unit-separator", { key: `${value}-sep` }, "|"));
             const isActive = state.unit === value;
             children.push(m(`button.unit-text${isActive ? ".active" : ""}`,
                 {
@@ -113,11 +109,7 @@ const UnitToggle: m.Component = {
                 label,
             ));
         });
-        return m("span.unit-text-toggle",
-            m("span.unit-paren", "("),
-            children,
-            m("span.unit-paren", ")"),
-        );
+        return m("span.unit-text-toggle", children);
     },
 };
 

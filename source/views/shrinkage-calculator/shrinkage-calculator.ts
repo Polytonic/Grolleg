@@ -1,5 +1,5 @@
 import m from "mithril";
-import "../../styles/shrinkage-calculator.css";
+import "@css/views/shrinkage-calculator.css";
 import { state, computeDerived, handleStageToggle } from "./state";
 import type { Derived } from "./state";
 import { ClayBodyField, ShrinkageField } from "./clay-selection";
@@ -26,19 +26,19 @@ export const ShrinkageCalculator: m.Component = {
                         checked: state.showStages,
                         onchange: handleStageToggle,
                     }),
-                    m("span", "Show shrinkage for greenware, bisque, and firing stages"),
+                    m("span", "Show shrinkage rate by stage"),
                 ),
                 state.showStages && m(StageInputs, { derived }),
                 m(ClayControls, { derived }),
                 m(".divider", { role: "separator" }),
                 !derived.anyResults && m(".hint-box",
                     { role: "status", "aria-live": "polite" },
-                    m("span", hintMessage(derived)),
+                    hintMessage(derived),
                 ),
                 derived.anyResults && m(ResultsCard, { derived }),
                 derived.showStagesCard && m(StagesCard, { derived }),
                 derived.anyResults && m("p.disclaimer",
-                    "Estimates only — actual shrinkage varies with materials and conditions."),
+                    "Actual shrinkage depends on your specific clay, firing temperature, and kiln conditions."),
             ),
         );
     },

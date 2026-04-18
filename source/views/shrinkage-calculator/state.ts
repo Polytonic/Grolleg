@@ -86,9 +86,30 @@ const applyRate = (dimension: number, percent: number): number =>
 const reverseRate = (dimension: number, percent: number): number =>
     dimension / (1 - percent / 100);
 
+// Locale-aware number formatter for display output.
+const numberFormat = new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
 // Em dash signals empty or invalid state, distinguishing it from a zero value.
 export const format = (value: number | null): string =>
-    value !== null && Number.isFinite(value) ? value.toFixed(2) : "—";
+    value !== null && Number.isFinite(value) ? numberFormat.format(value) : "—";
+
+// Normalizes locale number formats before parsing. Detects whether comma
+// is a decimal or thousands separator based on position, then strips
+// grouping separators and normalizes the decimal to a period.
+const parseLocaleNumber = (value: string): number => {
+    const trimmed = value.trim();
+    // If the last separator is a comma, treat it as decimal (e.g., "1.500,75" or "12,5")
+    const lastComma = trimmed.lastIndexOf(",");
+    const lastDot = trimmed.lastIndexOf(".");
+    if (lastComma > lastDot) {
+        return parseFloat(trimmed.replace(/\./g, "").replace(",", "."));
+    }
+    // Otherwise treat dot as decimal (e.g., "1,500.75" or "12.5")
+    return parseFloat(trimmed.replace(/,/g, ""));
+};
 
 const calculateVolume = (dimensions: number[], shapeId: ShapeMode["id"]): number | null => {
     if (shapeId === "rect" && dimensions.length >= 3) return dimensions[0] * dimensions[1] * dimensions[2];
@@ -268,12 +289,12 @@ export interface Derived {
 
 const parseInputs = () => {
     const shape = SHAPE_MODES[state.shapeIndex];
-    const totalPercent = parseFloat(state.shrinkage);
-    const greenwarePercent = parseFloat(state.greenwareShrinkage);
-    const bisquePercent = parseFloat(state.bisqueShrinkage);
+    const totalPercent = parseLocaleNumber(state.shrinkage);
+    const greenwarePercent = parseLocaleNumber(state.greenwareShrinkage);
+    const bisquePercent = parseLocaleNumber(state.bisqueShrinkage);
     const totalValid = Number.isFinite(totalPercent) && totalPercent > 0 && totalPercent < 100;
     const shrinkInvalid = state.shrinkTouched && !totalValid;
-    const parsedDimensions = state.dimensions.map((value) => parseFloat(value));
+    const parsedDimensions = state.dimensions.map((value) => parseLocaleNumber(value));
     const anyDimensionsEntered = state.dimensions.some((value) => value !== "");
     return {
         shape, totalPercent, greenwarePercent, bisquePercent,
@@ -321,7 +342,7 @@ const computeStageData = (inputs: ParsedInputs, wetDimensions: number[] | null, 
         ? boneDryDimensions.map((value) => applyRate(value, inputs.bisquePercent))
         : null;
     const stagesWarning = stagesValid && inputs.totalValid && !stagesConsistent
-        ? "Greenware + Bisque shrinkage totals more than the overall rate — try lowering either stage or raising the rate."
+        ? "Greenware + Bisque shrinkage exceeds total shrinkage rate. Try lowering either stage or raising the rate."
         : null;
     return { firingPercent, boneDryDimensions, bisqueDimensions, stagesWarning };
 };

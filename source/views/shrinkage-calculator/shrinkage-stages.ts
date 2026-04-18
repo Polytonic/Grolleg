@@ -4,42 +4,31 @@ import type { Stage, Derived } from "./state";
 
 
 // Greenware, bisque, and derived firing percentage inputs with stage hints
+const STAGE_FIELDS = [
+    { id: "greenware-percent", label: "Greenware", hint: "Wet → Bone Dry",    placeholder: "e.g. 6",    stateKey: "greenwareShrinkage" as const, handler: handleGreenwareInput },
+    { id: "bisque-percent",    label: "Bisque",    hint: "Bone Dry → Bisque", placeholder: "e.g. 0.75", stateKey: "bisqueShrinkage" as const,    handler: handleBisqueInput },
+];
+
 export const StageInputs: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".stage-inputs",
-        m(".stage-field",
-            m("label.label", { for: "greenware-percent" }, "Greenware"),
+        STAGE_FIELDS.map((field) => m(".stage-field", { key: field.id },
+            m("label.label", { for: field.id }, field.label),
             m(".dimension-input-wrap",
                 m("input.input.with-suffix", {
-                    id: "greenware-percent",
+                    id: field.id,
                     type: "number",
                     inputmode: "decimal",
                     step: "0.1",
                     min: "0",
-                    placeholder: "e.g. 6",
-                    value: state.greenwareShrinkage,
-                    oninput: handleGreenwareInput,
+                    placeholder: field.placeholder,
+                    value: state[field.stateKey],
+                    oninput: field.handler,
                 }),
                 m("span.dimension-unit", "%"),
             ),
-            m("span.stage-hint", "Wet → Bone Dry"),
-        ),
-        m(".stage-field",
-            m("label.label", { for: "bisque-percent" }, "Bisque"),
-            m(".dimension-input-wrap",
-                m("input.input.with-suffix", {
-                    id: "bisque-percent",
-                    type: "number",
-                    inputmode: "decimal",
-                    step: "0.1",
-                    min: "0",
-                    placeholder: "e.g. 0.75",
-                    value: state.bisqueShrinkage,
-                    oninput: handleBisqueInput,
-                }),
-                m("span.dimension-unit", "%"),
-            ),
-            m("span.stage-hint", "Bone Dry → Bisque"),
-        ),
+            m("span.stage-hint", field.hint),
+        )),
+        // Firing percentage is derived, not user-entered
         m(".stage-field",
             m("span.label", "Fired"),
             m(".dimension-input-wrap",
@@ -70,10 +59,8 @@ export const StagesCard: m.Component<{ derived: Derived }> = {
         ];
         return m(".results-card",
             m(".results-header", "Shrinkage stages"),
-            m(".timeline",
-                stages.map((stage, index) =>
-                    m(TimelineStage, { key: stage.label, stage, fields: derived.shape.fields, isFirst: index === 0 }),
-                ),
+            stages.map((stage, index) =>
+                m(TimelineStage, { key: stage.label, stage, fields: derived.shape.fields, isFirst: index === 0 }),
             ),
         );
     },
@@ -83,7 +70,6 @@ export const StagesCard: m.Component<{ derived: Derived }> = {
 const TimelineStage: m.Component<{ stage: Stage; fields: string[]; isFirst: boolean }> = {
     view: ({ attrs: { stage, fields, isFirst } }) => m(".timeline-stage",
         !isFirst && m(".timeline-arrow",
-            m("span.arrow-line"),
             m("span.arrow-percent", `−${format(stage.percent)}%`),
         ),
         m(`.timeline-card${stage.isEndpoint ? ".endpoint" : ""}`,

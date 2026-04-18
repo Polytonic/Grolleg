@@ -13,34 +13,48 @@ body {
     overscroll-behavior: none;
 }
 
-/* Font Rendering
-   Grayscale antialiasing keeps button labels crisp on macOS, where the
-   default subpixel AA can smear against colored pill backgrounds during
-   transitions. */
-html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Design tokens — referenced from component CSS via var(). */
+/* Design tokens, referenced from component CSS via var().
+   Base colors define the palette. Tints and shades are derived via
+   color-mix() so the system stays consistent when bases change. */
 :root {
+    /* Base colors */
+    --color-accent:          #386B8C;
+    --color-text:            #2A2D2E;
+    --color-error:           #c53030;
+    --color-warning:         #7a5a00;
+
+    /* Neutral surfaces */
     --color-bg:              #E8E9E1;
     --color-card:            #FFFFFF;
     --color-border:          #CBCDCA;
-    --color-border-subtle:   rgba(0, 0, 0, 0.06);
-    --color-text:            #2A2D2E;
-    --color-muted:           #4A4D4F;
-    --color-accent:          #386B8C;
-    --color-accent-text:     #FFFFFF;
-    --color-accent-soft:     rgba(56, 107, 140, 0.12);
-    --color-tooltip-bg:      #1A3344;
-    --color-error-text:      #c53030;
-    --color-error-bg:        #fff5f5;
-    --color-warning-text:    #7a5a00;
-    --color-warning-bg:      #fef3c7;
+    --color-border-subtle:   color-mix(in srgb, black 6%, transparent);
 
-    --font-sans: system-ui, -apple-system, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    /* Text */
+    --color-muted:           #4A4D4F;
+
+    /* Accent tints and shades
+       Interactive convention: hover mixes 15% toward light, press mixes 15%
+       toward dark (or 30% for inactive elements toward accent). Apply the
+       same ratios to any interactive element's base color. */
+    --color-accent-text:     #FFFFFF;
+    --color-accent-soft:     color-mix(in srgb, var(--color-accent) 12%, transparent);
+    --color-accent-dark:     color-mix(in srgb, var(--color-accent) 85%, black);
+    --color-tooltip-bg:      color-mix(in srgb, var(--color-accent) 60%, black);
+
+    /* Semantic: error */
+    --color-error-text:      var(--color-error);
+    --color-error-bg:        color-mix(in srgb, var(--color-error) 5%, white);
+
+    /* Semantic: warning */
+    --color-warning-text:    var(--color-warning);
+    --color-warning-bg:      color-mix(in srgb, var(--color-warning) 15%, white);
+
+    /* Endpoint label text (white, slightly transparent for contrast on accent) */
+    --color-accent-text-muted: color-mix(in srgb, white 85%, transparent);
+
+    /* Typography */
+    --font-sans: system-ui, sans-serif;
+    --font-mono: ui-monospace, monospace;
 }
 
 /* Focus Ring
