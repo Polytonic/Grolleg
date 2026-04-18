@@ -116,6 +116,10 @@ interface TooltipTriggerAttrs {
     groupId: string;
 }
 
+// Detect touch capability to prevent mouseenter from racing with click on mobile.
+// Touch devices fire mouseenter → click in sequence, causing open-then-close.
+const hasHover = window.matchMedia("(hover: hover)").matches;
+
 export const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
     return {
         view: (vnode) => {
@@ -126,7 +130,7 @@ export const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
                 oncreate: (v: m.VnodeDOM) => { state.triggerElement = v.dom as HTMLElement; },
                 onmouseenter: () => {
                     cancelClose(state);
-                    if (!state.open) state.openTooltip(false);
+                    if (hasHover && !state.open) state.openTooltip(false);
                 },
                 onclick: (event: MouseEvent) => {
                     event.preventDefault();
