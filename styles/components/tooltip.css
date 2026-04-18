@@ -1,0 +1,76 @@
+/* Tooltip
+   Compound component: Root wraps trigger + content. Content renders via
+   portal to document.body. 24x24 button meets WCAG 2.5.8 minimum target. */
+
+.tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+
+    .tooltip-button {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid var(--color-border);
+        background: transparent;
+        color: var(--color-muted);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin-left: 6px;
+        flex-shrink: 0;
+
+        @media (hover: hover) {
+            &:hover:not(.open) {
+                border-color: var(--color-accent);
+                background: color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
+                color: var(--color-text);
+            }
+        }
+
+        &:active:not(.open) {
+            border-color: var(--color-accent);
+            background: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+            color: var(--color-text);
+        }
+
+        &.open {
+            background: var(--color-accent);
+            color: var(--color-accent-text);
+        }
+
+        @media (hover: hover) {
+            &.open:hover {
+                background: color-mix(in srgb, var(--color-accent) 85%, white);
+            }
+        }
+
+        &.open:active {
+            background: color-mix(in srgb, var(--color-accent) 85%, black);
+        }
+    }
+}
+
+/* Portal mount point for tooltip bubbles */
+.tooltip-portal { display: contents; }
+
+/* Bubble is portal-rendered to document.body with fixed positioning.
+   Position coordinates are set via inline styles by TooltipContent. */
+.tooltip-bubble {
+    width: 260px;
+    padding: 12px 14px;
+    background: var(--color-tooltip-bg);
+    color: var(--color-accent-text);
+    font-size: 13px;
+    line-height: 1.6;
+    border-radius: 10px;
+    z-index: 10000;
+    box-shadow: 0 6px 24px color-mix(in srgb, black 20%, transparent);
+    text-transform: none;
+    letter-spacing: normal;
+}
