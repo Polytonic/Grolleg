@@ -1,6 +1,6 @@
 import { manifest } from "@parcel/service-worker";
 
-const CACHE_NAME = "grolleg-v1";
+const CACHE_NAME = "grolleg-v2";
 
 // Cache all build assets on install
 async function install() {
@@ -16,7 +16,21 @@ async function activate() {
 }
 addEventListener("activate", (event: ExtendableEvent) => event.waitUntil(activate()));
 
-// Serve from cache first, fall back to network
+// Navigation requests (SPA route changes, deep links, refreshes) all need to
+// resolve to the app shell so the Mithril router can take over. Serving the
+// cached index.html for any navigate-mode request bypasses the GitHub Pages
+// 404 round-trip when the service worker is active, and lets the app work
+// offline for any in-app route.
 addEventListener("fetch", (event: FetchEvent) => {
-    event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+    const request = event.request;
+    if (request.mode === "navigate") {
+        const indexUrl = new URL("./", self.registration.scope).pathname;
+        event.respondWith(
+            caches.match(indexUrl)
+                .then((cached) => cached || caches.match(request))
+                .then((cached) => cached || fetch(request))
+        );
+        return;
+    }
+    event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
 });

@@ -8,7 +8,12 @@ import { ClayControls } from "./controls";
 import { ResultsCard } from "./results";
 
 
-export const ShrinkageCalculator: m.Component = {
+export const ShrinkageCalculatorView: m.Component = {
+    oncreate: () => {
+        if (typeof document !== "undefined") {
+            document.title = "Grolleg • Shrinkage Calculator";
+        }
+    },
     view: () => {
         const derived = computeDerived();
         return m(".shrinkage-calculator",

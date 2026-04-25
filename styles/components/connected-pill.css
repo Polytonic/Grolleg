@@ -1,0 +1,91 @@
+/* Connected Pill
+   Two-half pill primitive with morph animation between connected and
+   separated states. Used in the firing calculator for the bisque/glaze
+   pair toggle; reusable for any future pair-toggle relationship.
+
+   Color state cascades through CSS custom properties (--cp-border,
+   --cp-bg, --cp-color) so inline border-color references using var()
+   pick up hover and press tints automatically. The component sets
+   per-edge border colors inline because the inner-divider semantics
+   (transparent on the right half's left edge when connected, white-60%
+   on the left half's right edge when both halves are active) depend on
+   prop combinations that can't be expressed as a single class. */
+
+.connected-pill {
+    display: inline-flex;
+    align-items: stretch;
+
+    .connected-pill__half {
+        --cp-border: var(--color-border);
+        --cp-bg:     var(--color-card);
+        --cp-color:  var(--color-text);
+
+        font-family: var(--font-sans);
+        outline: none;
+        cursor: pointer;
+        line-height: 1.2;
+        box-sizing: border-box;
+        transition:
+            border-top-left-radius 0.2s ease-out,
+            border-bottom-left-radius 0.2s ease-out,
+            border-top-right-radius 0.2s ease-out,
+            border-bottom-right-radius 0.2s ease-out,
+            border-color 0.2s ease-out,
+            margin-right 0.2s ease-out,
+            background 0.12s,
+            color 0.12s,
+            opacity 0.12s;
+
+        &.active {
+            --cp-border: var(--color-accent);
+            --cp-bg:     var(--color-accent);
+            --cp-color:  var(--color-accent-text);
+        }
+
+        &.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* Inactive: tint toward accent on hover, deeper tint on press */
+        @media (hover: hover) {
+            &:not(.disabled):not(.active):hover {
+                --cp-border: var(--color-accent);
+                --cp-bg:     color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
+                --cp-color:  var(--color-text);
+            }
+            &.active:not(.disabled):hover {
+                --cp-bg: color-mix(in srgb, var(--color-accent) 85%, white);
+            }
+        }
+
+        &:not(.disabled):not(.active):active {
+            --cp-border: var(--color-accent);
+            --cp-bg:     color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+            --cp-color:  var(--color-text);
+            transition: none;
+        }
+        &.active:not(.disabled):active {
+            --cp-bg: color-mix(in srgb, var(--color-accent) 85%, black);
+            transition: none;
+        }
+
+        /* Pill scale: matches the input row height (10px vertical padding +
+           16px font on inputs aligns with 9px padding + 14px font here so
+           the visual baseline stays consistent in mixed input/pill rows). */
+        &.size-pill {
+            min-height: 44px;
+        }
+
+        /* Chip scale: smaller than pill, used inside piece rows. Tap target
+           still meets WCAG via padding + font line-height (combined ≥ 24px
+           and the row's surrounding interactive area is forgiving). */
+    }
+}
+
+/* Reduced-motion: drop the radius/margin morph but keep color transitions */
+@media (prefers-reduced-motion: reduce) {
+    .connected-pill .connected-pill__half {
+        transition: background 0.12s, color 0.12s, opacity 0.12s;
+    }
+}

@@ -4,9 +4,56 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#386B8C" />
-    <title>Shrinkage Calculator</title>
+    <title>Grolleg</title>
     <link href="index.css" rel="stylesheet" />
     <link rel="manifest" href="manifest.json" />
+    <script>
+        // SPA routing helper. The build emits this same HTML twice (as
+        // index.html and 404.html) so GitHub Pages can serve it for any
+        // path. The script handles both entry conditions in one place:
+        //
+        //   1. Path-restore: if the URL is "/?/path" (we arrived via the
+        //      SPA-fallback redirect below), decode the original path and
+        //      replaceState back to it before the bundle initializes.
+        //
+        //   2. SPA fallback: if the URL's directory (everything up to the
+        //      last slash) doesn't match the project root, the browser
+        //      would resolve the bundle's relative asset URLs to the
+        //      wrong directory. Redirect through the project root with
+        //      the deep path encoded as ?/path. The next load hits case
+        //      1 and restores cleanly.
+        //
+        //   3. Otherwise (the normal case for a direct visit to the
+        //      project root or to a route at the right depth), do
+        //      nothing and let the SPA boot.
+        //
+        // Adapted from rafgraph/spa-github-pages.
+        (function (location, history) {
+            if (location.search[1] === "/") {
+                var decoded = location.search.slice(1).split("&").map(function (segment) {
+                    return segment.replace(/~and~/g, "&");
+                }).join("?");
+                history.replaceState(null, "", location.pathname.slice(0, -1) + decoded + location.hash);
+                return;
+            }
+
+            var lastSlash = location.pathname.lastIndexOf("/");
+            var directory = location.pathname.slice(0, lastSlash + 1);
+            var firstSegment = location.pathname.split("/").filter(Boolean)[0];
+            // GitHub Pages project pages live at /<repo>/, so the base
+            // includes that segment. Other hosts (including localhost)
+            // serve from the root.
+            var basePath = location.hostname.endsWith(".github.io") && firstSegment
+                ? "/" + firstSegment + "/"
+                : "/";
+
+            if (directory !== basePath) {
+                var deepPath = location.pathname.slice(basePath.length).replace(/\/+$/, "").replace(/&/g, "~and~");
+                var encodedSearch = location.search ? "&" + location.search.slice(1).replace(/&/g, "~and~") : "";
+                location.replace(basePath + "?/" + deepPath + encodedSearch + location.hash);
+            }
+        }(window.location, window.history));
+    </script>
 </head>
 <body>
     <script src="index.ts" type="module"></script>

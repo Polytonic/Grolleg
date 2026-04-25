@@ -6,7 +6,7 @@
     "browserslist": "> 0.5%, last 2 versions, not dead",
     "scripts": {
         "test": "bun test",
-        "build": "parcel build --no-source-maps --public-url ./",
+        "build": "parcel build --no-source-maps --public-url ./ && cp dist/index.html dist/404.html",
         "start": "parcel",
         "clean": "rm -rf .parcel-cache dist"
     },

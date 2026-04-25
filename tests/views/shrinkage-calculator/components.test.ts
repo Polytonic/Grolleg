@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import mq from "mithril-query";
 import { state, computeDerived } from "../../../source/views/shrinkage-calculator/state";
-import { ShrinkageCalculator } from "../../../source/views/shrinkage-calculator/shrinkage-calculator";
+import { ShrinkageCalculatorView } from "../../../source/views/shrinkage-calculator/shrinkage-calculator";
 import { ClayControls } from "../../../source/views/shrinkage-calculator/controls";
 import { ClayBodyField, ShrinkageField } from "../../../source/views/shrinkage-calculator/clay-selection";
 import { ResultsCard } from "../../../source/views/shrinkage-calculator/results";
@@ -13,15 +13,15 @@ beforeEach(() => resetState());
 
 // Orchestrator layout
 
-describe("ShrinkageCalculator", () => {
+describe("ShrinkageCalculatorView", () => {
     it("renders title and subtitle", () => {
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.contain("Shrinkage Calculator"));
         expect(output.should.contain("Convert between wet and fired dimensions"));
     });
 
     it("shows hint box with no dimensions", () => {
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.have(".hint-box"));
         expect(output.should.contain("Enter dimensions to see results"));
     });
@@ -29,21 +29,21 @@ describe("ShrinkageCalculator", () => {
     it("hint adapts when only dimensions entered (no shrinkage)", () => {
         state.shrinkage = "";
         state.dimensions = ["100", "200"];
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.contain("Enter a shrinkage rate to see results"));
     });
 
     it("hint adapts when nothing entered", () => {
         state.shrinkage = "";
         state.dimensions = ["", ""];
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.contain("Enter a shrinkage rate and dimensions to see results"));
     });
 
     it("results replace hint box when both inputs provided", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", "200"];
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.not.have(".hint-box"));
         expect(output.should.have(".results-card"));
     });
@@ -51,24 +51,24 @@ describe("ShrinkageCalculator", () => {
     it("disclaimer appears with results", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", "200"];
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.contain("Actual shrinkage depends on your specific clay"));
     });
 
     it("disclaimer hidden without results", () => {
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.not.contain("Actual shrinkage depends"));
     });
 
     it("stage inputs appear when checkbox enabled", () => {
         state.showStages = true;
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.have(".stage-inputs"));
     });
 
     it("stage inputs hidden when checkbox disabled", () => {
         state.showStages = false;
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.not.have(".stage-inputs"));
     });
 
@@ -76,12 +76,12 @@ describe("ShrinkageCalculator", () => {
         state.showStages = true;
         state.shrinkage = "12";
         state.dimensions = ["100", "200"];
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.contain("Shrinkage stages"));
     });
 
     it("checkbox label reads correctly", () => {
-        const output = mq(ShrinkageCalculator);
+        const output = mq(ShrinkageCalculatorView);
         expect(output.should.contain("Show shrinkage rate by stage"));
     });
 });

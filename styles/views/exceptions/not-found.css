@@ -1,0 +1,38 @@
+/* Page-Not-Found View
+   404 page rendered when the URL doesn't match any registered route.
+   Minimal layout: heading, subtitle, recovery link. */
+
+.not-found-view {
+
+    .container {
+        max-width: 480px;
+        margin: 60px auto 0;
+        text-align: center;
+    }
+
+    .not-found-view__link {
+        display: inline-block;
+        margin-top: 24px;
+        padding: 12px 20px;
+        background: var(--color-accent);
+        color: var(--color-accent-text);
+        border-radius: 8px;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background-color 0.12s;
+        min-height: 44px;
+        box-sizing: border-box;
+
+        @media (hover: hover) {
+            &:hover {
+                background: color-mix(in srgb, var(--color-accent) 85%, white);
+            }
+        }
+        &:active {
+            background: color-mix(in srgb, var(--color-accent) 85%, black);
+            transition: none;
+        }
+    }
+}

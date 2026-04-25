@@ -43,5 +43,6 @@ repo root. The `@css` alias in package.json maps imports like
 `@css/views/shrinkage-calculator.css` to the styles directory. Each tool
 lives in `source/views/` as a directory of Mithril components with a shared
 `state.ts` for the model layer. Reusable primitives live in
-`source/components/`. When tool #2 lands, `index.ts` will switch from
-`m.mount` to `m.route`; see `notes.md` for the plan.
+`source/components/`. Routes are wired in `source/index.ts` via `m.route`;
+see `docs/notes.md` for project-wide design notes and `docs/<tool-name>/`
+for per-tool reference material.

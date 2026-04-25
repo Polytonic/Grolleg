@@ -1,0 +1,657 @@
+/* Firing Calculator
+   Layout and tool-specific styles scoped under .firing-calculator. Visual
+   primitives (typography, buttons, base inputs, cards) live in
+   styles/typography.css and styles/controls.css. */
+
+.firing-calculator {
+
+    .container {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+
+    /* ── Card ──
+       Mirrors the shrinkage results-card visual treatment for cross-tool
+       consistency. Subtle border plus soft shadow reads as a lifted surface. */
+    .card {
+        background: var(--color-card);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px var(--color-border-subtle);
+    }
+
+
+    /* ── Field Primitives ── */
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .field-label {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-muted);
+        display: flex;
+        align-items: center;
+        line-height: 1.2;
+    }
+
+    /* Input visual (border + padding) is inherited from controls.css; this
+       rule narrows the font family to mono for numeric inputs and ensures
+       the suffix-aware right padding fits the firing calc's wider units
+       (e.g. "¢/in³" needs more room than the shrinkage calc's "%"). */
+    .input.numeric {
+        font-family: var(--font-mono);
+    }
+
+    .input.with-suffix {
+        padding-right: 56px;
+    }
+
+    .input-with-suffix {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-suffix {
+        position: absolute;
+        right: 12px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--color-muted-soft);
+        pointer-events: none;
+        line-height: 1;
+    }
+
+    /* Warning state on a numeric input: amber border + cream tint. Used by
+       the H input when a piece's height is below the studio minimum. */
+    .input.numeric.warn {
+        border-color: var(--color-warn-border);
+        background: var(--color-warn-bg);
+    }
+
+
+    /* ── Top Controls Grid ──
+       Basis dropdown takes more horizontal weight than the Units pills row
+       since dropdown labels can be long ("Volume (L × W × H)"). */
+    .controls-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+        align-items: start;
+    }
+
+    .unit-pills {
+        display: flex;
+        gap: 4px;
+    }
+
+    /* Unit-change hint: a brief reminder shown when the user changes units
+       while pieces have data. Fades in over 200ms then dismisses after 4s
+       via the state-level timer. */
+    .unit-hint {
+        background: var(--color-accent);
+        color: var(--color-accent-text);
+        font-family: var(--font-sans);
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        margin-top: 8px;
+        display: inline-block;
+        animation: firing-calc-unit-hint-fade-in 0.2s ease-out;
+    }
+
+
+    /* ── Pill ──
+       Sized to align with input row height (10px-equivalent vertical padding
+       gives 44px total with the 14px font). Same color/state conventions as
+       the shrinkage shape-pill but tuned for this tool's denser firings row.
+
+       Color cascade via custom properties so inline styles or future child
+       elements can reference the active color without re-declaring. */
+    .pill {
+        --pill-border: var(--color-border);
+        --pill-bg:     var(--color-card);
+        --pill-color:  var(--color-text);
+
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 400;
+        padding: 10px 14px;
+        background: var(--pill-bg);
+        color: var(--pill-color);
+        border: 1px solid var(--pill-border);
+        border-radius: 10px;
+        cursor: pointer;
+        outline: none;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        box-sizing: border-box;
+        min-height: 44px;
+        transition: background-color 0.12s, color 0.12s, border-color 0.12s;
+
+        &.flex {
+            flex: 1 1 0;
+        }
+
+        &.active {
+            --pill-border: var(--color-accent);
+            --pill-bg:     var(--color-accent);
+            --pill-color:  var(--color-accent-text);
+            font-weight: 600;
+        }
+
+        @media (hover: hover) {
+            &:not(.active):hover {
+                --pill-border: var(--color-accent);
+                --pill-bg:     color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
+                --pill-color:  var(--color-text);
+            }
+            &.active:hover {
+                --pill-bg: color-mix(in srgb, var(--color-accent) 85%, white);
+            }
+        }
+
+        &:not(.active):active {
+            --pill-border: var(--color-accent);
+            --pill-bg:     color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+            --pill-color:  var(--color-text);
+            transition: none;
+        }
+        &.active:active {
+            --pill-bg: color-mix(in srgb, var(--color-accent) 85%, black);
+            transition: none;
+        }
+    }
+
+
+    /* ── Firings Row ──
+       Two-container layout. The bundled chain pill is its own container; the
+       firings group (separator + ConnectedPill + Luster pill) is another. The
+       two containers wrap independently when the viewport narrows, keeping
+       the separator anchored to the firing pills it visually divides. */
+    .firings-label {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-muted);
+        margin-top: 4px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+    }
+
+    .firings-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .firings-row__bundled {
+        display: flex;
+    }
+
+    .firings-row__group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .firings-row__separator {
+        width: 1px;
+        height: 20px;
+        background: var(--color-border-dark);
+        align-self: center;
+        margin: 0 2px;
+        flex-shrink: 0;
+    }
+
+
+    /* ── Rate Inputs ──
+       Auto-shrink grid: columns-1 / columns-2 / columns-3 set the column
+       count to match the active firing count. The 480px breakpoint caps at
+       2 columns so individual fields stay readable on phones. */
+    .rate-inputs {
+        display: grid;
+        gap: 12px;
+
+        &.columns-1 { grid-template-columns: 1fr; }
+        &.columns-2 { grid-template-columns: 1fr 1fr; }
+        &.columns-3 { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    /* Ghost placeholder: shown when zero firings are active. Same vertical
+       footprint as a real rate row so toggling firings doesn't reflow the
+       card. The italic muted text reads as "this is what would go here." */
+    .input-with-suffix.ghost {
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        min-height: 44px;
+        box-sizing: border-box;
+    }
+
+    .ghost-input {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        color: var(--color-muted-soft);
+        font-style: italic;
+        flex: 1;
+        line-height: 1;
+    }
+
+    .ghost-hint {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--color-muted-soft);
+        font-style: italic;
+        margin-top: 6px;
+    }
+
+
+    /* ── Adjustments Row ──
+       Rounding takes more visual weight than Min Height (longer label,
+       longer dropdown options) so the 2:1 split when both are visible. The
+       narrow breakpoint stacks them 1:1 to give Min Height enough room for
+       its number input + unit suffix. */
+    .adjustments-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 14px;
+
+        &.both {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
+
+
+    /* Object-comparison silhouettes inherit color from their container so the
+       parent's `color` style tints them (typically muted-soft for piece rows,
+       muted for the total band). flex-shrink: 0 keeps them from being
+       squeezed when their text label wraps in tight rows. */
+    .silhouette {
+        flex-shrink: 0;
+    }
+
+
+    /* ── Pieces Stack ── */
+    .pieces-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .piece-row {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        padding: 14px;
+    }
+
+    /* Header line: badge · name · price+qty · X */
+    .piece-row__header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        min-width: 0;
+    }
+
+    .piece-row__badge {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--color-muted);
+        background: var(--color-bg);
+        padding: 2px 7px;
+        border-radius: 4px;
+        min-width: 24px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .piece-row__name-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 0;
+        outline: none;
+        font-family: var(--font-sans);
+        font-size: 16px;        /* iOS no-zoom floor */
+        font-weight: 600;
+        color: var(--color-text);
+        min-width: 0;
+
+        &::placeholder {
+            color: var(--color-muted-soft);
+            font-weight: 400;
+        }
+    }
+
+    .piece-row__subtitle {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--color-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .piece-row__price {
+        color: var(--color-text);
+        font-weight: 600;
+
+        &.zero {
+            color: var(--color-muted-soft);
+            font-weight: 400;
+        }
+    }
+
+    .piece-row__quantity {
+        color: var(--color-muted);
+    }
+
+    .piece-row__remove {
+        background: transparent;
+        border: none;
+        color: var(--color-muted-soft);
+        cursor: pointer;
+        padding: 4px;
+        line-height: 0;
+        flex-shrink: 0;
+        border-radius: 6px;
+        transition: color 0.12s, background-color 0.12s;
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--color-text);
+                background: color-mix(in srgb, var(--color-text) 10%, transparent);
+            }
+        }
+        &:active {
+            color: var(--color-text);
+            background: color-mix(in srgb, var(--color-text) 18%, transparent);
+        }
+    }
+
+    /* Dimension grid: 2-col for footprint, 3-col for volume. Inputs share
+       full row width to keep input target sizes generous. */
+    .piece-row__dimensions {
+        display: grid;
+        gap: 8px;
+
+        &.columns-2 { grid-template-columns: 1fr 1fr; }
+        &.columns-3 { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .piece-row__weight {
+        max-width: 220px;
+    }
+
+    /* Comparison silhouette + label, inline below dimensions */
+    .piece-row__comparison {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        color: var(--color-muted-soft);
+    }
+
+    .piece-row__comparison-label {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--color-muted);
+    }
+
+    /* Inline warning explainer for sub-minimum height. Repeats the H input's
+       title-attribute hint in always-visible form so mobile users (no hover)
+       see the bill-up reasoning. */
+    .piece-row__warning {
+        margin-top: 8px;
+        padding: 8px 10px;
+        background: var(--color-warn-bg);
+        border: 1px solid var(--color-warn-border);
+        border-radius: 8px;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--color-text);
+        line-height: 1.4;
+    }
+
+    /* Include label + chip row, inline */
+    .piece-row__include {
+        margin-top: 12px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .piece-row__include-label {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-muted);
+        line-height: 1.2;
+    }
+
+
+    /* ── Chip ──
+       Smaller than the controls Pill. Inactive uses font-weight 400 (suite
+       convention; the prototype's 500 is not portable across Segoe UI on
+       Windows). Disabled chips hold their underlying coloring at 50%
+       opacity so the user can read which firing the piece is logically on. */
+    .chip {
+        --chip-border: var(--color-border);
+        --chip-bg:     var(--color-card);
+        --chip-color:  var(--color-muted);
+
+        padding: 5px 11px;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        font-weight: 400;
+        background: var(--chip-bg);
+        color: var(--chip-color);
+        border: 1px solid var(--chip-border);
+        border-radius: 6px;
+        cursor: pointer;
+        outline: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        line-height: 1.2;
+        transition: background-color 0.12s, color 0.12s, border-color 0.12s;
+
+        &.active {
+            --chip-border: var(--color-accent);
+            --chip-bg:     var(--color-accent);
+            --chip-color:  var(--color-accent-text);
+            font-weight: 600;
+        }
+
+        &.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        @media (hover: hover) {
+            &:not(.disabled):not(.active):hover {
+                --chip-border: var(--color-accent);
+                --chip-bg:     color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
+                --chip-color:  var(--color-text);
+            }
+            &.active:not(.disabled):hover {
+                --chip-bg: color-mix(in srgb, var(--color-accent) 85%, white);
+            }
+        }
+
+        &:not(.disabled):not(.active):active {
+            --chip-border: var(--color-accent);
+            --chip-bg:     color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+            --chip-color:  var(--color-text);
+            transition: none;
+        }
+        &.active:not(.disabled):active {
+            --chip-bg: color-mix(in srgb, var(--color-accent) 85%, black);
+            transition: none;
+        }
+    }
+
+
+    /* ── Add Piece ──
+       Bottom-right of the pieces card. Accent-filled, icon + text, tight
+       padding. Distinct from Pill (which is row-aligned with inputs) since
+       this button is appended below the list rather than inline. */
+    .pieces-add-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+    }
+
+    .add-piece {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--color-accent);
+        color: var(--color-accent-text);
+        border: none;
+        padding: 9px 14px;
+        border-radius: 8px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        line-height: 1;
+        min-height: 44px;
+        transition: background-color 0.12s;
+
+        @media (hover: hover) {
+            &:hover {
+                background: color-mix(in srgb, var(--color-accent) 85%, white);
+            }
+        }
+        &:active {
+            background: color-mix(in srgb, var(--color-accent) 85%, black);
+            transition: none;
+        }
+    }
+
+
+    /* ── Total Band ──
+       Two-column grid: identity + amount. Sits below a borderDark separator
+       that visually divides the result from the configuration cards above. */
+    .total-band {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+        align-items: end;
+        border-top: 1px solid var(--color-border-dark);
+        padding: 18px 4px 0;
+    }
+
+    .total-band__identity {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .total-band__label {
+        font-family: var(--font-sans);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-muted);
+    }
+
+    .total-band__comparison {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--color-muted-soft);
+    }
+
+    .total-band__comparison-label {
+        font-family: var(--font-sans);
+        font-size: 14px;
+        color: var(--color-muted);
+    }
+
+    .total-band__subtitle {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--color-muted);
+        margin-top: 2px;
+    }
+
+    .total-band__amount {
+        font-family: var(--font-mono);
+        font-size: 36px;
+        font-weight: 600;
+        line-height: 1;
+        color: var(--color-text);
+        letter-spacing: -0.01em;
+        text-align: right;
+        white-space: nowrap;
+        align-self: end;
+    }
+
+    .disclaimer {
+        margin-top: 14px;
+    }
+
+
+    /* ── Tap Targets ──
+       WCAG 2.5.5 minimum tap target for tool-specific interactive elements.
+       The base controls (.input, .select, .pill) inherit 44px from their
+       declaration; piece-row elements need their own coverage. */
+    :is(.input, .add-piece, .piece-row__remove) {
+        min-height: 44px;
+    }
+    .piece-row__remove {
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+
+    /* ── Narrow Viewport ──
+       Stack the top controls grid and cap rate inputs at 2 columns. Pieces
+       row dims keep their grid; even at 375px three small dimension inputs
+       fit comfortably (~ 100px each with 8px gaps). */
+    @media (max-width: 480px) {
+        .controls-grid {
+            grid-template-columns: 1fr;
+        }
+        .adjustments-row.both {
+            grid-template-columns: 1fr 1fr;
+        }
+        .rate-inputs.columns-3 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+}
+
+
+/* Module-scope keyframe (animations don't inherit cascade scope) */
+@keyframes firing-calc-unit-hint-fade-in {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
