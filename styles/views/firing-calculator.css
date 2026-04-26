@@ -1,73 +1,121 @@
 /* Firing Calculator
    Layout and tool-specific styles scoped under .firing-calculator. Visual
-   primitives (typography, buttons, base inputs, cards) live in
-   styles/typography.css and styles/controls.css. */
+   primitives (typography labels, buttons, base inputs) live in
+   styles/typography.css and styles/controls.css. The orchestrator composes
+   naked sections on the page background, mirroring the shrinkage
+   calculator's pattern (cards reserved for results, not for inputs). */
 
 .firing-calculator {
 
     .container {
-        max-width: 720px;
+        max-width: 640px;
         margin: 0 auto;
     }
 
 
-    /* ── Card ──
-       Mirrors the shrinkage results-card visual treatment for cross-tool
-       consistency. Subtle border plus soft shadow reads as a lifted surface. */
-    .card {
-        background: var(--color-card);
-        border: 1px solid var(--color-border-subtle);
-        border-radius: 14px;
-        padding: 20px;
+    /* ── Section Spacing ──
+       20px vertical rhythm for top-level groups, matching shrinkage. The
+       outer .controls-section and .pieces-section cap the gap to whatever
+       follows; the .divider primitive (controls.css) handles the
+       configuration → result transition. */
+    :is(.controls-section, .pieces-section) {
         margin-bottom: 20px;
-        box-shadow: 0 4px 20px var(--color-border-subtle);
     }
 
 
-    /* ── Field Primitives ── */
-    .field {
+    /* ── Field Group ──
+       Label + input column, used for every labeled input/select in the
+       controls section. Mirrors shrinkage's .field-group (same role,
+       same vertical rhythm). The controls section bumps the gap to
+       10px (override below) so a tooltipped label doesn't crowd the
+       input or pill row underneath it. */
+    .field-group {
         display: flex;
         flex-direction: column;
         gap: 6px;
         min-width: 0;
     }
-
-    .field-label {
-        font-family: var(--font-sans);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--color-muted);
-        display: flex;
-        align-items: center;
-        line-height: 1.2;
+    .controls-section .field-group {
+        gap: 10px;
     }
 
-    /* Input visual (border + padding) is inherited from controls.css; this
-       rule narrows the font family to mono for numeric inputs and ensures
-       the suffix-aware right padding fits the firing calc's wider units
-       (e.g. "¢/in³" needs more room than the shrinkage calc's "%"). */
+
+    /* ── Three-Row Controls Layout ──
+       The controls section stacks three rows with 20px rhythm:
+         1. Billing + Rounding
+         2. Firings pills + Minimum Height
+         3. Firing Rates (with unit toggle inline) + rate inputs
+       Each pairing collapses to a single column when its right-side
+       field doesn't apply (weight basis hides Rounding and Min Height;
+       footprint basis hides Min Height). */
+
+    .billing-row,
+    .firings-row-wrap {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+        align-items: start;
+    }
+
+    .billing-row.paired {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Firings + Min Height: matched 1fr columns so Min Height's input
+       fills the same width as Rounding's select above it. */
+    .firings-row-wrap.paired {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── Section ──
+       Wrapper for the Firing Rates group (label + rate inputs). The
+       outer .controls-section margin handles bottom rhythm. */
+    .section {
+        margin-bottom: 0;
+    }
+
+    /* ── Label Row Alignment ──
+       Force every label-row in the controls section to a 24px box so
+       the inputs/pills below them sit on the same baseline whether
+       or not their label has an inline tooltip trigger (24px circle).
+       Without this, a tooltipped label is 24px tall and a plain label
+       is ~14px tall, misaligning paired fields by 10px. */
+    .controls-section :is(.label, .section-label) {
+        display: flex;
+        align-items: center;
+        min-height: 24px;
+        gap: 4px;
+    }
+
+    .section-label {
+        margin-bottom: 10px;
+    }
+
+    /* When the unit toggle inlines with a section header, push it to
+       the right edge and drop the toggle's standalone 44px tap-target
+       floor. The grouped inline buttons fall under WCAG 2.5.8 (Compact,
+       AAA), the same exception used for the piece-row chips. */
+    .section-label .unit-text-toggle {
+        margin-left: auto;
+    }
+    .section-label .unit-text {
+        min-height: 0;
+        padding: 4px 6px;
+    }
+
+
+    /* ── Numeric Input ──
+       Wrapper, suffix, and base input styles live in controls.css. The
+       firing calculator narrows the font to mono and widens the
+       suffix-side padding because its units ("¢/in³", "$/lb") need
+       more room than shrinkage's plain "%". */
     .input.numeric {
         font-family: var(--font-mono);
     }
 
     .input.with-suffix {
         padding-right: 56px;
-    }
-
-    .input-with-suffix {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .input-suffix {
-        position: absolute;
-        right: 12px;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        color: var(--color-muted-soft);
-        pointer-events: none;
-        line-height: 1;
     }
 
     /* Warning state on a numeric input: amber border + cream tint. Used by
@@ -78,45 +126,11 @@
     }
 
 
-    /* ── Top Controls Grid ──
-       Basis dropdown takes more horizontal weight than the Units pills row
-       since dropdown labels can be long ("Volume (L × W × H)"). */
-    .controls-grid {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr;
-        gap: 12px;
-        margin-bottom: 14px;
-        align-items: start;
-    }
-
-    .unit-pills {
-        display: flex;
-        gap: 4px;
-    }
-
-    /* Unit-change hint: a brief reminder shown when the user changes units
-       while pieces have data. Fades in over 200ms then dismisses after 4s
-       via the state-level timer. */
-    .unit-hint {
-        background: var(--color-accent);
-        color: var(--color-accent-text);
-        font-family: var(--font-sans);
-        font-size: 12px;
-        padding: 6px 10px;
-        border-radius: 6px;
-        margin-top: 8px;
-        display: inline-block;
-        animation: firing-calc-unit-hint-fade-in 0.2s ease-out;
-    }
-
-
     /* ── Pill ──
-       Sized to align with input row height (10px-equivalent vertical padding
-       gives 44px total with the 14px font). Same color/state conventions as
-       the shrinkage shape-pill but tuned for this tool's denser firings row.
-
-       Color cascade via custom properties so inline styles or future child
-       elements can reference the active color without re-declaring. */
+       Sized to align with input row height (10px-equivalent vertical
+       padding gives 44px total with the 14px font). Same color/state
+       conventions as the shrinkage shape-pill but tuned for this tool's
+       denser firings row. */
     .pill {
         --pill-border: var(--color-border);
         --pill-bg:     var(--color-card);
@@ -136,7 +150,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
+        gap: 6px;
         box-sizing: border-box;
         min-height: 44px;
         transition: background-color 0.12s, color 0.12s, border-color 0.12s;
@@ -177,27 +191,15 @@
 
 
     /* ── Firings Row ──
-       Two-container layout. The bundled chain pill is its own container; the
-       firings group (separator + ConnectedPill + Luster pill) is another. The
-       two containers wrap independently when the viewport narrows, keeping
-       the separator anchored to the firing pills it visually divides. */
-    .firings-label {
-        font-family: var(--font-sans);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--color-muted);
-        margin-top: 4px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-    }
-
+       Bundled chain pill on the left, separator, then the Bisque|Glaze
+       ConnectedPill and the Luster pill. Two containers wrap independently
+       on narrow viewports so the chain can break to its own line while
+       the firings group stays attached to the separator. */
     .firings-row {
         display: flex;
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
-        margin-bottom: 14px;
     }
 
     .firings-row__bundled {
@@ -223,70 +225,73 @@
 
     /* ── Rate Inputs ──
        Auto-shrink grid: columns-1 / columns-2 / columns-3 set the column
-       count to match the active firing count. The 480px breakpoint caps at
-       2 columns so individual fields stay readable on phones. */
+       count to match the active firing count. The 480px breakpoint caps
+       at 2 columns so individual fields stay readable on phones.
+       position: relative establishes a positioning context for the
+       leave-animation, which lifts removed cells out of flow with
+       position: absolute so the surviving cells can reflow to the new
+       column count. Without this, leaving cells would jump to viewport
+       coordinates instead of staying where they visually were. */
     .rate-inputs {
+        position: relative;
         display: grid;
-        gap: 12px;
+        gap: 10px;
 
         &.columns-1 { grid-template-columns: 1fr; }
         &.columns-2 { grid-template-columns: 1fr 1fr; }
         &.columns-3 { grid-template-columns: 1fr 1fr 1fr; }
     }
 
-    /* Ghost placeholder: shown when zero firings are active. Same vertical
-       footprint as a real rate row so toggling firings doesn't reflow the
-       card. The italic muted text reads as "this is what would go here." */
-    .input-with-suffix.ghost {
-        background: var(--color-bg);
-        border: 1px solid var(--color-border);
-        border-radius: 8px;
-        padding: 10px 12px;
-        min-height: 44px;
-        box-sizing: border-box;
-    }
-
-    .ghost-input {
-        font-family: var(--font-mono);
-        font-size: 16px;
+    /* Disabled rate slot: the firing is off but the slot still renders
+       so the row layout stays stable as the user toggles firings. The
+       saved rate value is preserved and reappears at full strength when
+       the firing is re-enabled. Definitive grey rather than translucent
+       so the slot reads as inactive, not clickable-but-faded. */
+    .rate-inputs .field-group.disabled .input-label,
+    .rate-inputs .field-group.disabled .input-suffix {
         color: var(--color-muted-soft);
-        font-style: italic;
-        flex: 1;
-        line-height: 1;
+    }
+    .rate-inputs .field-group.disabled .input {
+        background: var(--color-surface);
+        color: var(--color-muted-soft);
+        border-color: var(--color-border-dark);
+        cursor: not-allowed;
     }
 
+    /* Pulse on bundled toggle: each new rate input flashes accent fill
+       so the user notices the field that just appeared and likely
+       needs filling. Tuned warmer than shrinkage's pulse (22% accent
+       vs 12% transparent) because the firing calc's pulse fires only
+       on NEW elements (not survivors), and a single brief flash needs
+       to register on its own. Suppressed under reduced-motion. */
+    .rate-inputs .input.pulsing {
+        animation: firing-calc-rate-pulse 0.55s ease-out;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .rate-inputs .input.pulsing {
+            animation: none;
+        }
+    }
+    /* Hide the native number-input spinners when disabled. The arrows
+       can't be activated anyway (input is disabled), so they're pure
+       visual noise. */
+    .rate-inputs .field-group.disabled .input::-webkit-inner-spin-button,
+    .rate-inputs .field-group.disabled .input::-webkit-outer-spin-button {
+        appearance: none;
+        margin: 0;
+    }
+    .rate-inputs .field-group.disabled .input {
+        -moz-appearance: textfield;
+    }
+
+    /* Hint shown beneath the rate inputs when every slot is disabled. */
     .ghost-hint {
         font-family: var(--font-sans);
         font-size: 12px;
-        color: var(--color-muted-soft);
+        color: var(--color-muted);
         font-style: italic;
         margin-top: 6px;
-    }
-
-
-    /* ── Adjustments Row ──
-       Rounding takes more visual weight than Min Height (longer label,
-       longer dropdown options) so the 2:1 split when both are visible. The
-       narrow breakpoint stacks them 1:1 to give Min Height enough room for
-       its number input + unit suffix. */
-    .adjustments-row {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 12px;
-        margin-top: 14px;
-
-        &.both {
-            grid-template-columns: 2fr 1fr;
-        }
-    }
-
-
-    /* Object-comparison silhouettes inherit color from their container so the
-       parent's `color` style tints them (typically muted-soft for piece rows,
-       muted for the total band). flex-shrink: 0 keeps them from being
-       squeezed when their text label wraps in tight rows. */
-    .silhouette {
-        flex-shrink: 0;
+        display: inline-block;
     }
 
 
@@ -297,20 +302,37 @@
         gap: 10px;
     }
 
+    /* Each piece is its own white mini-card on the page background, like
+       a row of compact result cards. White on the page-bg beige clears
+       WCAG 1.4.11 with the 1px border doing the boundary work cleanly. */
     .piece-row {
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
+        background: var(--color-card);
+        border: 1px solid var(--color-border-subtle);
         border-radius: 10px;
         padding: 14px;
+        box-shadow: 0 1px 4px var(--color-border-subtle);
     }
 
-    /* Header line: badge · name · price+qty · X */
+    /* Header row: badge · Piece Dimensions label · meta cluster
+       (comparison + remove X) right-justified. The label sits naturally
+       between badge and meta. The .section-label margin-bottom is
+       overridden here because the header itself takes the spacing role. */
     .piece-row__header {
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 10px;
-        min-width: 0;
+        min-height: 24px;
+    }
+    .piece-row__header .section-label {
+        margin-bottom: 0;
+    }
+
+    .piece-row__header-meta {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
     .piece-row__badge {
@@ -319,61 +341,18 @@
         font-weight: 600;
         color: var(--color-muted);
         background: var(--color-bg);
-        padding: 2px 7px;
+        padding: 2px 8px;
         border-radius: 4px;
-        min-width: 24px;
-        text-align: center;
-        flex-shrink: 0;
-    }
-
-    .piece-row__name-input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        padding: 0;
-        outline: none;
-        font-family: var(--font-sans);
-        font-size: 16px;        /* iOS no-zoom floor */
-        font-weight: 600;
-        color: var(--color-text);
-        min-width: 0;
-
-        &::placeholder {
-            color: var(--color-muted-soft);
-            font-weight: 400;
-        }
-    }
-
-    .piece-row__subtitle {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        color: var(--color-muted);
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .piece-row__price {
-        color: var(--color-text);
-        font-weight: 600;
-
-        &.zero {
-            color: var(--color-muted-soft);
-            font-weight: 400;
-        }
-    }
-
-    .piece-row__quantity {
-        color: var(--color-muted);
+        line-height: 1.4;
     }
 
     .piece-row__remove {
         background: transparent;
         border: none;
-        color: var(--color-muted-soft);
+        color: var(--color-muted);
         cursor: pointer;
         padding: 4px;
         line-height: 0;
-        flex-shrink: 0;
         border-radius: 6px;
         transition: color 0.12s, background-color 0.12s;
 
@@ -389,11 +368,37 @@
         }
     }
 
+    /* Price label and price-block (price + " · qty unit") share styling.
+       The price block keeps the parts inline, in mono, so they read as
+       one number rather than two. Zero reads as muted to keep it from
+       competing with real numbers in a list of cards. */
+    .piece-row__price-block {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .piece-row__price {
+        color: var(--color-accent);
+        font-weight: 600;
+
+        &.zero {
+            color: var(--color-muted);
+            font-weight: 400;
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+    }
+
+    .piece-row__quantity {
+        color: var(--color-muted);
+    }
+
     /* Dimension grid: 2-col for footprint, 3-col for volume. Inputs share
        full row width to keep input target sizes generous. */
     .piece-row__dimensions {
         display: grid;
-        gap: 8px;
+        gap: 10px;
 
         &.columns-2 { grid-template-columns: 1fr 1fr; }
         &.columns-3 { grid-template-columns: 1fr 1fr 1fr; }
@@ -403,59 +408,80 @@
         max-width: 220px;
     }
 
-    /* Comparison silhouette + label, inline below dimensions */
+    /* Object-comparison silhouettes inherit color from their container so
+       the parent's `color` style tints them. flex-shrink: 0 keeps them from
+       being squeezed when their text label wraps in tight rows. */
+    .silhouette {
+        flex-shrink: 0;
+    }
+
+    /* Comparison silhouette + label, inline. Lives inside the include
+       row's right-justified meta cluster (alongside the price). Uses
+       --color-muted to clear WCAG 1.4.11 non-text contrast against
+       the white card surface. */
     .piece-row__comparison {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 8px;
-        margin-top: 10px;
-        color: var(--color-muted-soft);
+        gap: 6px;
+        color: var(--color-muted);
     }
 
     .piece-row__comparison-label {
         font-family: var(--font-sans);
-        font-size: 13px;
+        font-size: 12px;
         color: var(--color-muted);
     }
 
-    /* Inline warning explainer for sub-minimum height. Repeats the H input's
-       title-attribute hint in always-visible form so mobile users (no hover)
-       see the bill-up reasoning. */
+    /* Inline warning explainer for sub-minimum height. Repeats the H
+       input's title-attribute hint in always-visible form so mobile users
+       (no hover) see the bill-up reasoning. */
     .piece-row__warning {
         margin-top: 8px;
-        padding: 8px 10px;
-        background: var(--color-warn-bg);
-        border: 1px solid var(--color-warn-border);
+        padding: 8px 12px;
+        background: var(--color-warning-bg);
         border-radius: 8px;
         font-family: var(--font-sans);
-        font-size: 12px;
-        color: var(--color-text);
+        font-size: 13px;
+        color: var(--color-warning-text);
         line-height: 1.4;
     }
 
-    /* Include label + chip row, inline */
+    /* Include row: chips on the left, comparison + price right-justified.
+       margin-left: auto on the meta cluster pushes it to the right edge.
+       flex-wrap allows the meta cluster to drop to its own line on
+       narrow viewports so the chips stay one row. */
     .piece-row__include {
         margin-top: 12px;
+        display: flex;
+        gap: 10px 12px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .piece-row__include-chips {
         display: flex;
         gap: 6px;
         flex-wrap: wrap;
         align-items: center;
     }
 
-    .piece-row__include-label {
-        font-family: var(--font-sans);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--color-muted);
-        line-height: 1.2;
+    .piece-row__include-meta {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: nowrap;
     }
 
-
     /* ── Chip ──
-       Smaller than the controls Pill. Inactive uses font-weight 400 (suite
-       convention; the prototype's 500 is not portable across Segoe UI on
-       Windows). Disabled chips hold their underlying coloring at 50%
-       opacity so the user can read which firing the piece is logically on. */
+       Smaller than the controls Pill (~26px tall) so chip clusters
+       inside piece rows stay visually quiet. This intentionally falls
+       below WCAG 2.5.5's 44px tap target. The chips function as inline
+       grouped controls per WCAG 2.5.8 (Compact, AAA) where 24px is
+       acceptable. Inactive uses font-weight 400 because the suite
+       forbids 500 (Segoe UI on Windows renders 500 inconsistently).
+       Disabled chips dim to signal "studio doesn't bill for this
+       firing". */
     .chip {
         --chip-border: var(--color-border);
         --chip-bg:     var(--color-card);
@@ -486,7 +512,9 @@
 
         &.disabled {
             cursor: not-allowed;
-            opacity: 0.5;
+            --chip-border: var(--color-border-dark);
+            --chip-bg:     var(--color-surface);
+            --chip-color:  var(--color-muted-soft);
         }
 
         @media (hover: hover) {
@@ -514,30 +542,30 @@
 
 
     /* ── Add Piece ──
-       Bottom-right of the pieces card. Accent-filled, icon + text, tight
-       padding. Distinct from Pill (which is row-aligned with inputs) since
-       this button is appended below the list rather than inline. */
+       Bottom-right of the pieces stack, accent-filled, icon + text. */
     .pieces-add-row {
         display: flex;
         justify-content: flex-end;
         margin-top: 14px;
     }
 
+    /* Add Piece is an end-of-list secondary action, not the primary
+       control flow, so it sits at chip-scale (~32px) rather than the
+       44px floor reserved for input rows and pills. */
     .add-piece {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         background: var(--color-accent);
         color: var(--color-accent-text);
         border: none;
-        padding: 9px 14px;
-        border-radius: 8px;
+        padding: 7px 12px;
+        border-radius: 7px;
         font-family: var(--font-sans);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
         line-height: 1;
-        min-height: 44px;
         transition: background-color 0.12s;
 
         @media (hover: hover) {
@@ -553,15 +581,16 @@
 
 
     /* ── Total Band ──
-       Two-column grid: identity + amount. Sits below a borderDark separator
-       that visually divides the result from the configuration cards above. */
+       Sits directly on the page background after the .divider that the
+       orchestrator places between Pieces and Total. The divider does the
+       work of separating the result from the configuration; the band
+       itself has no border or framing. */
     .total-band {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 20px;
         align-items: end;
-        border-top: 1px solid var(--color-border-dark);
-        padding: 18px 4px 0;
+        padding: 0;
     }
 
     .total-band__identity {
@@ -571,20 +600,24 @@
         min-width: 0;
     }
 
+    /* The Total heading reuses the .results-header treatment from
+       shrinkage's typographic vocabulary: uppercase 11px accent color. */
     .total-band__label {
         font-family: var(--font-sans);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--color-muted);
+        color: var(--color-accent);
+        margin: 0;
+        line-height: 1.2;
     }
 
     .total-band__comparison {
         display: flex;
         align-items: center;
         gap: 10px;
-        color: var(--color-muted-soft);
+        color: var(--color-muted);
     }
 
     .total-band__comparison-label {
@@ -605,8 +638,7 @@
         font-size: 36px;
         font-weight: 600;
         line-height: 1;
-        color: var(--color-text);
-        letter-spacing: -0.01em;
+        color: var(--color-accent);
         text-align: right;
         white-space: nowrap;
         align-self: end;
@@ -618,10 +650,12 @@
 
 
     /* ── Tap Targets ──
-       WCAG 2.5.5 minimum tap target for tool-specific interactive elements.
-       The base controls (.input, .select, .pill) inherit 44px from their
-       declaration; piece-row elements need their own coverage. */
-    :is(.input, .add-piece, .piece-row__remove) {
+       The shared .input and .select from controls.css declare their own
+       44px floor; .pill, .chip, and .connected-pill__half declare theirs
+       in their own scopes. This rule covers the remaining tool-specific
+       buttons. .add-piece is a secondary action and sets its own size
+       in its own block. */
+    :is(.input, .piece-row__remove) {
         min-height: 44px;
     }
     .piece-row__remove {
@@ -633,15 +667,20 @@
 
 
     /* ── Narrow Viewport ──
-       Stack the top controls grid and cap rate inputs at 2 columns. Pieces
-       row dims keep their grid; even at 375px three small dimension inputs
-       fit comfortably (~ 100px each with 8px gaps). */
-    @media (max-width: 480px) {
-        .controls-grid {
+       The firings row collapses earlier than the billing row because the
+       firings pills are fixed-width and would wrap inside their cell
+       before the row gets narrow enough to drop a select. Below 600px
+       Min Height wraps to its own line so pills keep one row.
+       Below 480px the Billing/Rounding row also collapses, and the rate
+       grid caps at 2 columns. */
+    @media (max-width: 600px) {
+        .firings-row-wrap.paired {
             grid-template-columns: 1fr;
         }
-        .adjustments-row.both {
-            grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 480px) {
+        .billing-row.paired {
+            grid-template-columns: 1fr;
         }
         .rate-inputs.columns-3 {
             grid-template-columns: 1fr 1fr;
@@ -651,7 +690,7 @@
 
 
 /* Module-scope keyframe (animations don't inherit cascade scope) */
-@keyframes firing-calc-unit-hint-fade-in {
-    from { opacity: 0; transform: translateY(-2px); }
-    to   { opacity: 1; transform: translateY(0); }
+@keyframes firing-calc-rate-pulse {
+    0%   { background-color: color-mix(in srgb, var(--color-accent) 22%, white); }
+    100% { background-color: var(--color-card); }
 }

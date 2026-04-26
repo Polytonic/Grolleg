@@ -202,14 +202,11 @@ const SILHOUETTES: Record<SilhouetteKey, (size: number) => m.Vnode> = {
 
 
 /* ── Component ──
-   Renders the named silhouette at the given pixel size. Inherits color from
-   the surrounding element via currentColor, so the parent's `color` style
-   tints the silhouette (typically var(--color-muted-soft) for the inline
-   piece-row use, or var(--color-muted) for the larger total-band use). */
+   Renders the named silhouette at the given pixel size. Inherits color
+   from the surrounding element via currentColor so the parent's `color`
+   style tints the silhouette. */
 
 export const Silhouette: m.Component<{ type: SilhouetteKey; size?: number }> = {
-    view: ({ attrs: { type, size = 22 } }) => {
-        const factory = SILHOUETTES[type];
-        return factory ? factory(size) : null;
-    },
+    view: ({ attrs: { type, size = 22 } }) =>
+        SILHOUETTES[type](size),
 };

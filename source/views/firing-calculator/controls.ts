@@ -1,19 +1,33 @@
 import m from "mithril";
 import { Tooltip } from "../../components/tooltip";
 import { ConnectedPill } from "../../components/connected-pill";
+import { UnitToggle } from "../../components/unit-toggle";
+import { InputWithSuffix } from "../../components/input-with-suffix";
 import {
     state, BASIS_META, ROUNDING_OPTIONS, toDisplayRate,
     handleBasisChange, handleRoundingChange, handleMinHeightInput,
     handleFiringRateInput, handleBundledRateInput,
     toggleFiring, toggleBundled,
 } from "./state";
-import type { Derived, FiringKey } from "./state";
+import type { Derived } from "./state";
+
+
+/* Aria-label expansion for every unit string the calculator can show.
+   Falls back to the raw unit if a key isn't listed. */
+const UNIT_ARIA_LABELS: Record<string, string> = {
+    mm: "millimeters",
+    cm: "centimeters",
+    in: "inches",
+    g:  "grams",
+    kg: "kilograms",
+    oz: "ounces",
+    lb: "pounds",
+};
 
 
 /* ── Local Icon ──
-   Lucide link icon, transcribed for Mithril. Chain glyph signals the
-   Bundled state without text — the icon alone is enough to read as
-   "different class" from the firing pills next to it. */
+   The chain glyph signals the Bundled state without text. The icon
+   alone reads as a different class from the firing pills next to it. */
 
 const chainLinkIcon = (size: number = 16): m.Vnode =>
     m("svg", {
@@ -28,16 +42,15 @@ const chainLinkIcon = (size: number = 16): m.Vnode =>
 
 
 /* ── Local Pill Primitive ──
-   The firing-calculator pill is sized to align vertically with input rows
-   (10px-equivalent vertical padding, 14px font). The shrinkage calc's
-   `.shape-pill` has different sizing (8px / 13px) for its denser layout, so
-   this is intentionally separate styling. Both follow the same color and
-   interaction-state conventions. */
+   Sized to align vertically with input rows. Shares the suite's
+   color-state vocabulary (hover lightens 15% toward accent, press
+   darkens 15% toward black) without inheriting the shrinkage
+   `.shape-pill`'s sizing, which targets a denser layout. */
 
 interface PillAttrs {
     active: boolean;
     onclick: () => void;
-    flex?: boolean;                  // grow to share row width with siblings
+    flex?: boolean;
     ariaLabel?: string;
     title?: string;
 }
@@ -47,7 +60,7 @@ const Pill: m.Component<PillAttrs> = {
         m(`button.pill${attrs.active ? ".active" : ""}${attrs.flex ? ".flex" : ""}`,
             {
                 type: "button",
-                "aria-pressed": attrs.active,
+                "aria-pressed": attrs.active ? "true" : "false",
                 "aria-label": attrs.ariaLabel,
                 title: attrs.title,
                 onclick: attrs.onclick,
@@ -57,12 +70,18 @@ const Pill: m.Component<PillAttrs> = {
 };
 
 
-/* ── Top Fields ── */
+/* ── Row 1: Billing + Rounding ──
+   Billing (volume / footprint / weight) sits at the top. Rounding
+   shares the row as a 2-column grid when it applies (volume and
+   footprint bases); weight basis collapses to a single column. The
+   selects use the bare `.select` class because chaining `.input.select`
+   lets `.input`'s background shorthand wipe the chevron's
+   background-image. */
 
 const BasisField: m.Component = {
-    view: () => m(".field",
-        m("label.field-label", { for: "basis-select" }, "Pricing Basis"),
-        m("select.input.select#basis-select",
+    view: () => m(".field-group",
+        m("label.label", { for: "basis-select" }, "Measurement Method"),
+        m("select.select#basis-select",
             {
                 value: state.basis,
                 onchange: handleBasisChange,
@@ -74,42 +93,40 @@ const BasisField: m.Component = {
     ),
 };
 
-const UnitsField: m.Component<{ derived: Derived }> = {
-    view: ({ attrs: { derived } }) => m(".field",
-        m("span.field-label", "Units"),
-        m(".unit-pills",
-            derived.activeUnitSet.map((unit) =>
-                m(Pill, {
-                    key: unit,
-                    active: derived.activeUnit === unit,
-                    onclick: () => derived.setActiveUnit(unit),
-                    flex: true,
-                    ariaLabel: `Set units to ${unit}`,
-                }, unit),
+const RoundingField: m.Component = {
+    view: () => m(".field-group",
+        m("label.label", { for: "rounding-select" },
+            m("span", "Rounding Method"),
+            m(Tooltip, {
+                label: "rounding",
+                text: 'How dimensions are rounded before billing. For a 4.2 × 5.7 × 3.1 piece (74.2 in³ exact): Each Dimension rounds up L, W, H independently to 5 × 6 × 4 = 120 in³, matching the measuring-box convention. Total rounds up the final volume to 75 in³. Nearest Whole rounds without preference to 74 in³. Don\'t Round uses exact decimals.',
+            }),
+        ),
+        m("select.select#rounding-select",
+            {
+                value: state.rounding,
+                onchange: handleRoundingChange,
+            },
+            ROUNDING_OPTIONS.map((option) =>
+                m("option", { key: option.key, value: option.key }, option.label),
             ),
         ),
-        state.unitHintVisible && m(".unit-hint", { role: "status", "aria-live": "polite" },
-            "Changing units does not convert existing values.",
+    ),
+};
+
+const BillingRow: m.Component<{ derived: Derived }> = {
+    view: ({ attrs: { derived } }) =>
+        m(`.billing-row${derived.showRounding ? ".paired" : ""}`,
+            m(BasisField),
+            derived.showRounding && m(RoundingField),
         ),
-    ),
 };
 
 
-/* ── Firings Row ──
-   Bundled chain meta-pill on the left, then a separator, then the
-   Bisque|Glaze ConnectedPill and the Luster pill. Two containers wrap
-   independently — the chain can break to its own line on narrow viewports
-   while the firings group stays attached to the separator. */
-
-const FiringsLabel: m.Component = {
-    view: () => m(".firings-label",
-        m("span", "Firings"),
-        m(Tooltip, {
-            label: "firings",
-            text: "Which firings to charge for. Tap the chain icon to bundle bisque and glaze under one shared rate (common at studios that don't track them separately). Tap a firing to enable or disable it. Each piece can declare which firings it goes through, so pieces that skip a firing aren't charged for it.",
-        }),
-    ),
-};
+/* ── Row 2: Firings + Minimum Height ──
+   The firings pill row (chain + Bisque|Glaze + Luster) sits on the
+   left. Minimum Height pairs to the right when volume basis applies;
+   for footprint and weight the firings row takes the full width. */
 
 const FiringsRow: m.Component = {
     view: () => m(".firings-row",
@@ -117,7 +134,7 @@ const FiringsRow: m.Component = {
             m(Pill, {
                 active: state.bundled,
                 onclick: toggleBundled,
-                ariaLabel: "Bundled (share one rate for bisque and glaze)",
+                ariaLabel: "Bundle bisque and glaze rates",
                 title: "Bundled",
             }, chainLinkIcon(16)),
         ),
@@ -140,163 +157,278 @@ const FiringsRow: m.Component = {
     ),
 };
 
+// Uses a `<span>` rather than a `<label>` because the field has no
+// single input to associate with. The role="group" + aria-label on
+// the .field-group handles the labelling for assistive tech.
+const FiringsField: m.Component = {
+    view: () => m(".field-group", { role: "group", "aria-label": "Firing Types" },
+        m("span.label",
+            m("span", "Firing Types"),
+            m(Tooltip, {
+                label: "firings",
+                text: "Which firings to charge for. The chain icon bundles bisque and glaze under one shared rate, common at studios that don't track them separately. Toggle a firing to enable or disable it. Each piece can also opt out of any firing it skips.",
+            }),
+        ),
+        m(FiringsRow),
+    ),
+};
 
-/* ── Rate Inputs ──
-   Renders one column per active firing. When bundled is on and either
-   bisque or glaze is on, they collapse into a single Bundled Rate field
-   (pair-toggle keeps them in lockstep so they're always either both on or
-   both off in bundled mode). When zero firings are active, a ghost
-   placeholder occupies the same vertical footprint to prevent reflow when
-   toggling. */
+const MinHeightField: m.Component = {
+    view: () => m(".field-group",
+        m("label.label", { for: "min-height-input" },
+            m("span", "Minimum Height"),
+            m(Tooltip, {
+                label: "minimum height",
+                text: "Some studios bill short pieces at a minimum height to reflect the kiln-shelf interval consumed. A piece below the minimum is charged as if it were that tall. Set to 0 to disable.",
+            }),
+        ),
+        m(InputWithSuffix, {
+            suffix: state.dimensionUnit,
+            inputClass: "numeric",
+            id: "min-height-input",
+            type: "number",
+            inputmode: "decimal",
+            step: "0.5",
+            min: "0",
+            value: state.minHeight,
+            oninput: handleMinHeightInput,
+        }),
+    ),
+};
+
+const FiringsAndHeightRow: m.Component<{ derived: Derived }> = {
+    view: ({ attrs: { derived } }) =>
+        m(`.firings-row-wrap${derived.showMinHeight ? ".paired" : ""}`,
+            m(FiringsField),
+            derived.showMinHeight && m(MinHeightField),
+        ),
+};
+
+
+/* ── Row 3: Firing Rates ──
+   Section-labeled group containing the rate inputs. Slot count is
+   stable for a given bundled state (2 if bundled, 3 if not), so toggling
+   an individual firing dims its slot rather than reflowing the row.
+   The unit toggle inlines with the section label because units determine
+   the rate suffix (¢/in³ vs $/lb) and the dimension-input placeholders
+   on each piece. The unit-change hint sits between the label row and
+   the inputs when active. */
 
 interface RateField {
     key: string;
     label: string;
-    value: number;
+    value: string;
+    placeholder: string;
     onInput: (event: Event) => void;
+    disabled: boolean;
 }
 
-const RateInputs: m.Component<{ derived: Derived }> = {
-    view: ({ attrs: { derived } }) => {
-        const fields: RateField[] = [];
+// Cap a rate display value at 2 decimals and strip both trailing zeros
+// and floating-point artifacts. The cents conversion (× 100) introduces
+// noise like 0.035 → 3.5000000000000004, which would otherwise render
+// in the input as a ten-digit string. Examples:
+//   3.5000000000000004 → "3.5"
+//   3.25               → "3.25"
+//   8                  → "8"
+const formatRateNumber = (value: number): string =>
+    Number(value.toFixed(2)).toString();
 
-        if (state.bundled) {
-            if (state.firingToggles.bisque || state.firingToggles.glaze) {
-                fields.push({
-                    key: "bundled",
-                    label: "Bundled Rate",
-                    value: toDisplayRate(state.bundledRate, state.basis),
-                    onInput: handleBundledRateInput,
+// Stored 0 is rendered as an empty string so the input shows its
+// placeholder rather than a literal "0" — the placeholder reads as
+// "we'd suggest 4 here," whereas "0" reads as "you've entered zero."
+const formatRateValue = (stored: number, basis: string): string =>
+    stored === 0 ? "" : formatRateNumber(toDisplayRate(stored, basis as never));
+
+// Placeholder text shows the BASIS_META default for that firing in the
+// active basis' display unit (cents for volume/footprint, dollars for
+// weight).
+const formatPlaceholder = (defaultDollars: number, basis: string): string =>
+    formatRateNumber(toDisplayRate(defaultDollars, basis as never));
+
+const collectRateFields = (basis: string): RateField[] => {
+    const defaults = BASIS_META[basis as never] as { defaults: typeof state.firingRates };
+    const fields: RateField[] = [];
+    if (state.bundled) {
+        // Bundled rate is shared between bisque and glaze. The slot
+        // stays active as long as either firing is on. Placeholder uses
+        // the bisque default since most studios price bundled near bisque.
+        fields.push({
+            key: "bundled",
+            label: "Bundled",
+            value: formatRateValue(state.bundledRate, basis),
+            placeholder: formatPlaceholder(defaults.defaults.bisque, basis),
+            onInput: handleBundledRateInput,
+            disabled: !state.firingToggles.bisque && !state.firingToggles.glaze,
+        });
+    } else {
+        (["bisque", "glaze"] as const).forEach((key) => {
+            fields.push({
+                key,
+                label: key === "bisque" ? "Bisque" : "Glaze",
+                value: formatRateValue(state.firingRates[key], basis),
+                placeholder: formatPlaceholder(defaults.defaults[key], basis),
+                onInput: (event: Event) => handleFiringRateInput(key, event),
+                disabled: !state.firingToggles[key],
+            });
+        });
+    }
+    fields.push({
+        key: "luster",
+        label: "Luster",
+        value: formatRateValue(state.firingRates.luster, basis),
+        placeholder: formatPlaceholder(defaults.defaults.luster, basis),
+        onInput: (event: Event) => handleFiringRateInput("luster", event),
+        disabled: !state.firingToggles.luster,
+    });
+    return fields;
+};
+
+/* ── Rate Inputs (FLIP-animated) ──
+   Bundled toggle reshapes the row from 2 columns (Bundled, Luster) to
+   3 columns (Bisque, Glaze, Luster) and back. Without animation the
+   inputs pop in and out, which reads as a layout glitch. This component
+   uses FLIP (First, Last, Invert, Play) for the layout transition:
+     1. Before each redraw, snapshot every rendered cell's bounding box.
+     2. Let Mithril update the DOM into its new layout.
+     3. For each cell that survived, compute the (old − new) delta and
+        snap it back to its old position with `transform`, then in the
+        next frame transition the transform to identity. The cell
+        slides smoothly to its new home.
+     4. Cells that are leaving (Mithril's onbeforeremove) lift to
+        absolute positioning so the surrounding grid can collapse around
+        them, then fade out before the DOM removal completes. The
+        `.rate-inputs` wrapper has `position: relative` so the absolute
+        children stay in their visual position rather than jumping to
+        viewport coordinates.
+   The pulse animation on the rate inputs themselves is driven separately
+   by InputWithSuffix's `pulseKey` prop (state.bundlePulseKey), so new
+   and surviving bisque/glaze/bundled inputs flash on every toggle.
+   Luster never receives the prop and stays calm.
+   Honors prefers-reduced-motion: the snapshot/play logic is skipped
+   entirely under that media query (see CSS). */
+
+const PREFERS_REDUCED_MOTION =
+    typeof window !== "undefined"
+        && window.matchMedia
+        && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+interface RateInputsState {
+    snapshot: Map<string, DOMRect> | null;
+}
+
+const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInputsState> = {
+    onbeforeupdate(vnode) {
+        const dom = (vnode as m.VnodeDOM<{ derived: Derived; fields: RateField[] }, RateInputsState>).dom;
+        if (PREFERS_REDUCED_MOTION || !dom) return true;
+        const snapshot = new Map<string, DOMRect>();
+        for (const child of Array.from(dom.children) as HTMLElement[]) {
+            const key = child.dataset.flipKey;
+            if (key) snapshot.set(key, child.getBoundingClientRect());
+        }
+        vnode.state.snapshot = snapshot;
+        return true;
+    },
+    onupdate(vnode) {
+        const snapshot = vnode.state.snapshot;
+        vnode.state.snapshot = null;
+        if (!snapshot || PREFERS_REDUCED_MOTION) return;
+        for (const child of Array.from(vnode.dom.children) as HTMLElement[]) {
+            const key = child.dataset.flipKey;
+            if (!key) continue;
+            const previous = snapshot.get(key);
+            const current = child.getBoundingClientRect();
+            if (previous) {
+                const dx = previous.left - current.left;
+                const dy = previous.top - current.top;
+                if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+                child.style.transition = "none";
+                child.style.transform = `translate(${dx}px, ${dy}px)`;
+                requestAnimationFrame(() => {
+                    child.style.transition = "transform 0.25s ease-out";
+                    child.style.transform = "";
                 });
             }
-        } else {
-            (["bisque", "glaze"] as FiringKey[]).forEach((key) => {
-                if (!state.firingToggles[key]) return;
-                fields.push({
-                    key,
-                    label: `${key === "bisque" ? "Bisque" : "Glaze"} Rate`,
-                    value: toDisplayRate(state.firingRates[key], state.basis),
-                    onInput: (event: Event) => handleFiringRateInput(key, event),
-                });
-            });
+            // New cells need no special treatment here. Their pulse fires
+            // via InputWithSuffix's oncreate hook (gated on pulseKey > 0).
         }
-        if (state.firingToggles.luster) {
-            fields.push({
-                key: "luster",
-                label: "Luster Rate",
-                value: toDisplayRate(state.firingRates.luster, state.basis),
-                onInput: (event: Event) => handleFiringRateInput("luster", event),
-            });
-        }
-
-        if (fields.length === 0) {
-            return m(GhostRate, { derived });
-        }
-
-        // Column count matches field count, capped at 2 on narrow viewports
-        // (CSS handles the cap via @media; columns="N" attribute is read by
-        // CSS-only logic that constrains beyond a breakpoint).
-        return m(`.rate-inputs.cols-${fields.length}`,
-            fields.map((field) => m(".field", { key: field.key },
-                m("label.field-label", { for: `rate-${field.key}` }, field.label),
-                m(".input-with-suffix",
-                    m("input.input.numeric.with-suffix", {
-                        id: `rate-${field.key}`,
-                        type: "number",
-                        inputmode: "decimal",
-                        step: derived.rateStep,
-                        min: "0",
-                        value: field.value,
-                        oninput: field.onInput,
-                    }),
-                    m("span.input-suffix", derived.rateUnit),
-                ),
+    },
+    view: ({ attrs: { derived, fields } }) =>
+        m(`.rate-inputs.columns-${fields.length}`,
+            fields.map((field) => m(`.field-group${field.disabled ? ".disabled" : ""}`, {
+                key: field.key,
+                "data-flip-key": field.key,
+                onbeforeremove(removingVnode: m.VnodeDOM) {
+                    if (PREFERS_REDUCED_MOTION) return;
+                    const element = removingVnode.dom as HTMLElement;
+                    const parent = element.parentElement;
+                    if (!parent) return;
+                    const rect = element.getBoundingClientRect();
+                    const parentRect = parent.getBoundingClientRect();
+                    // Lift out of flow so the surviving cells can reflow
+                    // to the new column count without waiting for fade-out.
+                    element.style.position = "absolute";
+                    element.style.left = `${rect.left - parentRect.left}px`;
+                    element.style.top = `${rect.top - parentRect.top}px`;
+                    element.style.width = `${rect.width}px`;
+                    element.style.transition = "opacity 0.2s ease-out";
+                    return new Promise<void>((resolve) => {
+                        requestAnimationFrame(() => {
+                            element.style.opacity = "0";
+                            setTimeout(resolve, 200);
+                        });
+                    });
+                },
+            },
+                m("label.input-label", { for: `rate-${field.key}` }, field.label),
+                m(InputWithSuffix, {
+                    suffix: derived.rateUnit,
+                    inputClass: "numeric",
+                    // Luster is unaffected by the bundled toggle, so it
+                    // doesn't get a pulseKey and never pulses on toggle.
+                    pulseKey: field.key === "luster" ? undefined : state.bundlePulseKey,
+                    id: `rate-${field.key}`,
+                    type: "number",
+                    inputmode: "decimal",
+                    step: derived.rateStep,
+                    min: "0",
+                    placeholder: field.placeholder,
+                    value: field.value,
+                    oninput: field.onInput,
+                    disabled: field.disabled,
+                }),
             )),
-        );
-    },
-};
-
-// Read-only ghost placeholder shown when no firings are active. Visually
-// matches a real rate input (same label, same input shape, same vertical
-// rhythm) so the card doesn't reflow when toggling from one firing to none.
-const GhostRate: m.Component<{ derived: Derived }> = {
-    view: ({ attrs: { derived } }) => m(".field",
-        m("span.field-label", "Firing Rate"),
-        m(".input-with-suffix.ghost",
-            m("span.ghost-input", `e.g. ${derived.ghostSampleDisplay}`),
-            m("span.input-suffix", derived.rateUnit),
         ),
-        m("span.ghost-hint", "Toggle a firing above to set rates."),
-    ),
 };
 
-
-/* ── Adjustments Row ──
-   Rounding (visible for volume + footprint) and Minimum Height (visible
-   for volume only). Hidden entirely when basis = weight since neither
-   modifier applies to a per-pound charge. */
-
-const AdjustmentsRow: m.Component<{ derived: Derived }> = {
+const FiringRatesSection: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
-        if (!derived.showRounding && !derived.showMinHeight) return null;
-        const cls = derived.showRounding && derived.showMinHeight
-            ? "adjustments-row both"
-            : "adjustments-row";
-        return m(`.${cls}`,
-            derived.showRounding && m(".field",
-                m("label.field-label", { for: "rounding-select" },
-                    m("span", "Rounding"),
-                    m(Tooltip, {
-                        label: "rounding",
-                        text: 'How dimensions are rounded before billing. "Round up each measurement" matches the measuring-box convention by ceiling each L, W, and H independently. "Round up the total" rounds the final volume after multiplication. "Round to the nearest whole" rounds without preference. "Don\'t round" uses exact decimals.',
-                    }),
-                ),
-                m("select.input.select#rounding-select",
-                    {
-                        value: state.rounding,
-                        onchange: handleRoundingChange,
-                    },
-                    ROUNDING_OPTIONS.map((option) =>
-                        m("option", { key: option.key, value: option.key }, option.label),
-                    ),
-                ),
+        const fields = collectRateFields(state.basis);
+        const allDisabled = fields.every((field) => field.disabled);
+        return m(".section", { role: "group", "aria-label": "Firing rates" },
+            m(".section-label",
+                m("span", "Firing Rates"),
+                m(UnitToggle, {
+                    units: derived.activeUnitSet,
+                    active: derived.activeUnit,
+                    onSelect: (unit) => derived.setActiveUnit(unit as never),
+                    ariaLabels: UNIT_ARIA_LABELS,
+                }),
             ),
-            derived.showMinHeight && m(".field",
-                m("label.field-label", { for: "min-height-input" },
-                    m("span", "Minimum Height"),
-                    m(Tooltip, {
-                        label: "minimum height",
-                        text: "Some studios bill short pieces at a minimum height to reflect the kiln-shelf interval consumed. A 1″ piece at a 2″ minimum is charged as if it were 2″ tall. Set to 0 to disable.",
-                    }),
-                ),
-                m(".input-with-suffix",
-                    m("input.input.numeric.with-suffix#min-height-input", {
-                        type: "number",
-                        inputmode: "decimal",
-                        step: "0.5",
-                        min: "0",
-                        value: state.minHeight,
-                        oninput: handleMinHeightInput,
-                    }),
-                    m("span.input-suffix", state.dimensionUnit),
-                ),
-            ),
+            m(RateInputs, { derived, fields }),
+            allDisabled && m("span.ghost-hint", "Turn on a firing above to set rates."),
         );
     },
 };
 
 
-/* ── Card Export ── */
+/* ── Section Export ──
+   No wrapping card. Three rows: billing+rounding, firings+min-height,
+   firing-rates. */
 
-export const ControlsCard: m.Component<{ derived: Derived }> = {
-    view: ({ attrs: { derived } }) => m("section.card",
-        m(".controls-grid",
-            m(BasisField),
-            m(UnitsField, { derived }),
-        ),
-        m(FiringsLabel),
-        m(FiringsRow),
-        m(RateInputs, { derived }),
-        m(AdjustmentsRow, { derived }),
+export const ControlsSection: m.Component<{ derived: Derived }> = {
+    view: ({ attrs: { derived } }) => m(".controls-section",
+        m(BillingRow, { derived }),
+        m(FiringsAndHeightRow, { derived }),
+        m(FiringRatesSection, { derived }),
     ),
 };

@@ -1,5 +1,6 @@
 import m from "mithril";
 import { Tooltip } from "../../components/tooltip";
+import { UnitToggle } from "../../components/unit-toggle";
 import {
     state, SHAPE_MODES,
     handleShapeChange, handleDirectionChange, handleUnitChange,
@@ -17,8 +18,13 @@ export const ClayControls: m.Component<{ derived: Derived }> = {
             m(DirectionSection),
         ),
         m("span.section-title",
-            `Enter ${state.direction === "fired-to-wet" ? "fired" : "wet"} dimensions`,
-            m(UnitToggle),
+            `${state.direction === "fired-to-wet" ? "Fired" : "Wet"} Dimensions`,
+            m(UnitToggle, {
+                units: UNITS,
+                active: state.unit,
+                onSelect: (unit) => handleUnitChange(unit as Unit),
+                ariaLabels: UNIT_ARIA_LABELS,
+            }),
         ),
         m(".dimensions-row",
             derived.shape.fields.map((field, fieldIndex) => m(DimensionInput, {
@@ -85,39 +91,18 @@ const DirectionSection: m.Component = {
     ),
 };
 
-// Inline mm | cm | in selector next to the dimension header
-const UNIT_OPTIONS: [Unit, string, string][] = [
-    ["mm", "mm", "millimeters"],
-    ["cm", "cm", "centimeters"],
-    ["in", "in", "inches"],
-];
-
-const UnitToggle: m.Component = {
-    view: () => {
-        const children: m.Children[] = [];
-        UNIT_OPTIONS.forEach(([value, label, ariaLabel], index) => {
-            if (index > 0) children.push(m("span.unit-separator", { key: `${value}-sep` }, "|"));
-            const isActive = state.unit === value;
-            children.push(m(`button.unit-text${isActive ? ".active" : ""}`,
-                {
-                    key: value,
-                    type: "button",
-                    "aria-pressed": isActive,
-                    "aria-label": ariaLabel,
-                    onclick: () => handleUnitChange(value),
-                },
-                label,
-            ));
-        });
-        return m("span.unit-text-toggle", children);
-    },
+const UNITS: readonly Unit[] = ["mm", "cm", "in"];
+const UNIT_ARIA_LABELS: Record<string, string> = {
+    mm: "millimeters",
+    cm: "centimeters",
+    in: "inches",
 };
 
 // Single numeric input with unit suffix and pulse animation on direction change
 const DimensionInput: m.Component<{ field: string; fieldIndex: number; isLast: boolean }> = {
     view: ({ attrs: { field, fieldIndex, isLast } }) => m(".dimension-field",
         m("label.dimension-label", { for: `dimension-${field.toLowerCase()}` }, field),
-        m(".dimension-input-wrap",
+        m(".input-with-suffix",
             m("input.dimension-input", {
                 id: `dimension-${field.toLowerCase()}`,
                 type: "number",
@@ -146,7 +131,7 @@ const DimensionInput: m.Component<{ field: string; fieldIndex: number; isLast: b
                     element.classList.add("pulsing");
                 },
             }),
-            m("span.dimension-unit", state.unit),
+            m("span.input-suffix", state.unit),
         ),
     ),
 };

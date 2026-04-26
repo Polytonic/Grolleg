@@ -2,20 +2,19 @@ import { state, cloneInitialState } from "../../../source/views/firing-calculato
 import type { Piece, FiringFlags, FiringRates, Basis, DimensionUnit, WeightUnit, Rounding }
     from "../../../source/views/firing-calculator/state";
 
-// Resets calculator state to production defaults. Uses cloneInitialState so
-// each test starts with fresh nested objects (no shared-reference mutation).
+// Resets calculator state to production defaults. Each test starts
+// with fresh nested objects so mutations don't leak across tests.
 export function resetState() {
     Object.assign(state, cloneInitialState());
 }
 
-// Builds a piece for tests with sensible defaults; spread `overrides` to
-// customize. firings defaults to bisque-only (matches the production default
-// for an added piece when only bisque is the studio's active firing).
+// Builds a piece for tests with sensible defaults; spread `overrides`
+// to customize. The default firings match an added piece in the
+// default studio (bisque-only).
 let pieceCounter = 100;
 export function makePiece(overrides: Partial<Piece> = {}): Piece {
     return {
         id: pieceCounter++,
-        name: "",
         L: "", W: "", H: "",
         weight: "",
         firings: { bisque: true, glaze: false, luster: false },
@@ -23,9 +22,9 @@ export function makePiece(overrides: Partial<Piece> = {}): Piece {
     };
 }
 
-// Direct setters to compose state-mutation in a readable way for propagation
-// tests. They write to the singleton; tests should reset before/after.
-export function setStudio(opts: {
+// Direct setters compose state mutations readably in propagation tests.
+// They write to the singleton; tests should reset before and after.
+export function setStudio(options: {
     basis?: Basis;
     dimensionUnit?: DimensionUnit;
     weightUnit?: WeightUnit;
@@ -36,20 +35,20 @@ export function setStudio(opts: {
     minHeight?: number;
     rounding?: Rounding;
 }) {
-    if (opts.basis !== undefined) state.basis = opts.basis;
-    if (opts.dimensionUnit !== undefined) state.dimensionUnit = opts.dimensionUnit;
-    if (opts.weightUnit !== undefined) state.weightUnit = opts.weightUnit;
-    if (opts.firingToggles) state.firingToggles = { ...state.firingToggles, ...opts.firingToggles };
-    if (opts.firingRates) state.firingRates = { ...state.firingRates, ...opts.firingRates };
-    if (opts.bundled !== undefined) state.bundled = opts.bundled;
-    if (opts.bundledRate !== undefined) state.bundledRate = opts.bundledRate;
-    if (opts.minHeight !== undefined) state.minHeight = opts.minHeight;
-    if (opts.rounding !== undefined) state.rounding = opts.rounding;
+    if (options.basis !== undefined) state.basis = options.basis;
+    if (options.dimensionUnit !== undefined) state.dimensionUnit = options.dimensionUnit;
+    if (options.weightUnit !== undefined) state.weightUnit = options.weightUnit;
+    if (options.firingToggles) state.firingToggles = { ...state.firingToggles, ...options.firingToggles };
+    if (options.firingRates) state.firingRates = { ...state.firingRates, ...options.firingRates };
+    if (options.bundled !== undefined) state.bundled = options.bundled;
+    if (options.bundledRate !== undefined) state.bundledRate = options.bundledRate;
+    if (options.minHeight !== undefined) state.minHeight = options.minHeight;
+    if (options.rounding !== undefined) state.rounding = options.rounding;
 }
 
 export function setPieces(pieces: Piece[]) {
     state.pieces = pieces;
-    state.nextPieceId = pieces.reduce((max, p) => Math.max(max, p.id), 0) + 1;
+    state.nextPieceId = pieces.reduce((max, piece) => Math.max(max, piece.id), 0) + 1;
 }
 
 // Mock event factory matching the shape handlers read at the call site.

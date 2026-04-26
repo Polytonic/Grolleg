@@ -128,12 +128,10 @@
         color: var(--color-muted);
     }
 
-    .dimension-input-wrap {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
+    /* The dimension row's input is its own class because it carries the
+       pulse animation applied on direction change. The wrapper and
+       suffix span use the suite-shared .input-with-suffix / .input-suffix
+       (in controls.css). */
     .dimension-input {
         font-size: 16px;
         padding: 10px 36px 10px 12px;
@@ -146,14 +144,6 @@
         &.pulsing {
             animation: shrinkage-calc-pulse 0.4s ease-out;
         }
-    }
-
-    .dimension-unit {
-        position: absolute;
-        right: 12px;
-        font-size: 13px;
-        color: var(--color-muted);
-        pointer-events: none;
     }
 
 

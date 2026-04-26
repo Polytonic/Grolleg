@@ -25,6 +25,17 @@
     color: var(--color-muted);
 }
 
+/* Sentence-case 13px label for sub-text input labels within a multi-input
+   row (e.g. Length / Width / Height under a single Dimensions section, or
+   Bisque / Glaze / Luster Rate under a single Firings section). Quieter
+   than the uppercase .label so the input it labels stays the dominant
+   visual element in the row. Shrinkage uses `.dimension-label` for the
+   same purpose; both names are valid styles for the same role. */
+.input-label {
+    font-size: 13px;
+    color: var(--color-muted);
+}
+
 .hint-text {
     font-size: 11px;
     color: var(--color-muted);

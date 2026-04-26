@@ -67,6 +67,10 @@ body {
     /* Endpoint label text (white, slightly transparent for contrast on accent) */
     --color-accent-text-muted: color-mix(in srgb, white 85%, transparent);
 
+    /* Translucent white for inner-edge dividers on accent fills (verified
+       3:1 contrast against accent for WCAG 1.4.11 non-text minimum) */
+    --color-accent-inner-edge: color-mix(in srgb, white 60%, transparent);
+
     /* Typography */
     --font-sans: system-ui, sans-serif;
     --font-mono: ui-monospace, monospace;

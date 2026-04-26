@@ -20,11 +20,14 @@ addEventListener("activate", (event: ExtendableEvent) => event.waitUntil(activat
 // resolve to the app shell so the Mithril router can take over. Serving the
 // cached index.html for any navigate-mode request bypasses the GitHub Pages
 // 404 round-trip when the service worker is active, and lets the app work
-// offline for any in-app route.
+// offline for any in-app route. The SW global is typed as Window in this
+// build (no @types/serviceworker), so the registration cast is local.
+const swScope = (self as unknown as { registration: { scope: string } }).registration.scope;
+const indexUrl = new URL("./", swScope).pathname;
+
 addEventListener("fetch", (event: FetchEvent) => {
     const request = event.request;
     if (request.mode === "navigate") {
-        const indexUrl = new URL("./", self.registration.scope).pathname;
         event.respondWith(
             caches.match(indexUrl)
                 .then((cached) => cached || caches.match(request))

@@ -9,11 +9,10 @@ const formatTotalQuantity = (value: number, basis: string): string =>
 
 
 /* ── Total Band ──
-   Two-column layout: identity on the left (TOTAL label, comparison
-   silhouette, piece-count subtitle), price on the right. Sits on top of a
-   borderDark separator that visually severs the band from the cards above
-   it (the result reads as a different layer of information than the
-   configuration). The disclaimer follows centered below. */
+   Two-column layout: identity on the left (label, comparison silhouette
+   for two or more pieces, piece-count subtitle), price on the right.
+   The orchestrator places a `.divider` immediately above this band so
+   the configuration-to-result transition reads visually. */
 
 export const TotalBand: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
@@ -23,20 +22,24 @@ export const TotalBand: m.Component<{ derived: Derived }> = {
             ? `${pieceCount} piece${pieceCount === 1 ? "" : "s"} · ${formatTotalQuantity(aggregate.totalQuantity, studio.basis)} ${totalQuantityUnit}`
             : `${pieceCount} piece${pieceCount === 1 ? "" : "s"}`;
 
-        return [
-            m(".total-band",
-                m(".total-band__identity",
-                    m("span.total-band__label", "Total"),
-                    aggregate.comparison && m(".total-band__comparison",
-                        m(Silhouette, { type: aggregate.comparison.silhouette, size: 26 }),
-                        m("span.total-band__comparison-label",
-                            `All together ≈ ${aggregate.comparison.name}`),
-                    ),
-                    m(".total-band__subtitle", subtitle),
+        // The aggregate comparison is suppressed for a single piece because
+        // the per-piece row already shows the same silhouette, and "All
+        // together" reads oddly when there's nothing to combine.
+        const showAggregateComparison = aggregate.comparison && pieceCount > 1;
+
+        return m("section.total-band", { "aria-labelledby": "total-band__heading" },
+            m(".total-band__identity",
+                m("h2.total-band__label#total-band__heading", "Total"),
+                showAggregateComparison && m(".total-band__comparison",
+                    m(Silhouette, { type: aggregate.comparison!.silhouette, size: 26 }),
+                    m("span.total-band__comparison-label",
+                        `All together ≈ ${aggregate.comparison!.name}`),
                 ),
-                m(".total-band__amount", `$${aggregate.total.toFixed(2)}`),
+                m(".total-band__subtitle", subtitle),
             ),
-            m(".disclaimer", "Estimates only — actual billing may differ."),
-        ];
+            m(".total-band__amount",
+                { role: "status", "aria-live": "polite", "aria-atomic": "true" },
+                `$${aggregate.total.toFixed(2)}`),
+        );
     },
 };

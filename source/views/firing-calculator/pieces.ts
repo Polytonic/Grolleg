@@ -1,14 +1,15 @@
 import m from "mithril";
 import { ConnectedPill } from "../../components/connected-pill";
+import { InputWithSuffix } from "../../components/input-with-suffix";
 import { Silhouette } from "./comparison";
 import {
     state, addPiece, removePiece, updatePiece,
     togglePieceFiring, togglePiecePair,
 } from "./state";
-import type { Derived, Piece, PieceComputed, FiringKey } from "./state";
+import type { Derived, Piece, PieceComputed } from "./state";
 
 
-/* ── Local Icons (Lucide, Transcribed for Mithril) ── */
+/* ── Local Icons ── */
 
 const xIcon = (size: number = 16): m.Vnode =>
     m("svg", {
@@ -34,11 +35,11 @@ const plusIcon = (size: number = 14): m.Vnode =>
 
 
 /* ── Local Chip Primitive ──
-   Smaller than the controls-card pill (12px font, 5px/11px padding).
-   Inactive uses font-weight 400 to align with the suite's 400/600 weights
-   (the Segoe UI 500 weight from the React prototype is intentionally
-   omitted). Disabled state preserves underlying active/inactive coloring
-   at 50% opacity so users can read which firing is logically on. */
+   Smaller than the controls Pill (12px font, 5px/11px padding).
+   Inactive uses font-weight 400 because the suite forbids 500 (Segoe
+   UI on Windows renders 500 inconsistently). Disabled chips dim to
+   50% opacity, signalling "studio doesn't bill for this firing" while
+   preserving the underlying coloring. */
 
 interface ChipAttrs {
     active: boolean;
@@ -51,8 +52,10 @@ const Chip: m.Component<ChipAttrs> = {
         m(`button.chip${attrs.active ? ".active" : ""}${attrs.disabled ? ".disabled" : ""}`,
             {
                 type: "button",
-                "aria-pressed": attrs.active,
-                "aria-disabled": attrs.disabled || undefined,
+                // ARIA expects string "true"/"false", not the HTML5 boolean
+                // attribute presence form Mithril uses for raw booleans.
+                "aria-pressed": attrs.active ? "true" : "false",
+                "aria-disabled": attrs.disabled ? "true" : undefined,
                 disabled: attrs.disabled,
                 onclick: attrs.disabled ? undefined : attrs.onclick,
             },
@@ -62,57 +65,31 @@ const Chip: m.Component<ChipAttrs> = {
 
 
 /* ── Number Formatting ──
-   Aggregate quantity: weight basis prints two decimals (small numbers like
-   1.25 lb), volume/footprint prints whole numbers (large numbers like 240
-   in³). Price always prints two decimals as a dollar amount. */
+   Weight basis prints two decimals (small numbers like 1.25 lb);
+   volume and footprint print whole numbers (large numbers like 240 in³).
+   Price always prints two decimals as a dollar amount. */
 
 const formatPrice = (value: number): string => `$${value.toFixed(2)}`;
 const formatQuantity = (value: number, basis: string): string =>
     basis === "weight" ? value.toFixed(2) : value.toFixed(0);
 
 
-/* ── Header Line ──
-   Badge (2+ pieces) · name input · price+qty subtitle · remove X (2+ pieces). */
+/* ── Price + Quantity ──
+   Right-justified in the Include row. Active price is accent-coloured;
+   $0 reads as muted-soft so it doesn't compete with real numbers. */
 
-interface PieceHeaderAttrs {
-    piece: Piece;
-    computed: PieceComputed;
-    derived: Derived;
-    indexLabel: string | null;
-    canRemove: boolean;
-}
-
-const PieceHeader: m.Component<PieceHeaderAttrs> = {
-    view: ({ attrs: { piece, computed, derived, indexLabel, canRemove } }) => {
+const PriceLabel: m.Component<{ computed: PieceComputed; derived: Derived }> = {
+    view: ({ attrs: { computed, derived } }) => {
         const { result, quantityUnit } = computed;
         const hasPrice = result.price > 0;
-        return m(".piece-row__header",
-            indexLabel && m("span.piece-row__badge", indexLabel),
-            m("input.piece-row__name-input", {
-                type: "text",
-                placeholder: "Piece Name (Optional)",
-                value: piece.name,
-                "aria-label": `Piece ${indexLabel ?? ""} name`.trim(),
-                oninput: (event: Event) => updatePiece(piece.id, {
-                    name: (event.currentTarget as HTMLInputElement).value,
-                }),
-            }),
-            m(".piece-row__subtitle",
-                hasPrice
-                    ? m("span.piece-row__subtitle-active",
-                        m("span.piece-row__price", formatPrice(result.price)),
-                        result.quantity > 0 && m("span.piece-row__quantity",
-                            ` · ${formatQuantity(result.quantity, derived.studio.basis)} ${quantityUnit}`,
-                        ),
-                    )
-                    : m("span.piece-row__price.zero", formatPrice(0)),
+        if (!hasPrice) {
+            return m("span.piece-row__price.zero", formatPrice(0));
+        }
+        return m("span.piece-row__price-block",
+            m("span.piece-row__price", formatPrice(result.price)),
+            result.quantity > 0 && m("span.piece-row__quantity",
+                ` · ${formatQuantity(result.quantity, derived.studio.basis)} ${quantityUnit}`,
             ),
-            canRemove && m("button.piece-row__remove", {
-                type: "button",
-                tabindex: -1,
-                "aria-label": `Remove piece ${indexLabel ?? ""}`.trim(),
-                onclick: () => removePiece(piece.id),
-            }, xIcon(16)),
         );
     },
 };
@@ -135,41 +112,44 @@ const Dimensions: m.Component<DimensionsAttrs> = {
         const { studio } = derived;
         if (studio.basis === "weight") {
             return m(".piece-row__weight",
-                m(".input-with-suffix",
-                    m("input.input.numeric.with-suffix", {
+                m(".field-group",
+                    m("label.input-label", { for: `piece-${piece.id}-weight` }, "Weight"),
+                    m(InputWithSuffix, {
+                        suffix: studio.weightUnit,
+                        inputClass: "numeric",
+                        id: `piece-${piece.id}-weight`,
                         type: "number",
                         inputmode: "decimal",
                         step: "0.1",
                         min: "0",
-                        placeholder: "Weight",
-                        "aria-label": "Weight",
+                        placeholder: "—",
                         value: piece.weight,
                         oninput: (event: Event) => updatePiece(piece.id, {
                             weight: (event.currentTarget as HTMLInputElement).value,
                         }),
                     }),
-                    m("span.input-suffix", studio.weightUnit),
                 ),
             );
         }
-        const columns: { key: "L" | "W" | "H"; placeholder: string; warn?: boolean }[] = [
-            { key: "L", placeholder: "L" },
-            { key: "W", placeholder: "W" },
+        const columns: { key: "L" | "W" | "H"; label: string; warn?: boolean }[] = [
+            { key: "L", label: "Length" },
+            { key: "W", label: "Width" },
         ];
         if (studio.basis === "volume") {
-            columns.push({ key: "H", placeholder: "H", warn: heightBelowMin });
+            columns.push({ key: "H", label: "Height", warn: heightBelowMin });
         }
         return m(`.piece-row__dimensions.columns-${columns.length}`,
-            columns.map((column) => m(".input-with-suffix", { key: column.key },
-                m(`input.input.numeric.with-suffix${column.warn ? ".warn" : ""}`, {
+            columns.map((column) => m(".field-group", { key: column.key },
+                m("label.input-label", { for: `piece-${piece.id}-${column.key}` }, column.label),
+                m(InputWithSuffix, {
+                    suffix: studio.dimensionUnit,
+                    inputClass: column.warn ? "numeric warn" : "numeric",
+                    id: `piece-${piece.id}-${column.key}`,
                     type: "number",
                     inputmode: "decimal",
                     step: "0.1",
                     min: "0",
-                    placeholder: column.placeholder,
-                    "aria-label": column.placeholder === "L" ? "Length"
-                                : column.placeholder === "W" ? "Width"
-                                : "Height",
+                    placeholder: "—",
                     title: column.warn
                         ? `Billed at ${studio.minHeight} ${studio.dimensionUnit} (minimum height)`
                         : undefined,
@@ -178,51 +158,66 @@ const Dimensions: m.Component<DimensionsAttrs> = {
                         [column.key]: (event.currentTarget as HTMLInputElement).value,
                     }),
                 }),
-                m("span.input-suffix", studio.dimensionUnit),
             )),
         );
     },
 };
 
 
-/* ── Include Chips ──
-   ConnectedPill chip-size for the Bisque|Glaze pair (always rendered),
-   followed by a separate Luster Chip. The pair's `connected` reflects ONLY
-   the studio bundled flag, never the firing-active state. Earlier
-   iteration gated `connected` on bundled+bisque+glaze, which broke the
-   visual link when a user paired-off bisque/glaze under bundled. */
+/* ── Include Row ──
+   The Bisque|Glaze ConnectedPill (chip scale) and Luster chip on the
+   left. Price + quantity right-justified on the right. The comparison
+   silhouette has moved up to the Piece Dimensions header row, leaving
+   this row to read as "with these firings included, the piece costs
+   $X." The pair's `connected` reflects ONLY the studio bundled flag,
+   never the per-piece firing-active state. */
 
-const IncludeChips: m.Component<{ piece: Piece }> = {
-    view: ({ attrs: { piece } }) => {
+interface IncludeRowAttrs {
+    piece: Piece;
+    computed: PieceComputed;
+    derived: Derived;
+}
+
+const IncludeRow: m.Component<IncludeRowAttrs> = {
+    view: ({ attrs: { piece, computed, derived } }) => {
         const onPair = (key: "bisque" | "glaze") =>
             state.bundled
                 ? togglePiecePair(piece.id, key)
                 : togglePieceFiring(piece.id, key);
         return m(".piece-row__include",
-            m("span.piece-row__include-label", "Include"),
-            m(ConnectedPill, {
-                size: "chip",
-                connected: state.bundled,
-                aActive: !!piece.firings.bisque,
-                bActive: !!piece.firings.glaze,
-                aLabel: "Bisque",
-                bLabel: "Glaze",
-                aDisabled: !state.firingToggles.bisque,
-                bDisabled: !state.firingToggles.glaze,
-                onToggleA: () => onPair("bisque"),
-                onToggleB: () => onPair("glaze"),
-            }),
-            m(Chip, {
-                active: !!piece.firings.luster,
-                disabled: !state.firingToggles.luster,
-                onclick: () => togglePieceFiring(piece.id, "luster" as FiringKey),
-            }, "Luster"),
+            m("span.label", "Include"),
+            m(".piece-row__include-chips",
+                m(ConnectedPill, {
+                    size: "chip",
+                    connected: state.bundled,
+                    aActive: !!piece.firings.bisque,
+                    bActive: !!piece.firings.glaze,
+                    aLabel: "Bisque",
+                    bLabel: "Glaze",
+                    aDisabled: !state.firingToggles.bisque,
+                    bDisabled: !state.firingToggles.glaze,
+                    onToggleA: () => onPair("bisque"),
+                    onToggleB: () => onPair("glaze"),
+                }),
+                m(Chip, {
+                    active: !!piece.firings.luster,
+                    disabled: !state.firingToggles.luster,
+                    onclick: () => togglePieceFiring(piece.id, "luster"),
+                }, "Luster"),
+            ),
+            m(".piece-row__include-meta",
+                m(PriceLabel, { computed, derived }),
+            ),
         );
     },
 };
 
 
-/* ── Piece Row ── */
+/* ── Piece Row ──
+   Header row: badge (multi-piece) · "Piece Dimensions" label ·
+   comparison silhouette (right-justified, when dimensions yield one) ·
+   remove X (multi-piece, far right). Single-piece mode skips both badge
+   and X so the header collapses to label + comparison. */
 
 interface PieceRowAttrs {
     computed: PieceComputed;
@@ -233,31 +228,48 @@ interface PieceRowAttrs {
 
 const PieceRow: m.Component<PieceRowAttrs> = {
     view: ({ attrs: { computed, derived, indexLabel, canRemove } }) => {
-        const { piece, comparison, heightBelowMin, quantityUnit } = computed;
+        const { piece, comparison, heightBelowMin } = computed;
         const studio = derived.studio;
+        const hasMeta = !!comparison || canRemove;
         return m(".piece-row",
-            m(PieceHeader, { piece, computed, derived, indexLabel, canRemove }),
+            m(".piece-row__header",
+                indexLabel && m("span.piece-row__badge",
+                    { "aria-hidden": "true" },
+                    indexLabel),
+                m("span.section-label", "Piece Dimensions"),
+                hasMeta && m(".piece-row__header-meta",
+                    comparison && m("span.piece-row__comparison",
+                        m(Silhouette, { type: comparison.silhouette, size: 18 }),
+                        m("span.piece-row__comparison-label", `≈ ${comparison.name}`),
+                    ),
+                    canRemove && m("button.piece-row__remove", {
+                        type: "button",
+                        "aria-label": indexLabel ? `Remove piece ${indexLabel}` : "Remove piece",
+                        onclick: () => removePiece(piece.id),
+                    }, xIcon(16)),
+                ),
+            ),
             m(Dimensions, { piece, derived, heightBelowMin }),
-            comparison && m(".piece-row__comparison",
-                m(Silhouette, { type: comparison.silhouette, size: 20 }),
-                m("span.piece-row__comparison-label", `≈ ${comparison.name}`),
+            heightBelowMin && m(".piece-row__warning",
+                { role: "status", "aria-live": "polite" },
+                `Billed at ${studio.minHeight} ${studio.dimensionUnit} (minimum height). Pieces shorter than this are charged at the minimum height.`,
             ),
-            heightBelowMin && m(".piece-row__warning", { role: "note" },
-                `Billed at ${studio.minHeight} ${studio.dimensionUnit} — minimum height. Pieces shorter than this are charged at the minimum height.`,
-            ),
-            m(IncludeChips, { piece }),
+            m(IncludeRow, { piece, computed, derived }),
         );
     },
 };
 
 
-/* ── Card Export ── */
+/* ── Section Export ──
+   Naked stack of piece rows on the page background, mirroring shrinkage's
+   convention of inputs sitting directly on the page. The Add Piece button
+   right-aligns at the end of the stack. */
 
-export const PiecesCard: m.Component<{ derived: Derived }> = {
+export const PiecesSection: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
         const total = derived.pieces.length;
         const showIndex = total > 1;
-        return m("section.card", { "aria-label": "Pieces" },
+        return m(".pieces-section",
             m(".pieces-stack",
                 derived.pieces.map((computed, index) => m(PieceRow, {
                     key: computed.piece.id,
@@ -269,7 +281,7 @@ export const PiecesCard: m.Component<{ derived: Derived }> = {
             ),
             m(".pieces-add-row",
                 m("button.add-piece", { type: "button", onclick: addPiece },
-                    plusIcon(14),
+                    plusIcon(12),
                     m("span", "Add Piece"),
                 ),
             ),
@@ -277,5 +289,3 @@ export const PiecesCard: m.Component<{ derived: Derived }> = {
     },
 };
 
-// Re-export for tests that need to render PieceRow in isolation.
-export { PieceRow };

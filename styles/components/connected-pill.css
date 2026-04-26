@@ -44,7 +44,9 @@
 
         &.disabled {
             cursor: not-allowed;
-            opacity: 0.5;
+            --cp-border: var(--color-border-dark);
+            --cp-bg:     var(--color-surface);
+            --cp-color:  var(--color-muted-soft);
         }
 
         /* Inactive: tint toward accent on hover, deeper tint on press */
@@ -77,9 +79,11 @@
             min-height: 44px;
         }
 
-        /* Chip scale: smaller than pill, used inside piece rows. Tap target
-           still meets WCAG via padding + font line-height (combined ≥ 24px
-           and the row's surrounding interactive area is forgiving). */
+        /* Chip scale: 12px text in a piece row, ~26px tall. Falls below
+           WCAG 2.5.5's 44px target. The chip pair functions as an
+           inline grouped control per WCAG 2.5.8 (Compact, AAA) where
+           24px is acceptable. Sizing comes from the chip padding and
+           font; no min-height. */
     }
 }
 

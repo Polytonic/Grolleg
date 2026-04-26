@@ -1,4 +1,5 @@
 import m from "mithril";
+import { InputWithSuffix } from "../../components/input-with-suffix";
 import { state, format, handleGreenwareInput, handleBisqueInput } from "./state";
 import type { Stage, Derived } from "./state";
 
@@ -13,30 +14,30 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".stage-inputs",
         STAGE_FIELDS.map((field) => m(".stage-field", { key: field.id },
             m("label.label", { for: field.id }, field.label),
-            m(".dimension-input-wrap",
-                m("input.input.with-suffix", {
-                    id: field.id,
-                    type: "number",
-                    inputmode: "decimal",
-                    step: "0.1",
-                    min: "0",
-                    placeholder: field.placeholder,
-                    value: state[field.stateKey],
-                    oninput: field.handler,
-                }),
-                m("span.dimension-unit", "%"),
-            ),
+            m(InputWithSuffix, {
+                suffix: "%",
+                id: field.id,
+                type: "number",
+                inputmode: "decimal",
+                step: "0.1",
+                min: "0",
+                placeholder: field.placeholder,
+                value: state[field.stateKey],
+                oninput: field.handler,
+            }),
             m("span.hint-text", field.hint),
         )),
-        // Firing percentage is derived, not user-entered
+        // Firing percentage is derived, not user-entered. Inlined (not via
+        // InputWithSuffix) because the value sits in a <div.derived-value>
+        // not an <input>.
         m(".stage-field",
             m("span.label", "Fired"),
-            m(".dimension-input-wrap",
+            m(".input-with-suffix",
                 m(".derived-value",
                     { "aria-label": "Fired shrinkage percentage", role: "status", "aria-live": "polite" },
                     format(derived.firingPercent),
                 ),
-                derived.firingPercent !== null && m("span.dimension-unit", "%"),
+                derived.firingPercent !== null && m("span.input-suffix", "%"),
             ),
             m("span.hint-text", "Bisque → Fired"),
         ),

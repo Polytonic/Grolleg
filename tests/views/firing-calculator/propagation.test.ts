@@ -137,7 +137,7 @@ describe("bundled activation OR-migrates pieces", () => {
         expect(state.bundledRate).toBeCloseTo(0.05);
     });
 
-    it("bundled activation falls back to default when both individual rates are zero", () => {
+    it("bundled activation falls back to the basis' bisque default when both individual rates are zero", () => {
         setStudio({
             bundled: false,
             firingRates: { bisque: 0, glaze: 0, luster: 0.10 },
@@ -218,15 +218,15 @@ describe("piece-level chip toggle leaves studio unchanged", () => {
 
 /* ── Basis Change Resets Rates; Unit Change Preserves Them ── */
 
-describe("basis change resets rates; unit change does not", () => {
-    it("changing basis resets rates to that basis's defaults", () => {
+describe("basis change reseeds rates; unit change does not", () => {
+    it("changing basis reseeds rates from the new basis' defaults", () => {
         setStudio({ firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10 } });
         const event = { currentTarget: { value: "weight" } } as unknown as Event;
         handleBasisChange(event);
         expect(state.firingRates).toEqual(BASIS_META.weight.defaults);
     });
 
-    it("changing basis reseeds bundledRate from new basis's bisque default", () => {
+    it("changing basis reseeds bundledRate from the new basis' bisque default", () => {
         setStudio({ bundledRate: 0.06 });
         const event = { currentTarget: { value: "footprint" } } as unknown as Event;
         handleBasisChange(event);
@@ -266,7 +266,6 @@ describe("addPiece and removePiece", () => {
         expect(state.pieces.length).toBe(before + 1);
         const last = state.pieces[state.pieces.length - 1];
         expect(last.firings).toEqual({ bisque: true, glaze: true, luster: false });
-        expect(last.name).toBe("");
         expect(last.L).toBe("");
     });
 

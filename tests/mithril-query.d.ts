@@ -2,6 +2,7 @@ declare module "mithril-query" {
     import { Component, ClosureComponent } from "mithril";
 
     interface MithrilQuery {
+        rootEl: HTMLElement;
         should: {
             contain(text: string): void;
             have(selector: string): void;

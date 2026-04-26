@@ -215,7 +215,7 @@ describe("calculatePrice end-to-end", () => {
         // qty = 4×4×5 = 80 (no rounding needed since dims are already integers)
         // rate = 0.04 (bisque only)
         // price = 80 × 0.04 = $3.20
-        setStudio({ rounding: "dim-ceil" });
+        setStudio({ rounding: "dim-ceil", firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 } });
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.quantity).toBe(80);
         expect(result.rate).toBeCloseTo(0.04);
@@ -261,10 +261,13 @@ describe("BASIS_META and FIRING_TYPES sanity", () => {
         }
     });
 
-    it("ordering bisque < glaze < luster holds for each basis", () => {
+    it("ordering bisque ≤ glaze < luster holds for each basis", () => {
+        // Bisque and glaze can match (some studios price them at one
+        // shared rate even when shown as separate inputs). Luster is
+        // always more expensive: it's a specialty firing.
         for (const basis of ["volume", "footprint", "weight"] as const) {
             const d = BASIS_META[basis].defaults;
-            expect(d.bisque).toBeLessThan(d.glaze);
+            expect(d.bisque).toBeLessThanOrEqual(d.glaze);
             expect(d.glaze).toBeLessThan(d.luster);
         }
     });

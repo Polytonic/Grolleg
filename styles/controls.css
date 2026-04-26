@@ -39,6 +39,27 @@
     }
 }
 
+/* Input + Suffix Wrapper
+   The .input-with-suffix wrapper provides the relative positioning
+   context for an absolutely-placed unit string (".input-suffix") at
+   the right edge. Used wherever a numeric input has a unit annotation
+   ("%", "in", "¢/in³", "$/lb"). */
+.input-with-suffix {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-muted);
+    pointer-events: none;
+    line-height: 1;
+}
+
 .input-error-text {
     font-size: 12px;
     color: var(--color-error-text);

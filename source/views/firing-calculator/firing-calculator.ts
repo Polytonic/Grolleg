@@ -1,15 +1,14 @@
 import m from "mithril";
 import "@css/views/firing-calculator.css";
 import { computeDerived } from "./state";
-import { ControlsCard } from "./controls";
-import { PiecesCard } from "./pieces";
+import { ControlsSection } from "./controls";
+import { PiecesSection } from "./pieces";
 import { TotalBand } from "./total";
 
 
-// The orchestrator. Sets the per-tool document.title once on mount, then
-// composes the three cards plus the total band. computeDerived is called
-// once per render and threaded through to children so derived data stays
-// consistent within a single draw cycle.
+// Composes the input sections, divider, total band, and disclaimer.
+// computeDerived runs once per render and threads through to children so
+// derived data stays consistent within a single draw cycle.
 export const FiringCalculatorView: m.Component = {
     oncreate: () => {
         if (typeof document !== "undefined") {
@@ -21,11 +20,13 @@ export const FiringCalculatorView: m.Component = {
         return m(".firing-calculator",
             m(".container",
                 m("h1.title", "Firing Calculator"),
-                m("p.subtitle",
-                    "Estimate firing costs for one or more pieces."),
-                m(ControlsCard, { derived }),
-                m(PiecesCard, { derived }),
+                m("p.subtitle", "Estimate firing costs for one or more pieces."),
+                m(ControlsSection, { derived }),
+                m(".divider", { role: "separator" }),
+                m(PiecesSection, { derived }),
+                m(".divider", { role: "separator" }),
                 m(TotalBand, { derived }),
+                m("p.disclaimer", "Estimates only. Actual billing may differ."),
             ),
         );
     },

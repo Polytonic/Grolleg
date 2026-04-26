@@ -148,10 +148,10 @@ describe("ClayControls", () => {
 
     it("section title reflects direction", () => {
         state.direction = "fired-to-wet";
-        expect(mq(ClayControls, { derived: computeDerived() }).should.contain("Enter fired dimensions"));
+        expect(mq(ClayControls, { derived: computeDerived() }).should.contain("Fired Dimensions"));
 
         state.direction = "wet-to-fired";
-        expect(mq(ClayControls, { derived: computeDerived() }).should.contain("Enter wet dimensions"));
+        expect(mq(ClayControls, { derived: computeDerived() }).should.contain("Wet Dimensions"));
     });
 
     it("Cylinder renders Diameter and Height inputs", () => {
