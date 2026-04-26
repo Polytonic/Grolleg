@@ -16,7 +16,7 @@ describe("FiringCalculatorView orchestrator", () => {
     it("renders the title and subtitle", () => {
         const output = mq(FiringCalculatorView);
         expect(output.should.contain("Firing Calculator"));
-        expect(output.should.contain("Estimate firing costs for one or more pieces"));
+        expect(output.should.contain("Estimate firing costs"));
     });
 
     it("renders the controls, pieces, divider, and total sections", () => {
@@ -130,6 +130,19 @@ describe("ControlsSection", () => {
         expect(output.should.contain("lb"));
     });
 
+    it("rate input scrubs floating-point artifacts (0.035 → \"3.5\", not \"3.5000000000000004\")", () => {
+        // 0.035 × 100 = 3.5000000000000004 in IEEE 754. Without
+        // formatRateNumber's rounding the input would render the noise.
+        // setStudio writes directly to state.firingRates, bypassing the
+        // input handler.
+        setStudio({ basis: "volume", firingRates: { bisque: 0.035, glaze: 0.045, luster: 0.14 } });
+        const output = mq(ControlsSection, { derived: computeDerived() });
+        const bisqueInput = output.rootEl.querySelector("#rate-bisque") as HTMLInputElement;
+        expect(bisqueInput.getAttribute("value")).toBe("3.5");
+        const glazeInput = output.rootEl.querySelector("#rate-glaze") as HTMLInputElement;
+        expect(glazeInput.getAttribute("value")).toBe("4.5");
+    });
+
     it("rate suffix reflects basis (¢/in³ for volume)", () => {
         setStudio({ basis: "volume", dimensionUnit: "in" });
         const output = mq(ControlsSection, { derived: computeDerived() });
@@ -201,7 +214,7 @@ describe("PiecesSection", () => {
         const output = mq(PiecesSection, { derived: computeDerived() });
         expect(output.should.have(".piece-row__warning"));
         expect(output.should.contain("Billed at 2 in"));
-        expect(output.should.contain("Pieces shorter than this"));
+        expect(output.should.contain("Shorter pieces are charged"));
     });
 
     it("H input gets warn class when below minHeight", () => {

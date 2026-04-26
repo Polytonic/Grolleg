@@ -9,11 +9,6 @@ import { ResultsCard } from "./results";
 
 
 export const ShrinkageCalculatorView: m.Component = {
-    oncreate: () => {
-        if (typeof document !== "undefined") {
-            document.title = "Grolleg • Shrinkage Calculator";
-        }
-    },
     view: () => {
         const derived = computeDerived();
         return m(".shrinkage-calculator",

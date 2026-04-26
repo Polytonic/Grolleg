@@ -61,24 +61,26 @@ export const FIRING_TYPES: { key: FiringKey; label: string }[] = [
 
 // Defaults grounded in typical community-studio rates. Stored in
 // dollars. Volume and footprint display as cents (× 100), weight
-// displays as dollars 1:1.
+// displays as dollars 1:1. Luster runs 4-6x bisque in real studios
+// (third firing, gold compounds, small batches), not 2x; the volume
+// luster default sits at the low end of that band.
 export const BASIS_META: Record<Basis, { label: string; defaults: FiringRates }> = {
     volume: {
         label: "Volume (L × W × H)",
-        defaults: { bisque: 0.035, glaze: 0.035, luster: 0.08 },
+        defaults: { bisque: 0.035, glaze: 0.035, luster: 0.14 },
     },
     footprint: {
         label: "Footprint (L × W)",
-        defaults: { bisque: 0.07, glaze: 0.07, luster: 0.15 },
+        defaults: { bisque: 0.07, glaze: 0.07, luster: 0.28 },
     },
     weight: {
         label: "Weight",
-        defaults: { bisque: 1.0, glaze: 1.0, luster: 2.0 },
+        defaults: { bisque: 1.0, glaze: 1.0, luster: 4.0 },
     },
 };
 
 export const ROUNDING_OPTIONS: { key: Rounding; label: string }[] = [
-    { key: "dim-ceil",    label: "Each Dimension" },
+    { key: "dim-ceil",    label: "Per Dimension" },
     { key: "total-ceil",  label: "Total" },
     { key: "total-round", label: "Nearest Whole" },
     { key: "none",        label: "Don't Round" },
@@ -170,10 +172,17 @@ export const rateIsCents = (basis: Basis): boolean =>
 export const toDisplayRate = (stored: number, basis: Basis): number =>
     rateIsCents(basis) ? toPositive(stored) * 100 : toPositive(stored);
 
+// Upper bound on display-unit rates. Catches accidental paste of
+// scientific-notation values (`1e10` would otherwise produce a
+// hundred-billion-dollar bill on a 10×10×10 piece) and absurd typos
+// without restricting realistic studio rates (typical max ~50¢/in³).
+export const MAX_DISPLAY_RATE = 1000;
+
 export const toStoredRate = (display: number | string, basis: Basis): number => {
     const value = Number(display);
     if (!Number.isFinite(value)) return 0;
-    return rateIsCents(basis) ? value / 100 : value;
+    const clamped = Math.max(0, Math.min(MAX_DISPLAY_RATE, value));
+    return rateIsCents(basis) ? clamped / 100 : clamped;
 };
 
 export const rateUnitFor = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: WeightUnit): string => {
@@ -182,6 +191,22 @@ export const rateUnitFor = (basis: Basis, dimensionUnit: DimensionUnit, weightUn
     if (basis === "weight")    return `$/${weightUnit}`;
     return "$";
 };
+
+// Verbose unit name for screen-reader announcement (e.g. "in" → "inches",
+// "kg" → "kilograms"). Covers every dimension and weight unit the
+// calculator can show.
+export const UNIT_VERBOSE: Record<string, string> = {
+    mm: "millimeters",
+    cm: "centimeters",
+    in: "inches",
+    g:  "grams",
+    kg: "kilograms",
+    oz: "ounces",
+    lb: "pounds",
+};
+
+export const expandUnit = (unit: string): string =>
+    UNIT_VERBOSE[unit] ?? unit;
 
 
 /* ── Locale Detection ──
@@ -228,12 +253,13 @@ interface StateShape {
     // (not luster) so the inputs replay their CSS pulse on each
     // toggle, signalling that those rates likely need refreshing.
     bundlePulseKey: number;
+    // Per-basis cache of the user's last-entered rates, so switching
+    // measurement methods preserves prior edits instead of silently
+    // discarding them. Updated on basis change and on every rate-input
+    // event for the active basis.
+    firingRatesByBasis: Record<Basis, FiringRates>;
+    bundledRateByBasis: Record<Basis, number>;
 }
-
-// Per-input tracker carried on the vnode state so each input
-// remembers the last pulseKey it ran for and only replays the
-// animation when the key actually changes.
-export type PulseTracker = { lastPulseKey: number };
 
 export const INITIAL_STATE: StateShape = {
     basis: "volume",
@@ -251,18 +277,35 @@ export const INITIAL_STATE: StateShape = {
     ],
     nextPieceId: 2,
     bundlePulseKey: 0,
+    firingRatesByBasis: {
+        volume:    { ...BASIS_META.volume.defaults },
+        footprint: { ...BASIS_META.footprint.defaults },
+        weight:    { ...BASIS_META.weight.defaults },
+    },
+    bundledRateByBasis: {
+        volume:    BASIS_META.volume.defaults.bisque,
+        footprint: BASIS_META.footprint.defaults.bisque,
+        weight:    BASIS_META.weight.defaults.bisque,
+    },
 };
 
 export const state: StateShape = cloneInitialState();
 
-// Tests reset state through this. The nested objects are deep-cloned
-// so mutations in one test don't leak into the next.
+// Returns a fresh copy of INITIAL_STATE with nested objects deep-cloned,
+// so callers that mutate the result don't leak changes back into the
+// shared default.
 export function cloneInitialState(): StateShape {
     return {
         ...INITIAL_STATE,
         firingToggles: { ...INITIAL_STATE.firingToggles },
         firingRates: { ...INITIAL_STATE.firingRates },
         pieces: INITIAL_STATE.pieces.map((piece) => ({ ...piece, firings: { ...piece.firings } })),
+        firingRatesByBasis: {
+            volume:    { ...INITIAL_STATE.firingRatesByBasis.volume },
+            footprint: { ...INITIAL_STATE.firingRatesByBasis.footprint },
+            weight:    { ...INITIAL_STATE.firingRatesByBasis.weight },
+        },
+        bundledRateByBasis: { ...INITIAL_STATE.bundledRateByBasis },
     };
 }
 
@@ -303,12 +346,15 @@ const setStudioFirings = (next: Partial<FiringFlags>) => {
 export const handleBasisChange = (event: Event) => {
     const next = (event.currentTarget as HTMLSelectElement).value as Basis;
     if (next === state.basis) return;
+    // Save the active basis' rates into the per-basis cache so a return
+    // to this basis later restores the user's edits instead of reseeding
+    // from defaults. Rates carry semantic meaning per basis (cents/in³ vs
+    // $/lb), so the cache is segmented by basis rather than shared.
+    state.firingRatesByBasis[state.basis] = { ...state.firingRates };
+    state.bundledRateByBasis[state.basis] = state.bundledRate;
     state.basis = next;
-    // Rates carry semantic meaning per basis (cents/in³ vs $/lb), so
-    // a basis change reseeds from that basis' defaults rather than
-    // reinterpret existing numbers in a different unit.
-    state.firingRates = { ...BASIS_META[next].defaults };
-    state.bundledRate = BASIS_META[next].defaults.bisque;
+    state.firingRates = { ...state.firingRatesByBasis[next] };
+    state.bundledRate = state.bundledRateByBasis[next];
 };
 
 export const handleDimensionUnitChange = (next: DimensionUnit) => {
@@ -368,6 +414,7 @@ export const toggleBundled = () => {
             bisque: state.bundledRate,
             glaze: state.bundledRate,
         };
+        state.firingRatesByBasis[state.basis] = state.firingRates;
         state.bundled = false;
         return;
     }
@@ -379,6 +426,7 @@ export const toggleBundled = () => {
     state.bundledRate = bisqueRate > 0 ? bisqueRate
         : glazeRate > 0 ? glazeRate
         : BASIS_META[state.basis].defaults.bisque;
+    state.bundledRateByBasis[state.basis] = state.bundledRate;
     state.firingToggles = { ...state.firingToggles, bisque: true, glaze: true };
     state.bundled = true;
     state.pieces = state.pieces.map((piece) => {
@@ -394,11 +442,13 @@ export const toggleBundled = () => {
 export const handleFiringRateInput = (key: FiringKey, event: Event) => {
     const value = (event.currentTarget as HTMLInputElement).value;
     state.firingRates = { ...state.firingRates, [key]: toStoredRate(value, state.basis) };
+    state.firingRatesByBasis[state.basis] = state.firingRates;
 };
 
 export const handleBundledRateInput = (event: Event) => {
     const value = (event.currentTarget as HTMLInputElement).value;
     state.bundledRate = toStoredRate(value, state.basis);
+    state.bundledRateByBasis[state.basis] = state.bundledRate;
 };
 
 
@@ -450,6 +500,10 @@ export const addPiece = () => {
 };
 
 export const removePiece = (id: number) => {
+    // Guard the invariant: at least one piece always exists. The UI hides
+    // the X button on a single-piece view, but a programmatic call (or
+    // a future keyboard shortcut) would otherwise leave the page empty.
+    if (state.pieces.length <= 1) return;
     state.pieces = state.pieces.filter((piece) => piece.id !== id);
 };
 
@@ -482,7 +536,10 @@ export interface Derived {
     showMinHeight: boolean;
     activeUnitSet: readonly DimensionUnit[] | readonly WeightUnit[];
     activeUnit: DimensionUnit | WeightUnit;
-    setActiveUnit: (unit: DimensionUnit | WeightUnit) => void;
+    // Widened to `string` so the shared UnitToggle's `onSelect: (unit:
+    // string) => void` accepts it. The implementation knows the unit
+    // is a member of `activeUnitSet` and casts internally.
+    setActiveUnit: (unit: string) => void;
     totalQuantityUnit: string;
 }
 

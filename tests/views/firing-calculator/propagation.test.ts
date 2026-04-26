@@ -128,6 +128,14 @@ describe("bundled activation OR-migrates pieces", () => {
         expect(state.firingToggles.glaze).toBe(true);
     });
 
+    it("toggleBundled bumps bundlePulseKey on every flip (drives the rate-input pulse animation)", () => {
+        const before = state.bundlePulseKey;
+        toggleBundled();
+        expect(state.bundlePulseKey).toBe(before + 1);
+        toggleBundled();
+        expect(state.bundlePulseKey).toBe(before + 2);
+    });
+
     it("bundled activation seeds bundledRate from first non-zero individual rate", () => {
         setStudio({
             bundled: false,
@@ -247,6 +255,18 @@ describe("basis change reseeds rates; unit change does not", () => {
         expect(state.firingRates.bisque).toBeCloseTo(0.05);
     });
 
+    it("round-tripping basis preserves user-edited rates via the per-basis cache", () => {
+        // Edit rates on volume, switch to weight, switch back. The cache
+        // should restore the prior volume rates instead of reseeding.
+        setStudio({ basis: "volume", firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10 } });
+        const toWeight = { currentTarget: { value: "weight" } } as unknown as Event;
+        handleBasisChange(toWeight);
+        expect(state.firingRates).toEqual(BASIS_META.weight.defaults);
+        const backToVolume = { currentTarget: { value: "volume" } } as unknown as Event;
+        handleBasisChange(backToVolume);
+        expect(state.firingRates).toEqual({ bisque: 0.05, glaze: 0.06, luster: 0.10 });
+    });
+
     it("changing weight unit does not reset rates", () => {
         setStudio({ basis: "weight", firingRates: { bisque: 1.5, glaze: 1.5, luster: 2.0 } });
         handleWeightUnitChange("kg");
@@ -271,7 +291,7 @@ describe("addPiece and removePiece", () => {
 
     it("addPiece assigns unique ids", () => {
         addPiece(); addPiece(); addPiece();
-        const ids = state.pieces.map((p) => p.id);
+        const ids = state.pieces.map((piece) => piece.id);
         expect(new Set(ids).size).toBe(ids.length);
     });
 
@@ -282,6 +302,13 @@ describe("addPiece and removePiece", () => {
             makePiece({ id: 3 }),
         ]);
         removePiece(2);
-        expect(state.pieces.map((p) => p.id)).toEqual([1, 3]);
+        expect(state.pieces.map((piece) => piece.id)).toEqual([1, 3]);
+    });
+
+    it("removePiece is a no-op on the last remaining piece (invariant: at least one piece)", () => {
+        setPieces([makePiece({ id: 1 })]);
+        removePiece(1);
+        expect(state.pieces.length).toBe(1);
+        expect(state.pieces[0].id).toBe(1);
     });
 });

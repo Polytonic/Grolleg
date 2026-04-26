@@ -43,9 +43,9 @@ export interface ConnectedPillAttrs {
 export const ConnectedPill: m.Component<ConnectedPillAttrs> = {
     view: ({ attrs }) => {
         const size = attrs.size ?? "pill";
-        const geom = GEOMETRY[size];
-        const innerRadius = attrs.connected ? 0 : geom.outerRadius;
-        const splitGap = attrs.connected ? 0 : geom.gap;
+        const geometry = GEOMETRY[size];
+        const innerRadius = attrs.connected ? 0 : geometry.outerRadius;
+        const splitGap = attrs.connected ? 0 : geometry.gap;
         const bothActiveConnected = attrs.connected && attrs.aActive && attrs.bActive;
 
         // Per-edge border colors. Top and bottom always use --cp-border
@@ -62,18 +62,18 @@ export const ConnectedPill: m.Component<ConnectedPillAttrs> = {
         const halfStyle = (isLeft: boolean, active: boolean): Record<string, string> => {
             const { left, right } = edge(isLeft);
             return {
-                padding: geom.padding,
-                fontSize: `${geom.fontSize}px`,
+                padding: geometry.padding,
+                fontSize: `${geometry.fontSize}px`,
                 background: "var(--cp-bg)",
                 color: "var(--cp-color)",
                 borderTop:    "1px solid var(--cp-border)",
                 borderBottom: "1px solid var(--cp-border)",
                 borderLeft:   `1px solid ${left}`,
                 borderRight:  `1px solid ${right}`,
-                borderTopLeftRadius:     `${isLeft ? geom.outerRadius : innerRadius}px`,
-                borderBottomLeftRadius:  `${isLeft ? geom.outerRadius : innerRadius}px`,
-                borderTopRightRadius:    `${isLeft ? innerRadius : geom.outerRadius}px`,
-                borderBottomRightRadius: `${isLeft ? innerRadius : geom.outerRadius}px`,
+                borderTopLeftRadius:     `${isLeft ? geometry.outerRadius : innerRadius}px`,
+                borderBottomLeftRadius:  `${isLeft ? geometry.outerRadius : innerRadius}px`,
+                borderTopRightRadius:    `${isLeft ? innerRadius : geometry.outerRadius}px`,
+                borderBottomRightRadius: `${isLeft ? innerRadius : geometry.outerRadius}px`,
                 marginRight: isLeft ? `${splitGap}px` : "0px",
                 fontWeight: active ? "600" : "400",
             };

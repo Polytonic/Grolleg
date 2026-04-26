@@ -37,8 +37,12 @@ export const TotalBand: m.Component<{ derived: Derived }> = {
                 ),
                 m(".total-band__subtitle", subtitle),
             ),
+            // role/aria-live announces the new total when it actually
+            // changes. aria-atomic was dropped because Mithril's auto-
+            // redraw fires on every keystroke, and atomic re-announcement
+            // of the entire region on every redraw was extremely chatty.
             m(".total-band__amount",
-                { role: "status", "aria-live": "polite", "aria-atomic": "true" },
+                { role: "status", "aria-live": "polite" },
                 `$${aggregate.total.toFixed(2)}`),
         );
     },

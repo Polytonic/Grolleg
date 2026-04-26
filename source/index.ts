@@ -26,11 +26,22 @@ const redirectToShrinkage: m.RouteResolver = {
     },
 };
 
+// Wraps a tool component so document.title updates on every route entry,
+// not only on initial mount. A bare component would set the title in
+// `oncreate`, which doesn't re-fire on back/forward navigation between
+// tools (Mithril keeps the same root mounted and just swaps children).
+const titled = (title: string, component: m.Component): m.RouteResolver => ({
+    onmatch() {
+        document.title = title;
+        return component;
+    },
+});
+
 m.route.prefix = detectBase();
 m.route(document.body, "/shrinkage", {
     "/":            redirectToShrinkage,
-    "/shrinkage":   ShrinkageCalculatorView,
-    "/firing":      FiringCalculatorView,
+    "/shrinkage":   titled("Grolleg • Shrinkage Calculator", ShrinkageCalculatorView),
+    "/firing":      titled("Grolleg • Firing Calculator", FiringCalculatorView),
     "/:rest...":    NotFoundView,
 });
 

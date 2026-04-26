@@ -247,14 +247,18 @@
        saved rate value is preserved and reappears at full strength when
        the firing is re-enabled. Definitive grey rather than translucent
        so the slot reads as inactive, not clickable-but-faded. */
+    /* Disabled colors use --color-muted (not --color-muted-soft) on
+       --color-surface to clear WCAG 1.4.3 (4.5:1) for text and 1.4.11
+       (3:1) for the border. The earlier muted-soft tokens computed to
+       2.09:1 / 1.61:1, both failing AA. */
     .rate-inputs .field-group.disabled .input-label,
     .rate-inputs .field-group.disabled .input-suffix {
-        color: var(--color-muted-soft);
+        color: var(--color-muted);
     }
     .rate-inputs .field-group.disabled .input {
         background: var(--color-surface);
-        color: var(--color-muted-soft);
-        border-color: var(--color-border-dark);
+        color: var(--color-muted);
+        border-color: var(--color-muted);
         cursor: not-allowed;
     }
 
@@ -274,14 +278,16 @@
     }
     /* Hide the native number-input spinners when disabled. The arrows
        can't be activated anyway (input is disabled), so they're pure
-       visual noise. */
+       visual noise. The ::-webkit-*-spin-button pseudo-elements have
+       no standard equivalent, so the project's no-vendor-prefixes rule
+       carves out an exception here. */
     .rate-inputs .field-group.disabled .input::-webkit-inner-spin-button,
     .rate-inputs .field-group.disabled .input::-webkit-outer-spin-button {
         appearance: none;
         margin: 0;
     }
     .rate-inputs .field-group.disabled .input {
-        -moz-appearance: textfield;
+        appearance: textfield;
     }
 
     /* Hint shown beneath the rate inputs when every slot is disabled. */
@@ -323,6 +329,11 @@
         gap: 10px;
         margin-bottom: 10px;
         min-height: 24px;
+        /* Wrap at narrow widths so a long comparison label like
+           "≈ a mini fridge (are you sure?)" plus a 10+ piece badge
+           plus the remove X don't overflow the row at iPhone SE
+           (375px) widths. */
+        flex-wrap: wrap;
     }
     .piece-row__header .section-label {
         margin-bottom: 0;
@@ -333,8 +344,23 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        /* Cap the comparison cluster so the longest label truncates
+           gracefully rather than pushing the remove X off-screen. */
+        max-width: 100%;
+        min-width: 0;
+    }
+    .piece-row__header-meta .piece-row__comparison {
+        min-width: 0;
+    }
+    .piece-row__header-meta .piece-row__comparison-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
     }
 
+    /* Renders as <h3> for SR heading anchoring; reset the default
+       browser h3 margins so the badge sits inline within the header. */
     .piece-row__badge {
         font-family: var(--font-mono);
         font-size: 11px;
@@ -344,6 +370,8 @@
         padding: 2px 8px;
         border-radius: 4px;
         line-height: 1.4;
+        margin: 0;
+        display: inline-block;
     }
 
     .piece-row__remove {
@@ -374,7 +402,7 @@
        competing with real numbers in a list of cards. */
     .piece-row__price-block {
         font-family: var(--font-mono);
-        font-size: 13px;
+        font-size: 16px;
         white-space: nowrap;
     }
 
@@ -386,7 +414,7 @@
             color: var(--color-muted);
             font-weight: 400;
             font-family: var(--font-mono);
-            font-size: 13px;
+            font-size: 16px;
         }
     }
 
@@ -465,12 +493,12 @@
         align-items: center;
     }
 
-    .piece-row__include-meta {
+    /* PriceLabel anchors right inside .piece-row__include via auto-margin
+       on whichever element (price-block for active, .piece-row__price.zero
+       for $0) is the price node. */
+    .piece-row__include > :is(.piece-row__price-block, .piece-row__price.zero) {
         margin-left: auto;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: nowrap;
+        white-space: nowrap;
     }
 
     /* ── Chip ──
@@ -512,9 +540,9 @@
 
         &.disabled {
             cursor: not-allowed;
-            --chip-border: var(--color-border-dark);
+            --chip-border: var(--color-muted);
             --chip-bg:     var(--color-surface);
-            --chip-color:  var(--color-muted-soft);
+            --chip-color:  var(--color-muted);
         }
 
         @media (hover: hover) {
@@ -549,23 +577,27 @@
         margin-top: 14px;
     }
 
-    /* Add Piece is an end-of-list secondary action, not the primary
-       control flow, so it sits at chip-scale (~32px) rather than the
-       44px floor reserved for input rows and pills. */
+    /* Add Piece is the primary action that grows the pieces list, so
+       it gets a real 44px tap target (WCAG 2.5.5) and aligns to the
+       input scale (8px radius, 14px horizontal padding). The accent
+       fill and 13px font keep it less prominent than the input rows
+       it sits beneath, but it remains comfortably tappable mid-task
+       on a phone. */
     .add-piece {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
         background: var(--color-accent);
         color: var(--color-accent-text);
         border: none;
-        padding: 7px 12px;
-        border-radius: 7px;
+        padding: 10px 14px;
+        border-radius: 8px;
         font-family: var(--font-sans);
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         line-height: 1;
+        min-height: 44px;
         transition: background-color 0.12s;
 
         @media (hover: hover) {
@@ -651,10 +683,9 @@
 
     /* ── Tap Targets ──
        The shared .input and .select from controls.css declare their own
-       44px floor; .pill, .chip, and .connected-pill__half declare theirs
-       in their own scopes. This rule covers the remaining tool-specific
-       buttons. .add-piece is a secondary action and sets its own size
-       in its own block. */
+       44px floor. .pill, .chip, .connected-pill__half, and .add-piece
+       declare theirs in their own scopes. This rule covers the
+       remaining tool-specific buttons. */
     :is(.input, .piece-row__remove) {
         min-height: 44px;
     }

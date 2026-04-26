@@ -83,6 +83,21 @@ describe("handleFiringRateInput", () => {
         handleFiringRateInput("bisque", mockInputEvent("not a number"));
         expect(state.firingRates.bisque).toBe(0);
     });
+
+    it("clamps negatives to 0 (input min='0' is validation, not coercion)", () => {
+        state.basis = "volume";
+        handleFiringRateInput("bisque", mockInputEvent("-5"));
+        expect(state.firingRates.bisque).toBe(0);
+    });
+
+    it("clamps absurd values like a pasted '1e10' to MAX_DISPLAY_RATE", () => {
+        state.basis = "volume";
+        handleFiringRateInput("bisque", mockInputEvent("1e10"));
+        // MAX_DISPLAY_RATE = 1000 in display units; for volume that's
+        // stored as 1000 / 100 = 10 dollars per in³. Far below the
+        // hundred-billion-dollar bill the unclamped path produced.
+        expect(state.firingRates.bisque).toBe(10);
+    });
 });
 
 describe("handleBundledRateInput", () => {

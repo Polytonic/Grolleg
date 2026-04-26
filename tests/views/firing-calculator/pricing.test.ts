@@ -121,8 +121,8 @@ describe("rounding modes produce expected quantities", () => {
     });
 
     it("dim-ceil on footprint rounds each L/W independently", () => {
-        const p = makePiece({ L: "5.2", W: "3.1" });
-        expect(computeQuantity(p, "footprint", "dim-ceil", 0)).toBe(24); // ceil(5.2)*ceil(3.1) = 6*4
+        const piece = makePiece({ L: "5.2", W: "3.1" });
+        expect(computeQuantity(piece, "footprint", "dim-ceil", 0)).toBe(24); // ceil(5.2)*ceil(3.1) = 6*4
     });
 });
 
@@ -252,12 +252,12 @@ describe("BASIS_META and FIRING_TYPES sanity", () => {
         }
     });
 
-    it("luster rate is roughly 2× bisque for each basis", () => {
+    it("luster rate is 3-6× bisque for each basis (specialty firing convention)", () => {
         for (const basis of ["volume", "footprint", "weight"] as const) {
             const bisque = BASIS_META[basis].defaults.bisque;
             const luster = BASIS_META[basis].defaults.luster;
-            expect(luster).toBeGreaterThan(bisque * 1.5);
-            expect(luster).toBeLessThan(bisque * 3);
+            expect(luster).toBeGreaterThan(bisque * 3);
+            expect(luster).toBeLessThan(bisque * 6);
         }
     });
 
@@ -266,9 +266,9 @@ describe("BASIS_META and FIRING_TYPES sanity", () => {
         // shared rate even when shown as separate inputs). Luster is
         // always more expensive: it's a specialty firing.
         for (const basis of ["volume", "footprint", "weight"] as const) {
-            const d = BASIS_META[basis].defaults;
-            expect(d.bisque).toBeLessThanOrEqual(d.glaze);
-            expect(d.glaze).toBeLessThan(d.luster);
+            const defaults = BASIS_META[basis].defaults;
+            expect(defaults.bisque).toBeLessThanOrEqual(defaults.glaze);
+            expect(defaults.glaze).toBeLessThan(defaults.luster);
         }
     });
 });

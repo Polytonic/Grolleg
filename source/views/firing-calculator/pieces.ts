@@ -4,7 +4,7 @@ import { InputWithSuffix } from "../../components/input-with-suffix";
 import { Silhouette } from "./comparison";
 import {
     state, addPiece, removePiece, updatePiece,
-    togglePieceFiring, togglePiecePair,
+    togglePieceFiring, togglePiecePair, expandUnit,
 } from "./state";
 import type { Derived, Piece, PieceComputed } from "./state";
 
@@ -116,7 +116,8 @@ const Dimensions: m.Component<DimensionsAttrs> = {
                     m("label.input-label", { for: `piece-${piece.id}-weight` }, "Weight"),
                     m(InputWithSuffix, {
                         suffix: studio.weightUnit,
-                        inputClass: "numeric",
+                        suffixSr: expandUnit(studio.weightUnit),
+                        modifiers: ["numeric"],
                         id: `piece-${piece.id}-weight`,
                         type: "number",
                         inputmode: "decimal",
@@ -143,7 +144,8 @@ const Dimensions: m.Component<DimensionsAttrs> = {
                 m("label.input-label", { for: `piece-${piece.id}-${column.key}` }, column.label),
                 m(InputWithSuffix, {
                     suffix: studio.dimensionUnit,
-                    inputClass: column.warn ? "numeric warn" : "numeric",
+                    suffixSr: expandUnit(studio.dimensionUnit),
+                    modifiers: column.warn ? ["numeric", "warn"] : ["numeric"],
                     id: `piece-${piece.id}-${column.key}`,
                     type: "number",
                     inputmode: "decimal",
@@ -205,9 +207,7 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
                     onclick: () => togglePieceFiring(piece.id, "luster"),
                 }, "Luster"),
             ),
-            m(".piece-row__include-meta",
-                m(PriceLabel, { computed, derived }),
-            ),
+            m(PriceLabel, { computed, derived }),
         );
     },
 };
@@ -233,10 +233,17 @@ const PieceRow: m.Component<PieceRowAttrs> = {
         const hasMeta = !!comparison || canRemove;
         return m(".piece-row",
             m(".piece-row__header",
-                indexLabel && m("span.piece-row__badge",
-                    { "aria-hidden": "true" },
+                // The badge is the SR heading anchor in multi-piece mode
+                // ("Piece 02") so heading-nav has somewhere to land
+                // between the section h2 and the input controls.
+                indexLabel && m("h3.piece-row__badge",
+                    { "aria-label": `Piece ${indexLabel}` },
                     indexLabel),
-                m("span.section-label", "Piece Dimensions"),
+                // Single-piece mode skips the section label since the
+                // dimension grid below self-labels (Length / Width /
+                // Height); the badge is what makes the redundant header
+                // useful as an anchor in multi-piece mode.
+                indexLabel && m("span.section-label", "Piece Dimensions"),
                 hasMeta && m(".piece-row__header-meta",
                     comparison && m("span.piece-row__comparison",
                         m(Silhouette, { type: comparison.silhouette, size: 18 }),
@@ -252,7 +259,7 @@ const PieceRow: m.Component<PieceRowAttrs> = {
             m(Dimensions, { piece, derived, heightBelowMin }),
             heightBelowMin && m(".piece-row__warning",
                 { role: "status", "aria-live": "polite" },
-                `Billed at ${studio.minHeight} ${studio.dimensionUnit} (minimum height). Pieces shorter than this are charged at the minimum height.`,
+                `Billed at ${studio.minHeight} ${studio.dimensionUnit} minimum. Shorter pieces are charged at this height.`,
             ),
             m(IncludeRow, { piece, computed, derived }),
         );
@@ -270,6 +277,7 @@ export const PiecesSection: m.Component<{ derived: Derived }> = {
         const total = derived.pieces.length;
         const showIndex = total > 1;
         return m(".pieces-section",
+            m("h2.sr-only", "Pieces"),
             m(".pieces-stack",
                 derived.pieces.map((computed, index) => m(PieceRow, {
                     key: computed.piece.id,
@@ -281,7 +289,7 @@ export const PiecesSection: m.Component<{ derived: Derived }> = {
             ),
             m(".pieces-add-row",
                 m("button.add-piece", { type: "button", onclick: addPiece },
-                    plusIcon(12),
+                    plusIcon(14),
                     m("span", "Add Piece"),
                 ),
             ),

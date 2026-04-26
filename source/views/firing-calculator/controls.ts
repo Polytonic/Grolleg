@@ -4,24 +4,26 @@ import { ConnectedPill } from "../../components/connected-pill";
 import { UnitToggle } from "../../components/unit-toggle";
 import { InputWithSuffix } from "../../components/input-with-suffix";
 import {
-    state, BASIS_META, ROUNDING_OPTIONS, toDisplayRate,
+    state, BASIS_META, ROUNDING_OPTIONS, toDisplayRate, toPositive,
+    expandUnit, UNIT_VERBOSE,
     handleBasisChange, handleRoundingChange, handleMinHeightInput,
     handleFiringRateInput, handleBundledRateInput,
     toggleFiring, toggleBundled,
 } from "./state";
-import type { Derived } from "./state";
+import type { Basis, Derived } from "./state";
 
 
-/* Aria-label expansion for every unit string the calculator can show.
-   Falls back to the raw unit if a key isn't listed. */
-const UNIT_ARIA_LABELS: Record<string, string> = {
-    mm: "millimeters",
-    cm: "centimeters",
-    in: "inches",
-    g:  "grams",
-    kg: "kilograms",
-    oz: "ounces",
-    lb: "pounds",
+/* Verbose rate-unit string used by screen readers via aria-describedby.
+   Mirrors the short suffix shown next to the input ("¢/in³" → "cents
+   per cubic inch"). Falls back to the raw rateUnit string for any
+   shape not anticipated. */
+const singularize = (word: string): string =>
+    word.endsWith("s") ? word.slice(0, -1) : word;
+
+const expandRateUnit = (basis: Basis, dimensionUnit: string, weightUnit: string): string => {
+    if (basis === "volume")    return `cents per cubic ${singularize(expandUnit(dimensionUnit))}`;
+    if (basis === "footprint") return `cents per square ${singularize(expandUnit(dimensionUnit))}`;
+    return `dollars per ${singularize(expandUnit(weightUnit))}`;
 };
 
 
@@ -80,7 +82,7 @@ const Pill: m.Component<PillAttrs> = {
 
 const BasisField: m.Component = {
     view: () => m(".field-group",
-        m("label.label", { for: "basis-select" }, "Measurement Method"),
+        m("label.label", { for: "basis-select" }, "Pricing By"),
         m("select.select#basis-select",
             {
                 value: state.basis,
@@ -96,10 +98,10 @@ const BasisField: m.Component = {
 const RoundingField: m.Component = {
     view: () => m(".field-group",
         m("label.label", { for: "rounding-select" },
-            m("span", "Rounding Method"),
+            m("span", "Rounding"),
             m(Tooltip, {
                 label: "rounding",
-                text: 'How dimensions are rounded before billing. For a 4.2 × 5.7 × 3.1 piece (74.2 in³ exact): Each Dimension rounds up L, W, H independently to 5 × 6 × 4 = 120 in³, matching the measuring-box convention. Total rounds up the final volume to 75 in³. Nearest Whole rounds without preference to 74 in³. Don\'t Round uses exact decimals.',
+                text: 'How dimensions are rounded before billing. For a 4.2 × 5.7 × 3.1 piece (74.2 in³ exact): Per Dimension rounds up L, W, H independently to 5 × 6 × 4 = 120 in³, matching the measuring-box convention. Total rounds up the final volume to 75 in³. Nearest Whole rounds without preference to 74 in³. Don\'t Round uses exact decimals.',
             }),
         ),
         m("select.select#rounding-select",
@@ -134,8 +136,8 @@ const FiringsRow: m.Component = {
             m(Pill, {
                 active: state.bundled,
                 onclick: toggleBundled,
-                ariaLabel: "Bundle bisque and glaze rates",
-                title: "Bundled",
+                ariaLabel: "Bundle bisque and glaze under one shared rate",
+                title: "Bundle bisque and glaze under one shared rate",
             }, chainLinkIcon(16)),
         ),
         m(".firings-row__group",
@@ -184,7 +186,8 @@ const MinHeightField: m.Component = {
         ),
         m(InputWithSuffix, {
             suffix: state.dimensionUnit,
-            inputClass: "numeric",
+            suffixSr: expandUnit(state.dimensionUnit),
+            modifiers: ["numeric"],
             id: "min-height-input",
             type: "number",
             inputmode: "decimal",
@@ -226,27 +229,30 @@ interface RateField {
 // Cap a rate display value at 2 decimals and strip both trailing zeros
 // and floating-point artifacts. The cents conversion (× 100) introduces
 // noise like 0.035 → 3.5000000000000004, which would otherwise render
-// in the input as a ten-digit string. Examples:
+// in the input as a ten-digit string. toPositive guards against NaN /
+// non-finite slipping through if a stored rate ever gets corrupted.
+// Examples:
 //   3.5000000000000004 → "3.5"
 //   3.25               → "3.25"
 //   8                  → "8"
+//   NaN                → "0"
 const formatRateNumber = (value: number): string =>
-    Number(value.toFixed(2)).toString();
+    Number(toPositive(value).toFixed(2)).toString();
 
 // Stored 0 is rendered as an empty string so the input shows its
-// placeholder rather than a literal "0" — the placeholder reads as
-// "we'd suggest 4 here," whereas "0" reads as "you've entered zero."
-const formatRateValue = (stored: number, basis: string): string =>
-    stored === 0 ? "" : formatRateNumber(toDisplayRate(stored, basis as never));
+// placeholder rather than a literal "0". The placeholder reads as
+// a suggested value, whereas "0" reads as a deliberate entry.
+const formatRateValue = (stored: number, basis: Basis): string =>
+    stored === 0 ? "" : formatRateNumber(toDisplayRate(stored, basis));
 
 // Placeholder text shows the BASIS_META default for that firing in the
 // active basis' display unit (cents for volume/footprint, dollars for
 // weight).
-const formatPlaceholder = (defaultDollars: number, basis: string): string =>
-    formatRateNumber(toDisplayRate(defaultDollars, basis as never));
+const formatPlaceholder = (defaultDollars: number, basis: Basis): string =>
+    formatRateNumber(toDisplayRate(defaultDollars, basis));
 
-const collectRateFields = (basis: string): RateField[] => {
-    const defaults = BASIS_META[basis as never] as { defaults: typeof state.firingRates };
+const collectRateFields = (basis: Basis): RateField[] => {
+    const defaults = BASIS_META[basis];
     const fields: RateField[] = [];
     if (state.bundled) {
         // Bundled rate is shared between bisque and glaze. The slot
@@ -322,6 +328,12 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
         if (PREFERS_REDUCED_MOTION || !dom) return true;
         const snapshot = new Map<string, DOMRect>();
         for (const child of Array.from(dom.children) as HTMLElement[]) {
+            // Skip "zombie" cells already in their leave animation (Mithril
+            // keeps them in dom.children until onbeforeremove's promise
+            // resolves). Their getBoundingClientRect would return the
+            // absolute-positioned rect, which would pollute a survivor's
+            // FLIP delta on the next toggle.
+            if (child.dataset.flipping === "leaving") continue;
             const key = child.dataset.flipKey;
             if (key) snapshot.set(key, child.getBoundingClientRect());
         }
@@ -333,6 +345,7 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
         vnode.state.snapshot = null;
         if (!snapshot || PREFERS_REDUCED_MOTION) return;
         for (const child of Array.from(vnode.dom.children) as HTMLElement[]) {
+            if (child.dataset.flipping === "leaving") continue;
             const key = child.dataset.flipKey;
             if (!key) continue;
             const previous = snapshot.get(key);
@@ -364,8 +377,11 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
                     if (!parent) return;
                     const rect = element.getBoundingClientRect();
                     const parentRect = parent.getBoundingClientRect();
-                    // Lift out of flow so the surviving cells can reflow
-                    // to the new column count without waiting for fade-out.
+                    // Tag this cell so onbeforeupdate skips it on a
+                    // subsequent toggle while it's still mid-fade. Without
+                    // the tag, its absolute-positioned rect would pollute
+                    // the survivor's FLIP delta.
+                    element.dataset.flipping = "leaving";
                     element.style.position = "absolute";
                     element.style.left = `${rect.left - parentRect.left}px`;
                     element.style.top = `${rect.top - parentRect.top}px`;
@@ -374,7 +390,11 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
                     return new Promise<void>((resolve) => {
                         requestAnimationFrame(() => {
                             element.style.opacity = "0";
-                            setTimeout(resolve, 200);
+                            // The 250ms fallback is 50ms longer than the
+                            // CSS transition duration to absorb frame jitter
+                            // and tab-throttling on background tabs.
+                            element.addEventListener("transitionend", () => resolve(), { once: true });
+                            setTimeout(resolve, 250);
                         });
                     });
                 },
@@ -382,7 +402,8 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
                 m("label.input-label", { for: `rate-${field.key}` }, field.label),
                 m(InputWithSuffix, {
                     suffix: derived.rateUnit,
-                    inputClass: "numeric",
+                    suffixSr: expandRateUnit(derived.studio.basis, derived.studio.dimensionUnit, derived.studio.weightUnit),
+                    modifiers: ["numeric"],
                     // Luster is unaffected by the bundled toggle, so it
                     // doesn't get a pulseKey and never pulses on toggle.
                     pulseKey: field.key === "luster" ? undefined : state.bundlePulseKey,
@@ -410,8 +431,8 @@ const FiringRatesSection: m.Component<{ derived: Derived }> = {
                 m(UnitToggle, {
                     units: derived.activeUnitSet,
                     active: derived.activeUnit,
-                    onSelect: (unit) => derived.setActiveUnit(unit as never),
-                    ariaLabels: UNIT_ARIA_LABELS,
+                    onSelect: derived.setActiveUnit,
+                    ariaLabels: UNIT_VERBOSE,
                 }),
             ),
             m(RateInputs, { derived, fields }),
@@ -427,6 +448,10 @@ const FiringRatesSection: m.Component<{ derived: Derived }> = {
 
 export const ControlsSection: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".controls-section",
+        // Anchors SR navigation between the page <h1> and the per-piece
+        // h3 badges below. Visually hidden because the row labels
+        // (Pricing By, Rounding, Firing Types) already orient sighted users.
+        m("h2.sr-only", "Studio Settings"),
         m(BillingRow, { derived }),
         m(FiringsAndHeightRow, { derived }),
         m(FiringRatesSection, { derived }),

@@ -7,22 +7,32 @@ import m from "mithril";
    positioning context. The suffix is non-interactive so it doesn't
    eat clicks meant for the input.
 
-   Pass-through API: `suffix`, `inputClass`, and `pulseKey` are consumed
+   Pass-through API: `suffix`, `modifiers`, and `pulseKey` are consumed
    by the component, everything else flows to the inner <input>.
-   `inputClass` takes a space-separated modifier string (e.g., "numeric
-   warn") that gets appended to the base `.input.with-suffix` selector.
+   `modifiers` is a typed list of class hooks ("numeric", "warn",
+   "error") that get appended to the base `.input.with-suffix` selector.
    `pulseKey` is a monotonic counter. Whenever it changes between
    renders the input replays its `.pulsing` background-fade animation
    (CSS-defined per consumer). The animation also plays on initial
    mount when pulseKey is non-zero, so newly-appearing inputs flash
    alongside surviving ones on the same state change. */
 
+type Modifier = "numeric" | "warn" | "error";
+
 interface InputWithSuffixAttrs {
     suffix: m.Children;
-    inputClass?: string;
+    modifiers?: readonly Modifier[];
     pulseKey?: number;
+    /** Verbose unit string for screen-reader announcement (e.g. "inches",
+     *  "cents per cubic inch"). When provided, the input gains an
+     *  aria-describedby pointing to a hidden sibling so the unit is
+     *  announced alongside the label. The visible suffix can stay
+     *  short (e.g. "in", "¢/in³"). */
+    suffixSr?: string;
     [key: string]: unknown;
 }
+
+let suffixSrIdCounter = 0;
 
 type PulseTracker = { lastPulseKey: number };
 
@@ -32,40 +42,58 @@ const replayPulse = (element: HTMLElement) => {
     element.classList.add("pulsing");
 };
 
-export const InputWithSuffix: m.Component<InputWithSuffixAttrs> = {
-    view: ({ attrs }) => {
-        // `key` is consumed by Mithril for the parent component vnode but
-        // also surfaces in `attrs`. If left in the spread, it would tag
-        // the inner <input> as keyed while its sibling <span> stays
-        // unkeyed, which throws a "vnodes must either all have keys or
-        // none have keys" fragment error.
-        const { suffix, inputClass, pulseKey, key: _key, ...inputAttrs } = attrs;
-        void _key;
-        const modifier = inputClass
-            ? "." + inputClass.split(/\s+/).filter(Boolean).join(".")
+// Per-instance counter used to mint a stable id for the SR-only unit
+// span when `suffixSr` is provided.
+interface InputWithSuffixState {
+    suffixSrId?: string;
+}
+
+export const InputWithSuffix: m.Component<InputWithSuffixAttrs, InputWithSuffixState> = {
+    oninit(vnode) {
+        if (vnode.attrs.suffixSr) {
+            vnode.state.suffixSrId = `input-suffix-sr-${++suffixSrIdCounter}`;
+        }
+    },
+    view({ attrs, state }) {
+        // m.censor strips Mithril's reserved attrs (key + lifecycle hooks)
+        // plus the named extras, so the remainder spreads cleanly onto the
+        // inner <input> without the fragment-key error.
+        const inputAttrs = m.censor(attrs, ["suffix", "modifiers", "pulseKey", "suffixSr"]);
+        const modifierClass = attrs.modifiers?.length
+            ? "." + attrs.modifiers.join(".")
             : "";
 
         const inputProps: Record<string, unknown> = { ...inputAttrs };
-        if (pulseKey !== undefined) {
-            inputProps.oncreate = (vnode: m.VnodeDOM) => {
-                (vnode.state as PulseTracker).lastPulseKey = pulseKey;
+        if (state.suffixSrId) {
+            // Compose with caller-supplied aria-describedby if present.
+            const existing = inputProps["aria-describedby"];
+            inputProps["aria-describedby"] = existing
+                ? `${existing} ${state.suffixSrId}`
+                : state.suffixSrId;
+        }
+        if (attrs.pulseKey !== undefined) {
+            const pulseKey = attrs.pulseKey;
+            inputProps.oncreate = (vnode: m.VnodeDOM<unknown, PulseTracker>) => {
+                vnode.state.lastPulseKey = pulseKey;
                 // Mount-time pulse: this input just appeared in response
                 // to the same toggle that bumped the key. Animate so the
                 // new field reads as "this is what changed."
                 if (pulseKey > 0) replayPulse(vnode.dom as HTMLElement);
             };
-            inputProps.onupdate = (vnode: m.VnodeDOM) => {
-                const tracker = vnode.state as PulseTracker;
-                if (tracker.lastPulseKey === pulseKey) return;
-                tracker.lastPulseKey = pulseKey;
+            inputProps.onupdate = (vnode: m.VnodeDOM<unknown, PulseTracker>) => {
+                if (vnode.state.lastPulseKey === pulseKey) return;
+                vnode.state.lastPulseKey = pulseKey;
                 if (pulseKey === 0) return;
                 replayPulse(vnode.dom as HTMLElement);
             };
         }
 
         return m(".input-with-suffix",
-            m(`input.input.with-suffix${modifier}`, inputProps),
-            m("span.input-suffix", suffix),
+            m(`input.input.with-suffix${modifierClass}`, inputProps),
+            m("span.input-suffix", attrs.suffix),
+            state.suffixSrId && attrs.suffixSr
+                ? m("span.sr-only", { id: state.suffixSrId }, attrs.suffixSr)
+                : null,
         );
     },
 };

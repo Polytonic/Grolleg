@@ -44,9 +44,9 @@
 
         &.disabled {
             cursor: not-allowed;
-            --cp-border: var(--color-border-dark);
+            --cp-border: var(--color-muted);
             --cp-bg:     var(--color-surface);
-            --cp-color:  var(--color-muted-soft);
+            --cp-color:  var(--color-muted);
         }
 
         /* Inactive: tint toward accent on hover, deeper tint on press */
