@@ -71,6 +71,16 @@ export const InputWithSuffix: m.Component<InputWithSuffixAttrs, InputWithSuffixS
                 ? `${existing} ${state.suffixSrId}`
                 : state.suffixSrId;
         }
+        // Trackpad scroll over a focused number input would otherwise
+        // change the value (browser default for type="number"), making
+        // the page feel stuck. Blur on wheel hands the wheel back to
+        // the page so it scrolls instead.
+        if (inputProps.type === "number") {
+            inputProps.onwheel = (event: WheelEvent) => {
+                const target = event.currentTarget as HTMLInputElement;
+                if (document.activeElement === target) target.blur();
+            };
+        }
         if (attrs.pulseKey !== undefined) {
             const pulseKey = attrs.pulseKey;
             inputProps.oncreate = (vnode: m.VnodeDOM<unknown, PulseTracker>) => {

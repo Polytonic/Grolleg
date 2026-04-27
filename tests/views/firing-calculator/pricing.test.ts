@@ -167,7 +167,7 @@ describe("rate conversion (display vs stored)", () => {
 /* ── Bundled Rate Semantics ── */
 
 describe("bundled rate effective behavior", () => {
-    it("bundled bisque/glaze use bundledRate, not individual rates", () => {
+    it("bundled bisque/glaze charge bundledRate ONCE (not once per firing)", () => {
         const piece = makePiece({
             L: "1", W: "1", H: "1",
             firings: { bisque: true, glaze: true, luster: false },
@@ -179,13 +179,31 @@ describe("bundled rate effective behavior", () => {
             bundledRate: 0.06,
             rounding: "none", minHeight: 0,
         });
-        // qty = 1×1×1 = 1; rate = bundledRate (bisque) + bundledRate (glaze) = 0.12
+        // Bundled = one combined charge for bisque AND glaze together.
+        // qty = 1; rate = bundledRate = 0.06 (NOT 0.12).
         const result = calculatePrice(piece, studioSnapshot());
-        expect(result.rate).toBeCloseTo(0.12);
-        expect(result.price).toBeCloseTo(0.12);
+        expect(result.rate).toBeCloseTo(0.06);
+        expect(result.price).toBeCloseTo(0.06);
     });
 
-    it("bundled luster still uses individual luster rate", () => {
+    it("bundled charge still applies if only one of bisque/glaze is enabled on the piece", () => {
+        const piece = makePiece({
+            L: "1", W: "1", H: "1",
+            firings: { bisque: true, glaze: false, luster: false },
+        });
+        setStudio({
+            firingToggles: { bisque: true, glaze: true, luster: false },
+            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 },
+            bundled: true,
+            bundledRate: 0.06,
+            rounding: "none", minHeight: 0,
+        });
+        // Either firing being on triggers the bundled charge once.
+        const result = calculatePrice(piece, studioSnapshot());
+        expect(result.rate).toBeCloseTo(0.06);
+    });
+
+    it("bundled luster adds the individual luster rate on top of the bundle", () => {
         const piece = makePiece({
             L: "1", W: "1", H: "1",
             firings: { bisque: true, glaze: true, luster: true },
@@ -197,9 +215,9 @@ describe("bundled rate effective behavior", () => {
             bundledRate: 0.06,
             rounding: "none", minHeight: 0,
         });
-        // qty = 1; rate = 0.06 + 0.06 + 0.08 = 0.20
+        // qty = 1; rate = bundled (0.06) + luster (0.08) = 0.14
         const result = calculatePrice(piece, studioSnapshot());
-        expect(result.rate).toBeCloseTo(0.20);
+        expect(result.rate).toBeCloseTo(0.14);
     });
 });
 

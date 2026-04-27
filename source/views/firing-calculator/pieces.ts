@@ -82,14 +82,21 @@ const PriceLabel: m.Component<{ computed: PieceComputed; derived: Derived }> = {
     view: ({ attrs: { computed, derived } }) => {
         const { result, quantityUnit } = computed;
         const hasPrice = result.price > 0;
+        // Quantity comes first in display order, price last, so the $
+        // amount always pins to the right edge of the include row.
+        // Without this, an empty card ($0.00) and a card with dimensions
+        // ($4.20 · 80 in³) would show their $ amounts at different x
+        // offsets within the same column-aligned row.
         if (!hasPrice) {
-            return m("span.piece-row__price.zero", formatPrice(0));
+            return m("span.piece-row__price-block",
+                m("span.piece-row__price.zero", formatPrice(0)),
+            );
         }
         return m("span.piece-row__price-block",
-            m("span.piece-row__price", formatPrice(result.price)),
             result.quantity > 0 && m("span.piece-row__quantity",
-                ` · ${formatQuantity(result.quantity, derived.studio.basis)} ${quantityUnit}`,
+                `${formatQuantity(result.quantity, derived.studio.basis)} ${quantityUnit} · `,
             ),
+            m("span.piece-row__price", formatPrice(result.price)),
         );
     },
 };
@@ -239,11 +246,7 @@ const PieceRow: m.Component<PieceRowAttrs> = {
                 indexLabel && m("h3.piece-row__badge",
                     { "aria-label": `Piece ${indexLabel}` },
                     indexLabel),
-                // Single-piece mode skips the section label since the
-                // dimension grid below self-labels (Length / Width /
-                // Height); the badge is what makes the redundant header
-                // useful as an anchor in multi-piece mode.
-                indexLabel && m("span.section-label", "Piece Dimensions"),
+                m("span.section-label", "Piece Dimensions"),
                 hasMeta && m(".piece-row__header-meta",
                     comparison && m("span.piece-row__comparison",
                         m(Silhouette, { type: comparison.silhouette, size: 18 }),
@@ -289,7 +292,7 @@ export const PiecesSection: m.Component<{ derived: Derived }> = {
             ),
             m(".pieces-add-row",
                 m("button.add-piece", { type: "button", onclick: addPiece },
-                    plusIcon(14),
+                    plusIcon(12),
                     m("span", "Add Piece"),
                 ),
             ),

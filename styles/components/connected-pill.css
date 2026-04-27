@@ -42,9 +42,12 @@
             --cp-color:  var(--color-accent-text);
         }
 
+        /* Borderless grey: border matches fill so the half reads as a
+           flat grey card, matching the disabled chip and rate-input
+           treatments. */
         &.disabled {
             cursor: not-allowed;
-            --cp-border: var(--color-muted);
+            --cp-border: var(--color-surface);
             --cp-bg:     var(--color-surface);
             --cp-color:  var(--color-muted);
         }

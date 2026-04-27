@@ -145,13 +145,23 @@ describe("bundled activation OR-migrates pieces", () => {
         expect(state.bundledRate).toBeCloseTo(0.05);
     });
 
-    it("bundled activation falls back to the basis' bisque default when both individual rates are zero", () => {
+    it("bundled activation falls back to the basis' bundledDefault when both individual rates are zero", () => {
         setStudio({
             bundled: false,
             firingRates: { bisque: 0, glaze: 0, luster: 0.10 },
         });
         toggleBundled();
-        expect(state.bundledRate).toBeCloseTo(BASIS_META.volume.defaults.bisque);
+        expect(state.bundledRate).toBeCloseTo(BASIS_META.volume.bundledDefault);
+    });
+
+    it("bundled activation uses the basis' bundledDefault when bisque/glaze are still at their defaults (visibly differs from bisque alone)", () => {
+        // Default load: rates are at BASIS_META defaults, bisque non-zero.
+        // Without the ratesAtDefaults branch, the seed would echo bisque
+        // and the user would toggle Bundled and see no price change.
+        setStudio({ basis: "volume", bundled: false });
+        toggleBundled();
+        expect(state.bundledRate).toBeCloseTo(BASIS_META.volume.bundledDefault);
+        expect(state.bundledRate).not.toBeCloseTo(BASIS_META.volume.defaults.bisque);
     });
 });
 
@@ -234,11 +244,11 @@ describe("basis change reseeds rates; unit change does not", () => {
         expect(state.firingRates).toEqual(BASIS_META.weight.defaults);
     });
 
-    it("changing basis reseeds bundledRate from the new basis' bisque default", () => {
+    it("changing basis reseeds bundledRate from the new basis' bundledDefault", () => {
         setStudio({ bundledRate: 0.06 });
         const event = { currentTarget: { value: "footprint" } } as unknown as Event;
         handleBasisChange(event);
-        expect(state.bundledRate).toBeCloseTo(BASIS_META.footprint.defaults.bisque);
+        expect(state.bundledRate).toBeCloseTo(BASIS_META.footprint.bundledDefault);
     });
 
     it("re-selecting current basis is a no-op", () => {

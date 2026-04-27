@@ -17,7 +17,6 @@ body {
     line-height: 1.4;
     min-height: 100vh;
     padding: 32px 16px;
-    overscroll-behavior: none;
 }
 
 /* Design tokens, referenced from component CSS via var().

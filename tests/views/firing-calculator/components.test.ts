@@ -19,12 +19,21 @@ describe("FiringCalculatorView orchestrator", () => {
         expect(output.should.contain("Estimate firing costs"));
     });
 
-    it("renders the controls, pieces, divider, and total sections", () => {
+    it("renders the controls, pieces, and divider on a single-piece default load (no total band)", () => {
+        // Default load is one piece, so the Total band is suppressed
+        // (a single-piece run already shows its price inside the piece
+        // card).
         const output = mq(FiringCalculatorView);
         expect(output.should.have(".firing-calculator"));
         expect(output.should.have(".controls-section"));
         expect(output.should.have(".pieces-section"));
         expect(output.should.have(".divider"));
+        expect(output.should.not.have(".total-band"));
+    });
+
+    it("shows the total band once a second piece is added", () => {
+        setPieces([makePiece({ id: 1 }), makePiece({ id: 2 })]);
+        const output = mq(FiringCalculatorView);
         expect(output.should.have(".total-band"));
     });
 

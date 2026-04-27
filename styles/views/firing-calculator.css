@@ -247,10 +247,10 @@
        saved rate value is preserved and reappears at full strength when
        the firing is re-enabled. Definitive grey rather than translucent
        so the slot reads as inactive, not clickable-but-faded. */
-    /* Disabled colors use --color-muted (not --color-muted-soft) on
-       --color-surface to clear WCAG 1.4.3 (4.5:1) for text and 1.4.11
-       (3:1) for the border. The earlier muted-soft tokens computed to
-       2.09:1 / 1.61:1, both failing AA. */
+    /* Disabled colors mirror shrinkage's "Fired" derived-value card:
+       definitive grey fill, no visible border (border matches the bg
+       so the rule fades into the surface), text in --color-muted to
+       clear WCAG 1.4.3 (4.5:1) on --color-surface. */
     .rate-inputs .field-group.disabled .input-label,
     .rate-inputs .field-group.disabled .input-suffix {
         color: var(--color-muted);
@@ -258,7 +258,7 @@
     .rate-inputs .field-group.disabled .input {
         background: var(--color-surface);
         color: var(--color-muted);
-        border-color: var(--color-muted);
+        border-color: var(--color-surface);
         cursor: not-allowed;
     }
 
@@ -494,9 +494,10 @@
     }
 
     /* PriceLabel anchors right inside .piece-row__include via auto-margin
-       on whichever element (price-block for active, .piece-row__price.zero
-       for $0) is the price node. */
-    .piece-row__include > :is(.piece-row__price-block, .piece-row__price.zero) {
+       on the price-block. Quantity is inside the same span (rendered
+       BEFORE the price) so the dollar amount always pins to the row's
+       right edge regardless of whether quantity is also shown. */
+    .piece-row__include > .piece-row__price-block {
         margin-left: auto;
         white-space: nowrap;
     }
@@ -538,9 +539,12 @@
             font-weight: 600;
         }
 
+        /* Borderless grey to match the disabled rate-input style: the
+           border tint matches the fill so the chip reads as a flat
+           grey card, not a clickable outlined control. */
         &.disabled {
             cursor: not-allowed;
-            --chip-border: var(--color-muted);
+            --chip-border: var(--color-surface);
             --chip-bg:     var(--color-surface);
             --chip-color:  var(--color-muted);
         }
@@ -577,12 +581,12 @@
         margin-top: 14px;
     }
 
-    /* Add Piece is the primary action that grows the pieces list, so
-       it gets a real 44px tap target (WCAG 2.5.5) and aligns to the
-       input scale (8px radius, 14px horizontal padding). The accent
-       fill and 13px font keep it less prominent than the input rows
-       it sits beneath, but it remains comfortably tappable mid-task
-       on a phone. */
+    /* Add Piece is an end-of-list secondary action sitting on a 12px
+       margin from the cards. Sized to chip-scale (~36px) rather than
+       the 44px input floor so it doesn't compete visually with the
+       piece cards above. The chip-scale falls under the WCAG 2.5.8
+       (Compact, AAA) carve-out for grouped/secondary controls — same
+       exception used by the per-piece chips. */
     .add-piece {
         display: inline-flex;
         align-items: center;
@@ -590,14 +594,13 @@
         background: var(--color-accent);
         color: var(--color-accent-text);
         border: none;
-        padding: 10px 14px;
-        border-radius: 8px;
+        padding: 8px 12px;
+        border-radius: 6px;
         font-family: var(--font-sans);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
         line-height: 1;
-        min-height: 44px;
         transition: background-color 0.12s;
 
         @media (hover: hover) {
@@ -617,12 +620,21 @@
        orchestrator places between Pieces and Total. The divider does the
        work of separating the result from the configuration; the band
        itself has no border or framing. */
+    /* Card-styled to match shrinkage's results-card vocabulary. Only
+       renders in multi-piece mode (orchestrator gates on
+       pieces.length > 1) since a single-piece run already shows its
+       price inside its own card. */
     .total-band {
+        background: var(--color-card);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 14px;
+        box-shadow: 0 4px 20px var(--color-border-subtle);
+        padding: 20px;
+        margin-top: 20px;
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 20px;
         align-items: end;
-        padding: 0;
     }
 
     .total-band__identity {

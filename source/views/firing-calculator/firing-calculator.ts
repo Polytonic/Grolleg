@@ -15,6 +15,10 @@ import { TotalBand } from "./total";
 export const FiringCalculatorView: m.Component = {
     view: () => {
         const derived = computeDerived();
+        // The Total band is only meaningful with multiple pieces (a
+        // single-piece run gets its price in the piece card itself).
+        // Hidden in single-piece mode, along with its preceding divider.
+        const showTotal = derived.pieces.length > 1;
         return m(".firing-calculator",
             m(".container",
                 m("h1.title", "Firing Calculator"),
@@ -22,8 +26,7 @@ export const FiringCalculatorView: m.Component = {
                 m(ControlsSection, { derived }),
                 m(".divider", { role: "separator" }),
                 m(PiecesSection, { derived }),
-                m(".divider", { role: "separator" }),
-                m(TotalBand, { derived }),
+                showTotal && m(TotalBand, { derived }),
                 m("p.disclaimer", "Estimates only. Actual billing may differ."),
             ),
         );
