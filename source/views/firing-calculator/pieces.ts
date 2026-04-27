@@ -74,29 +74,46 @@ const formatQuantity = (value: number, basis: string): string =>
     basis === "weight" ? value.toFixed(2) : value.toFixed(0);
 
 
-/* ── Price + Quantity ──
-   Right-justified in the Include row. Active price is accent-coloured;
-   $0 reads as muted-soft so it doesn't compete with real numbers. */
+/* ── Price Label ──
+   Right-justified inside the Include row. Active price is accent
+   coloured; $0 reads as muted so empty cards don't compete with
+   priced ones in a stack. The price sits in the same row as the
+   firings chips so it reads as "with these firings included, the
+   piece costs $X." */
 
-const PriceLabel: m.Component<{ computed: PieceComputed; derived: Derived }> = {
-    view: ({ attrs: { computed, derived } }) => {
-        const { result, quantityUnit } = computed;
+const PriceLabel: m.Component<{ computed: PieceComputed }> = {
+    view: ({ attrs: { computed } }) => {
+        const { result } = computed;
         const hasPrice = result.price > 0;
-        // Quantity comes first in display order, price last, so the $
-        // amount always pins to the right edge of the include row.
-        // Without this, an empty card ($0.00) and a card with dimensions
-        // ($4.20 · 80 in³) would show their $ amounts at different x
-        // offsets within the same column-aligned row.
-        if (!hasPrice) {
-            return m("span.piece-row__price-block",
-                m("span.piece-row__price.zero", formatPrice(0)),
+        return m("span.piece-row__price-block",
+            m(`span.piece-row__price${hasPrice ? "" : ".zero"}`, formatPrice(result.price)),
+        );
+    },
+};
+
+
+/* ── Size Label ──
+   Silhouette icon + comparison name + parenthetical quantity, right
+   justified in the piece-row header (next to the Remove X when the
+   row is removable). Renders any time the piece has valid dimensions
+   (quantity > 0), independent of pricing or which firings are
+   selected: toggling firings off shouldn't hide the dimensions the
+   user just entered. When no comparison shape matches the
+   dimensions, falls back to the bare quantity. */
+
+const SizeLabel: m.Component<{ computed: PieceComputed; derived: Derived }> = {
+    view: ({ attrs: { computed, derived } }) => {
+        const { result, comparison, quantityUnit } = computed;
+        if (result.quantity <= 0) return null;
+        const size = `${formatQuantity(result.quantity, derived.studio.basis)} ${quantityUnit}`;
+        if (comparison) {
+            return m(".piece-row__size-block",
+                m(Silhouette, { type: comparison.silhouette, size: 18 }),
+                m("span", `≈ ${comparison.name} (${size})`),
             );
         }
-        return m("span.piece-row__price-block",
-            result.quantity > 0 && m("span.piece-row__quantity",
-                `${formatQuantity(result.quantity, derived.studio.basis)} ${quantityUnit} · `,
-            ),
-            m("span.piece-row__price", formatPrice(result.price)),
+        return m(".piece-row__size-block",
+            m("span", size),
         );
     },
 };
@@ -175,20 +192,20 @@ const Dimensions: m.Component<DimensionsAttrs> = {
 
 /* ── Include Row ──
    The Bisque|Glaze ConnectedPill (chip scale) and Luster chip on the
-   left. Price + quantity right-justified on the right. The comparison
-   silhouette has moved up to the Piece Dimensions header row, leaving
-   this row to read as "with these firings included, the piece costs
-   $X." The pair's `connected` reflects ONLY the studio bundled flag,
-   never the per-piece firing-active state. */
+   left. Price right-justified on the right. The size cluster
+   (silhouette + comparison + qty) lives in the Piece Dimensions
+   header row above, so this row reads as "with these firings
+   included, the piece costs $X." The pair's `connected` reflects
+   ONLY the studio bundled flag, never the per-piece firing-active
+   state. */
 
 interface IncludeRowAttrs {
     piece: Piece;
     computed: PieceComputed;
-    derived: Derived;
 }
 
 const IncludeRow: m.Component<IncludeRowAttrs> = {
-    view: ({ attrs: { piece, computed, derived } }) => {
+    view: ({ attrs: { piece, computed } }) => {
         const onPair = (key: "bisque" | "glaze") =>
             state.bundled
                 ? togglePiecePair(piece.id, key)
@@ -214,17 +231,20 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
                     onclick: () => togglePieceFiring(piece.id, "luster"),
                 }, "Luster"),
             ),
-            m(PriceLabel, { computed, derived }),
+            m(PriceLabel, { computed }),
         );
     },
 };
 
 
 /* ── Piece Row ──
-   Header row: badge (multi-piece) · "Piece Dimensions" label ·
-   comparison silhouette (right-justified, when dimensions yield one) ·
-   remove X (multi-piece, far right). Single-piece mode skips both badge
-   and X so the header collapses to label + comparison. */
+   Header row: badge (multi-piece) · "Piece Dimensions" label · size
+   cluster (silhouette + comparison + qty, when dimensions are valid)
+   · remove X (multi-piece, far right). The size cluster renders any
+   time dimensions are valid, independent of firings, so a user
+   toggling firings off doesn't lose visual confirmation of the
+   dimensions they entered. Single-piece mode skips badge and remove
+   X so the header collapses to label + size cluster. */
 
 interface PieceRowAttrs {
     computed: PieceComputed;
@@ -235,9 +255,8 @@ interface PieceRowAttrs {
 
 const PieceRow: m.Component<PieceRowAttrs> = {
     view: ({ attrs: { computed, derived, indexLabel, canRemove } }) => {
-        const { piece, comparison, heightBelowMin } = computed;
+        const { piece, heightBelowMin } = computed;
         const studio = derived.studio;
-        const hasMeta = !!comparison || canRemove;
         return m(".piece-row",
             m(".piece-row__header",
                 // The badge is the SR heading anchor in multi-piece mode
@@ -247,11 +266,8 @@ const PieceRow: m.Component<PieceRowAttrs> = {
                     { "aria-label": `Piece ${indexLabel}` },
                     indexLabel),
                 m("span.section-label", "Piece Dimensions"),
-                hasMeta && m(".piece-row__header-meta",
-                    comparison && m("span.piece-row__comparison",
-                        m(Silhouette, { type: comparison.silhouette, size: 18 }),
-                        m("span.piece-row__comparison-label", `≈ ${comparison.name}`),
-                    ),
+                m(".piece-row__header-meta",
+                    m(SizeLabel, { computed, derived }),
                     canRemove && m("button.piece-row__remove", {
                         type: "button",
                         "aria-label": indexLabel ? `Remove piece ${indexLabel}` : "Remove piece",
@@ -264,7 +280,7 @@ const PieceRow: m.Component<PieceRowAttrs> = {
                 { role: "status", "aria-live": "polite" },
                 `Billed at ${studio.minHeight} ${studio.dimensionUnit} minimum. Shorter pieces are charged at this height.`,
             ),
-            m(IncludeRow, { piece, computed, derived }),
+            m(IncludeRow, { piece, computed }),
         );
     },
 };

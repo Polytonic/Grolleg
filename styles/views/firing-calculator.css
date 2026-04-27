@@ -62,10 +62,25 @@
         grid-template-columns: 1fr 1fr;
     }
 
-    /* Firings + Min Height: matched 1fr columns so Min Height's input
-       fills the same width as Rounding's select above it. */
+    /* Firings + Min Height: the firings row needs its full natural
+       width (chain pill + separator + Bisque|Glaze + Luster on one
+       line, ~330px), which is more than half of the 640px-capped
+       container. Equal 1fr 1fr columns force the firings to wrap
+       internally (chain drops above the rest). Switching to flex
+       (overriding the grid display from the base rule) lets the
+       firings column take its natural unwrapped width while Min
+       Height fills the leftover space, and lets Min Height drop to
+       its own row when the leftover would shrink it below ~240px. */
     .firings-row-wrap.paired {
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: start;
+    }
+    .firings-row-wrap.paired > .field-group:first-child {
+        flex: 0 0 auto;
+    }
+    .firings-row-wrap.paired > .field-group:last-child {
+        flex: 1 1 240px;
     }
 
     /* ── Section ──
@@ -319,8 +334,8 @@
         box-shadow: 0 1px 4px var(--color-border-subtle);
     }
 
-    /* Header row: badge · Piece Dimensions label · meta cluster
-       (comparison + remove X) right-justified. The label sits naturally
+    /* Header row: badge · Piece Dimensions label · meta cluster (size
+       cluster + remove X) right-justified. The label sits naturally
        between badge and meta. The .section-label margin-bottom is
        overridden here because the header itself takes the spacing role. */
     .piece-row__header {
@@ -339,23 +354,16 @@
         margin-bottom: 0;
     }
 
+    /* Cap the meta cluster so a long comparison label truncates
+       gracefully (via the size-block's ellipsis) rather than pushing
+       the remove X off-screen. min-width: 0 lets the size-block's
+       inner span actually shrink below content width. */
     .piece-row__header-meta {
         margin-left: auto;
         display: flex;
         align-items: center;
         gap: 12px;
-        /* Cap the comparison cluster so the longest label truncates
-           gracefully rather than pushing the remove X off-screen. */
         max-width: 100%;
-        min-width: 0;
-    }
-    .piece-row__header-meta .piece-row__comparison {
-        min-width: 0;
-    }
-    .piece-row__header-meta .piece-row__comparison-label {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
         min-width: 0;
     }
 
@@ -396,10 +404,9 @@
         }
     }
 
-    /* Price label and price-block (price + " · qty unit") share styling.
-       The price block keeps the parts inline, in mono, so they read as
-       one number rather than two. Zero reads as muted to keep it from
-       competing with real numbers in a list of cards. */
+    /* Price block sits at the right edge of the Include row. Mono so
+       the $ amount reads as a single number; zero falls to muted so
+       empty cards don't compete with priced ones in the same stack. */
     .piece-row__price-block {
         font-family: var(--font-mono);
         font-size: 16px;
@@ -416,10 +423,6 @@
             font-family: var(--font-mono);
             font-size: 16px;
         }
-    }
-
-    .piece-row__quantity {
-        color: var(--color-muted);
     }
 
     /* Dimension grid: 2-col for footprint, 3-col for volume. Inputs share
@@ -443,21 +446,26 @@
         flex-shrink: 0;
     }
 
-    /* Comparison silhouette + label, inline. Lives inside the include
-       row's right-justified meta cluster (alongside the price). Uses
-       --color-muted to clear WCAG 1.4.11 non-text contrast against
-       the white card surface. */
-    .piece-row__comparison {
+    /* Size cluster (silhouette + "≈ name (qty unit)") sits in the
+       piece-row header next to the Remove X. Renders any time
+       dimensions are valid, independent of pricing or which firings
+       are selected, so the user always sees their entered dimensions
+       reflected back. Uses --color-muted to clear WCAG 1.4.11
+       non-text contrast against the white card surface. */
+    .piece-row__size-block {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         color: var(--color-muted);
-    }
-
-    .piece-row__comparison-label {
         font-family: var(--font-sans);
         font-size: 12px;
-        color: var(--color-muted);
+        min-width: 0;
+    }
+    .piece-row__size-block > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
     }
 
     /* Inline warning explainer for sub-minimum height. Repeats the H
@@ -474,9 +482,9 @@
         line-height: 1.4;
     }
 
-    /* Include row: chips on the left, comparison + price right-justified.
-       margin-left: auto on the meta cluster pushes it to the right edge.
-       flex-wrap allows the meta cluster to drop to its own line on
+    /* Include row: chips on the left, price right-justified.
+       margin-left: auto on the price-block pushes it to the right
+       edge. flex-wrap allows the price to drop to its own line on
        narrow viewports so the chips stay one row. */
     .piece-row__include {
         margin-top: 12px;
@@ -493,13 +501,8 @@
         align-items: center;
     }
 
-    /* PriceLabel anchors right inside .piece-row__include via auto-margin
-       on the price-block. Quantity is inside the same span (rendered
-       BEFORE the price) so the dollar amount always pins to the row's
-       right edge regardless of whether quantity is also shown. */
     .piece-row__include > .piece-row__price-block {
         margin-left: auto;
-        white-space: nowrap;
     }
 
     /* ── Chip ──
@@ -710,17 +713,11 @@
 
 
     /* ── Narrow Viewport ──
-       The firings row collapses earlier than the billing row because the
-       firings pills are fixed-width and would wrap inside their cell
-       before the row gets narrow enough to drop a select. Below 600px
-       Min Height wraps to its own line so pills keep one row.
-       Below 480px the Billing/Rounding row also collapses, and the rate
-       grid caps at 2 columns. */
-    @media (max-width: 600px) {
-        .firings-row-wrap.paired {
-            grid-template-columns: 1fr;
-        }
-    }
+       Below 480px the Billing/Rounding row collapses to a single
+       column and the rate grid caps at 2 columns so individual fields
+       stay readable on phones. The firings + Min Height row uses
+       flex-wrap on its container, so Min Height drops to its own row
+       automatically once the leftover space falls below 240px. */
     @media (max-width: 480px) {
         .billing-row.paired {
             grid-template-columns: 1fr;

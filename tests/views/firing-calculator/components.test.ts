@@ -203,16 +203,32 @@ describe("PiecesSection", () => {
         expect(output.should.have(".piece-row__weight"));
     });
 
-    it("comparison silhouette renders when dimensions are entered", () => {
+    it("size cluster renders silhouette + comparison name + qty when dimensions are entered", () => {
         // Pin dimUnit to inches so the cubeish bucket math is deterministic;
         // otherwise the locale-detected default in the test runtime can
         // shift the lookup (e.g., 4×4×5 cm³ falls in a different bucket).
         setStudio({ dimensionUnit: "in" });
         setPieces([makePiece({ L: "4", W: "4", H: "5" })]);
         const output = mq(PiecesSection, { derived: computeDerived() });
-        expect(output.should.have(".piece-row__comparison"));
-        expect(output.should.have(".piece-row__comparison-label"));
+        expect(output.should.have(".piece-row__size-block"));
         expect(output.should.contain("coffee mug"));
+        expect(output.should.contain("in³"));
+    });
+
+    it("size cluster keeps showing dimensions when all piece firings are off", () => {
+        // Regression: the size info used to be bundled with the price
+        // block, which hid itself when price was $0. Toggling every
+        // firing off on a piece (so price drops to $0) must still leave
+        // the entered dimensions visible.
+        setStudio({ dimensionUnit: "in" });
+        setPieces([makePiece({
+            L: "4", W: "4", H: "5",
+            firings: { bisque: false, glaze: false, luster: false },
+        })]);
+        const output = mq(PiecesSection, { derived: computeDerived() });
+        expect(output.should.have(".piece-row__price.zero"));
+        expect(output.should.have(".piece-row__size-block"));
+        expect(output.should.contain("in³"));
     });
 
     it("warning box renders when piece H is below studio minimum", () => {
