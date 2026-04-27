@@ -62,25 +62,24 @@
         grid-template-columns: 1fr 1fr;
     }
 
-    /* Firings + Min Height: the firings row needs its full natural
-       width (chain pill + separator + Bisque|Glaze + Luster on one
-       line, ~330px), which is more than half of the 640px-capped
-       container. Equal 1fr 1fr columns force the firings to wrap
-       internally (chain drops above the rest). Switching to flex
-       (overriding the grid display from the base rule) lets the
-       firings column take its natural unwrapped width while Min
-       Height fills the leftover space, and lets Min Height drop to
-       its own row when the leftover would shrink it below ~240px. */
+    /* Firings + Min Height: a flex pair so Min Height can drop to its
+       own full-width row when the viewport is too narrow to hold both
+       at 50/50. When both fit, each child sits at 50% so Min Height
+       left-aligns with Rounding above. The firings field is pinned to
+       max-content so the chain + Bisque|Glaze + Luster pills stay on
+       one line as a single unit; when their natural width exceeds 50%,
+       the column expands and pushes Min Height to the next row. */
     .firings-row-wrap.paired {
         display: flex;
         flex-wrap: wrap;
         align-items: start;
     }
     .firings-row-wrap.paired > .field-group:first-child {
-        flex: 0 0 auto;
+        flex: 1 0 calc(50% - 6px);
+        min-width: max-content;
     }
     .firings-row-wrap.paired > .field-group:last-child {
-        flex: 1 1 240px;
+        flex: 1 0 calc(50% - 6px);
     }
 
     /* ── Section ──
@@ -207,14 +206,16 @@
 
     /* ── Firings Row ──
        Bundled chain pill on the left, separator, then the Bisque|Glaze
-       ConnectedPill and the Luster pill. Two containers wrap independently
-       on narrow viewports so the chain can break to its own line while
-       the firings group stays attached to the separator. */
+       ConnectedPill and the Luster pill. The row is treated as a single
+       atomic unit, never wrapping internally. When the viewport is too
+       narrow to hold the row plus Min Height side by side, the parent
+       .firings-row-wrap pushes Min Height to its own line; the pills
+       themselves stay together. */
     .firings-row {
         display: flex;
         align-items: center;
         gap: 8px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
     }
 
     .firings-row__bundled {
@@ -225,7 +226,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
     }
 
     .firings-row__separator {
@@ -713,11 +714,10 @@
 
 
     /* ── Narrow Viewport ──
-       Below 480px the Billing/Rounding row collapses to a single
-       column and the rate grid caps at 2 columns so individual fields
-       stay readable on phones. The firings + Min Height row uses
-       flex-wrap on its container, so Min Height drops to its own row
-       automatically once the leftover space falls below 240px. */
+       Below 480px the Billing/Rounding row collapses to a single column
+       and the rate grid caps at 2 columns so individual fields stay
+       readable on phones. The firings + Min Height pair handles its
+       own wrap via flex on the outer container. */
     @media (max-width: 480px) {
         .billing-row.paired {
             grid-template-columns: 1fr;
