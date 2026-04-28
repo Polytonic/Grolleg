@@ -84,7 +84,7 @@ const Pill: m.Component<PillAttrs> = {
 
 const BasisField: m.Component = {
     view: () => m(".field-group",
-        m("label.label", { for: "basis-select" }, "Pricing By"),
+        m("label.label", { for: "basis-select" }, "Measurement Method"),
         m("select.select#basis-select",
             {
                 value: state.basis,
@@ -263,8 +263,8 @@ const collectRateFields = (basis: Basis): RateField[] => {
         fields.push({
             key: "bundled",
             label: "Bundled",
-            value: formatRateValue(state.bundledRate, basis),
-            placeholder: formatPlaceholder(defaults.bundledDefault, basis),
+            value: formatRateValue(state.firingRates.bundled, basis),
+            placeholder: formatPlaceholder(defaults.defaults.bundled, basis),
             onInput: handleBundledRateInput,
             disabled: !state.firingToggles.bisque && !state.firingToggles.glaze,
         });
@@ -454,7 +454,7 @@ export const ControlsSection: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".controls-section",
         // Anchors SR navigation between the page <h1> and the per-piece
         // h3 badges below. Visually hidden because the row labels
-        // (Pricing By, Rounding, Firing Types) already orient sighted users.
+        // (Measurement Method, Rounding, Firing Types) already orient sighted users.
         m("h2.sr-only", "Controls"),
         m(BillingRow, { derived }),
         m(FiringsAndHeightRow, { derived }),

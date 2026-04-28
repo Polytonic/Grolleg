@@ -119,10 +119,10 @@ describe("calculatePrice edge cases", () => {
 /* ── Minimum Height Behavior ── */
 
 describe("minimum height applies before per-dim ceiling", () => {
-    it("1×1×1 with min=2 and dim-ceil yields quantity 1×1×2 = 2 (floor first, then ceil)", () => {
+    it("1×1×1 with min=2 and dimension-ceil yields quantity 1×1×2 = 2 (floor first, then ceil)", () => {
         const piece = makePiece({ L: "1", W: "1", H: "1" });
-        setStudio({ minHeight: 2, rounding: "dim-ceil" });
-        expect(computeQuantity(piece, "volume", "dim-ceil", 2)).toBe(2);
+        setStudio({ minHeight: 2, rounding: "dimension-ceil" });
+        expect(computeQuantity(piece, "volume", "dimension-ceil", 2)).toBe(2);
     });
 
     it("minHeight=0 disables the floor", () => {
@@ -150,14 +150,39 @@ describe("minimum height applies before per-dim ceiling", () => {
 });
 
 
+/* ── Incomplete Dimensions ── */
+
+describe("incomplete dimensions return zero quantity", () => {
+    it("volume with missing H returns 0", () => {
+        const piece = makePiece({ L: "5", W: "5", H: "" });
+        expect(computeQuantity(piece, "volume", "none", 2)).toBe(0);
+    });
+
+    it("volume with missing L returns 0", () => {
+        const piece = makePiece({ L: "", W: "5", H: "5" });
+        expect(computeQuantity(piece, "volume", "none", 0)).toBe(0);
+    });
+
+    it("footprint with missing W returns 0", () => {
+        const piece = makePiece({ L: "5", W: "" });
+        expect(computeQuantity(piece, "footprint", "none", 0)).toBe(0);
+    });
+
+    it("all dimensions present produces non-zero quantity", () => {
+        const piece = makePiece({ L: "5", W: "5", H: "5" });
+        expect(computeQuantity(piece, "volume", "none", 0)).toBe(125);
+    });
+});
+
+
 /* ── Rounding Modes ── */
 
 describe("rounding modes produce expected quantities", () => {
     const piece = () => makePiece({ L: "3.1", W: "3.1", H: "3.1" });
 
-    it("dim-ceil rounds each dimension up before multiplication", () => {
+    it("dimension-ceil rounds each dimension up before multiplication", () => {
         // ceil(3.1) = 4; 4 × 4 × 4 = 64
-        expect(computeQuantity(piece(), "volume", "dim-ceil", 0)).toBe(64);
+        expect(computeQuantity(piece(), "volume", "dimension-ceil", 0)).toBe(64);
     });
 
     it("total-ceil multiplies first then ceils", () => {
@@ -174,9 +199,9 @@ describe("rounding modes produce expected quantities", () => {
         expect(computeQuantity(piece(), "volume", "none", 0)).toBeCloseTo(29.791, 5);
     });
 
-    it("dim-ceil on footprint rounds each L/W independently", () => {
+    it("dimension-ceil on footprint rounds each L/W independently", () => {
         const piece = makePiece({ L: "5.2", W: "3.1" });
-        expect(computeQuantity(piece, "footprint", "dim-ceil", 0)).toBe(24); // ceil(5.2)*ceil(3.1) = 6*4
+        expect(computeQuantity(piece, "footprint", "dimension-ceil", 0)).toBe(24); // ceil(5.2)*ceil(3.1) = 6*4
     });
 });
 
@@ -230,20 +255,17 @@ describe("rate conversion (display vs stored)", () => {
 /* ── Bundled Rate Semantics ── */
 
 describe("bundled rate effective behavior", () => {
-    it("bundled bisque/glaze charge bundledRate ONCE (not once per firing)", () => {
+    it("bundled bisque/glaze charge firingRates.bundled ONCE (not once per firing)", () => {
         const piece = makePiece({
             L: "1", W: "1", H: "1",
             firings: { bisque: true, glaze: true, luster: false },
         });
         setStudio({
             firingToggles: { bisque: true, glaze: true, luster: false },
-            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 },
+            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08, bundled: 0.06 },
             bundled: true,
-            bundledRate: 0.06,
             rounding: "none", minHeight: 0,
         });
-        // Bundled = one combined charge for bisque AND glaze together.
-        // qty = 1; rate = bundledRate = 0.06 (NOT 0.12).
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.rate).toBeCloseTo(0.06);
         expect(result.price).toBeCloseTo(0.06);
@@ -256,12 +278,10 @@ describe("bundled rate effective behavior", () => {
         });
         setStudio({
             firingToggles: { bisque: true, glaze: true, luster: false },
-            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 },
+            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08, bundled: 0.06 },
             bundled: true,
-            bundledRate: 0.06,
             rounding: "none", minHeight: 0,
         });
-        // Either firing being on triggers the bundled charge once.
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.rate).toBeCloseTo(0.06);
     });
@@ -273,12 +293,11 @@ describe("bundled rate effective behavior", () => {
         });
         setStudio({
             firingToggles: { bisque: true, glaze: true, luster: true },
-            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 },
+            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08, bundled: 0.06 },
             bundled: true,
-            bundledRate: 0.06,
             rounding: "none", minHeight: 0,
         });
-        // qty = 1; rate = bundled (0.06) + luster (0.08) = 0.14
+        // rate = bundled (0.06) + luster (0.08) = 0.14
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.rate).toBeCloseTo(0.14);
     });
@@ -296,7 +315,7 @@ describe("calculatePrice end-to-end", () => {
         // qty = 4×4×5 = 80 (no rounding needed since dims are already integers)
         // rate = 0.04 (bisque only)
         // price = 80 × 0.04 = $3.20
-        setStudio({ rounding: "dim-ceil", firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 } });
+        setStudio({ rounding: "dimension-ceil", firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 } });
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.quantity).toBe(80);
         expect(result.rate).toBeCloseTo(0.04);

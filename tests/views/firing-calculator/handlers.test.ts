@@ -101,12 +101,11 @@ describe("handleFiringRateInput", () => {
 });
 
 describe("handleBundledRateInput", () => {
-    it("stores bundled rate via the same conversion as individual rates", () => {
+    it("stores bundled rate in firingRates.bundled via the same conversion as individual rates", () => {
         state.basis = "volume";
         handleBundledRateInput(mockInputEvent("6"));
-        expect(state.bundledRate).toBeCloseTo(0.06);
-        // Round-trip through display.
-        expect(toDisplayRate(state.bundledRate, "volume")).toBeCloseTo(6);
+        expect(state.firingRates.bundled).toBeCloseTo(0.06);
+        expect(toDisplayRate(state.firingRates.bundled, "volume")).toBeCloseTo(6);
     });
 });
 

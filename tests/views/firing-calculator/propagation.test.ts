@@ -137,32 +137,29 @@ describe("bundled activation OR-migrates pieces", () => {
         expect(state.bundlePulseKey).toBe(before + 2);
     });
 
-    it("bundled activation seeds bundledRate from first non-zero individual rate", () => {
+    it("bundled activation seeds firingRates.bundled from first non-zero individual rate", () => {
         setStudio({
             bundled: false,
-            firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10 },
+            firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10, bundled: BASIS_META.volume.defaults.bundled },
         });
         toggleBundled();
-        expect(state.bundledRate).toBeCloseTo(0.05);
+        expect(state.firingRates.bundled).toBeCloseTo(0.05);
     });
 
-    it("bundled activation falls back to the basis' bundledDefault when both individual rates are zero", () => {
+    it("bundled activation falls back to the default when both individual rates are zero", () => {
         setStudio({
             bundled: false,
-            firingRates: { bisque: 0, glaze: 0, luster: 0.10 },
+            firingRates: { bisque: 0, glaze: 0, luster: 0.10, bundled: BASIS_META.volume.defaults.bundled },
         });
         toggleBundled();
-        expect(state.bundledRate).toBeCloseTo(BASIS_META.volume.bundledDefault);
+        expect(state.firingRates.bundled).toBeCloseTo(BASIS_META.volume.defaults.bundled);
     });
 
-    it("bundled activation uses the basis' bundledDefault when bisque/glaze are still at their defaults (visibly differs from bisque alone)", () => {
-        // Default load: rates are at BASIS_META defaults, bisque non-zero.
-        // Without the ratesAtDefaults branch, the seed would echo bisque
-        // and the user would toggle Bundled and see no price change.
+    it("bundled activation keeps the default when bisque/glaze are at their defaults", () => {
         setStudio({ basis: "volume", bundled: false });
         toggleBundled();
-        expect(state.bundledRate).toBeCloseTo(BASIS_META.volume.bundledDefault);
-        expect(state.bundledRate).not.toBeCloseTo(BASIS_META.volume.defaults.bisque);
+        expect(state.firingRates.bundled).toBeCloseTo(BASIS_META.volume.defaults.bundled);
+        expect(state.firingRates.bundled).not.toBeCloseTo(BASIS_META.volume.defaults.bisque);
     });
 });
 
@@ -185,16 +182,30 @@ describe("bundled deactivation leaves pieces unchanged", () => {
         expect(state.pieces[1].firings).toEqual({ bisque: false, glaze: false, luster: true });
     });
 
-    it("deactivation spreads bundledRate back into individual rates", () => {
+    it("deactivation restores the bisque/glaze rates saved on activation", () => {
         setStudio({
-            bundled: true,
-            bundledRate: 0.06,
-            firingRates: { bisque: 0.04, glaze: 0.04, luster: 0.08 },
+            bundled: false,
+            firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 },
         });
         toggleBundled();
-        expect(state.firingRates.bisque).toBeCloseTo(0.06);
-        expect(state.firingRates.glaze).toBeCloseTo(0.06);
-        expect(state.firingRates.luster).toBeCloseTo(0.08); // luster unchanged
+        expect(state.bundled).toBe(true);
+        toggleBundled();
+        expect(state.bundled).toBe(false);
+        expect(state.firingRates.bisque).toBeCloseTo(0.04);
+        expect(state.firingRates.glaze).toBeCloseTo(0.045);
+        expect(state.firingRates.luster).toBeCloseTo(0.08);
+    });
+
+    it("round-trip preserves rates even when the bundled rate was edited", () => {
+        setStudio({
+            bundled: false,
+            firingRates: { bisque: 0.03, glaze: 0.05, luster: 0.10 },
+        });
+        toggleBundled();
+        handleBundledRateInput(mockInputEvent("9"));
+        toggleBundled();
+        expect(state.firingRates.bisque).toBeCloseTo(0.03);
+        expect(state.firingRates.glaze).toBeCloseTo(0.05);
     });
 });
 
@@ -245,15 +256,15 @@ describe("basis change reseeds rates; unit change does not", () => {
         expect(state.firingRates).toEqual(BASIS_META.weight.defaults);
     });
 
-    it("changing basis reseeds bundledRate from the new basis' bundledDefault", () => {
-        setStudio({ bundledRate: 0.06 });
+    it("changing basis reseeds bundled rate from the new basis' default", () => {
+        setStudio({ firingRates: { bisque: 0.04, glaze: 0.04, luster: 0.08, bundled: 0.06 } });
         const event = { currentTarget: { value: "footprint" } } as unknown as Event;
         handleBasisChange(event);
-        expect(state.bundledRate).toBeCloseTo(BASIS_META.footprint.bundledDefault);
+        expect(state.firingRates.bundled).toBeCloseTo(BASIS_META.footprint.defaults.bundled);
     });
 
     it("re-selecting current basis is a no-op", () => {
-        setStudio({ basis: "volume", firingRates: { bisque: 0.07, glaze: 0.07, luster: 0.07 } });
+        setStudio({ basis: "volume", firingRates: { bisque: 0.07, glaze: 0.07, luster: 0.07, bundled: 0.07 } });
         const event = { currentTarget: { value: "volume" } } as unknown as Event;
         handleBasisChange(event);
         expect(state.firingRates.bisque).toBeCloseTo(0.07);
@@ -267,15 +278,13 @@ describe("basis change reseeds rates; unit change does not", () => {
     });
 
     it("round-tripping basis preserves user-edited rates via the per-basis cache", () => {
-        // Edit rates on volume, switch to weight, switch back. The cache
-        // should restore the prior volume rates instead of reseeding.
-        setStudio({ basis: "volume", firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10 } });
+        setStudio({ basis: "volume", firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10, bundled: 0.09 } });
         const toWeight = { currentTarget: { value: "weight" } } as unknown as Event;
         handleBasisChange(toWeight);
         expect(state.firingRates).toEqual(BASIS_META.weight.defaults);
         const backToVolume = { currentTarget: { value: "volume" } } as unknown as Event;
         handleBasisChange(backToVolume);
-        expect(state.firingRates).toEqual({ bisque: 0.05, glaze: 0.06, luster: 0.10 });
+        expect(state.firingRates).toEqual({ bisque: 0.05, glaze: 0.06, luster: 0.10, bundled: 0.09 });
     });
 
     it("changing weight unit does not reset rates", () => {
@@ -313,19 +322,19 @@ describe("updatePiece", () => {
 });
 
 
-/* ── bundledRateByBasis Round-Trip ── */
+/* ── Bundled Rate Basis Round-Trip ── */
 
-describe("bundledRateByBasis round-trip preserves user edits", () => {
-    it("edited bundledRate survives a basis round-trip via the per-basis cache", () => {
+describe("bundled rate survives basis round-trip via the per-basis cache", () => {
+    it("edited bundled rate is restored after switching basis and back", () => {
         setStudio({ basis: "volume", bundled: true });
         handleBundledRateInput(mockInputEvent("9"));
-        const editedRate = state.bundledRate;
+        const editedRate = state.firingRates.bundled;
         const toWeight = { currentTarget: { value: "weight" } } as unknown as Event;
         handleBasisChange(toWeight);
-        expect(state.bundledRate).toBeCloseTo(BASIS_META.weight.bundledDefault);
+        expect(state.firingRates.bundled).toBeCloseTo(BASIS_META.weight.defaults.bundled);
         const backToVolume = { currentTarget: { value: "volume" } } as unknown as Event;
         handleBasisChange(backToVolume);
-        expect(state.bundledRate).toBeCloseTo(editedRate);
+        expect(state.firingRates.bundled).toBeCloseTo(editedRate);
     });
 });
 

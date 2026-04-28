@@ -31,7 +31,6 @@ export function setStudio(options: {
     firingToggles?: Partial<FiringFlags>;
     firingRates?: Partial<FiringRates>;
     bundled?: boolean;
-    bundledRate?: number;
     minHeight?: number;
     rounding?: Rounding;
 }) {
@@ -41,7 +40,6 @@ export function setStudio(options: {
     if (options.firingToggles) state.firingToggles = { ...state.firingToggles, ...options.firingToggles };
     if (options.firingRates) state.firingRates = { ...state.firingRates, ...options.firingRates };
     if (options.bundled !== undefined) state.bundled = options.bundled;
-    if (options.bundledRate !== undefined) state.bundledRate = options.bundledRate;
     if (options.minHeight !== undefined) state.minHeight = options.minHeight;
     if (options.rounding !== undefined) state.rounding = options.rounding;
 }

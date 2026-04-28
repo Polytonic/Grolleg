@@ -12,10 +12,10 @@ export type Basis = "volume" | "footprint" | "weight";
 export type DimensionUnit = "mm" | "cm" | "in";
 export type WeightUnit = "g" | "kg" | "oz" | "lb";
 export type FiringKey = "bisque" | "glaze" | "luster";
-export type Rounding = "dim-ceil" | "total-ceil" | "total-round" | "none";
+export type Rounding = "dimension-ceil" | "total-ceil" | "total-round" | "none";
 
 export type FiringFlags = Record<FiringKey, boolean>;
-export type FiringRates = Record<FiringKey, number>;
+export type FiringRates = Record<FiringKey | "bundled", number>;
 
 // Pieces store dimensions as strings so partial input like "12."
 // survives re-renders and empty distinguishes from zero. Coerced to
@@ -39,7 +39,6 @@ export interface Studio {
     firingToggles: FiringFlags;
     firingRates: FiringRates;
     bundled: boolean;
-    bundledRate: number;
     minHeight: number;
     rounding: Rounding;
 }
@@ -72,29 +71,25 @@ export const FIRING_TYPES: { key: FiringKey; label: string }[] = [
 interface BasisMetaEntry {
     label: string;
     defaults: FiringRates;
-    bundledDefault: number;
 }
 
 export const BASIS_META: Record<Basis, BasisMetaEntry> = {
     volume: {
         label: "Volume (L × W × H)",
-        defaults: { bisque: 0.035, glaze: 0.035, luster: 0.14 },
-        bundledDefault: 0.07,
+        defaults: { bisque: 0.035, glaze: 0.035, luster: 0.14, bundled: 0.07 },
     },
     footprint: {
         label: "Footprint (L × W)",
-        defaults: { bisque: 0.07, glaze: 0.07, luster: 0.28 },
-        bundledDefault: 0.14,
+        defaults: { bisque: 0.07, glaze: 0.07, luster: 0.28, bundled: 0.14 },
     },
     weight: {
         label: "Weight",
-        defaults: { bisque: 1.0, glaze: 1.0, luster: 4.0 },
-        bundledDefault: 2.0,
+        defaults: { bisque: 1.0, glaze: 1.0, luster: 4.0, bundled: 2.0 },
     },
 };
 
 export const ROUNDING_OPTIONS: { key: Rounding; label: string }[] = [
-    { key: "dim-ceil",    label: "Per Dimension" },
+    { key: "dimension-ceil",    label: "Per Dimension" },
     { key: "total-ceil",  label: "Total" },
     { key: "total-round", label: "Nearest Whole" },
     { key: "none",        label: "Don't Round" },
@@ -129,9 +124,11 @@ export const computeQuantity = (
     piece: Piece, basis: Basis, rounding: Rounding, minHeight: number,
 ): number => {
     if (basis === "volume") {
-        let length = toPositive(piece.L), width = toPositive(piece.W);
-        let height = Math.max(toPositive(piece.H), toPositive(minHeight));
-        if (rounding === "dim-ceil") {
+        const rawL = toPositive(piece.L), rawW = toPositive(piece.W), rawH = toPositive(piece.H);
+        if (rawL === 0 || rawW === 0 || rawH === 0) return 0;
+        let length = rawL, width = rawW;
+        let height = Math.max(rawH, toPositive(minHeight));
+        if (rounding === "dimension-ceil") {
             length = Math.ceil(length);
             width = Math.ceil(width);
             height = Math.ceil(height);
@@ -139,8 +136,10 @@ export const computeQuantity = (
         return applyRounding(length * width * height, rounding);
     }
     if (basis === "footprint") {
-        let length = toPositive(piece.L), width = toPositive(piece.W);
-        if (rounding === "dim-ceil") {
+        const rawL = toPositive(piece.L), rawW = toPositive(piece.W);
+        if (rawL === 0 || rawW === 0) return 0;
+        let length = rawL, width = rawW;
+        if (rounding === "dimension-ceil") {
             length = Math.ceil(length);
             width = Math.ceil(width);
         }
@@ -152,8 +151,8 @@ export const computeQuantity = (
 
 // A piece pays for a firing only when both the studio toggle and the
 // piece chip are on. The bundled flag picks one of two rate models:
-//   • Bundled: a single combined charge (bundledRate) covers bisque
-//     AND glaze together, applied once if the piece includes either.
+//   • Bundled: a single combined charge (firingRates.bundled) covers
+//     bisque AND glaze together, applied once if the piece includes either.
 //   • Unbundled: bisque and glaze are independent charges, summed.
 // Luster is independent in both modes. Both quantity and rate must
 // be positive for a non-zero price; either being zero produces $0.
@@ -163,7 +162,7 @@ export const calculatePrice = (piece: Piece, studio: Studio): PieceResult => {
     if (studio.bundled) {
         const bisqueOn = studio.firingToggles.bisque && piece.firings.bisque;
         const glazeOn  = studio.firingToggles.glaze  && piece.firings.glaze;
-        if (bisqueOn || glazeOn) rate += toPositive(studio.bundledRate);
+        if (bisqueOn || glazeOn) rate += toPositive(studio.firingRates.bundled);
     } else {
         if (studio.firingToggles.bisque && piece.firings.bisque) {
             rate += toPositive(studio.firingRates.bisque);
@@ -263,7 +262,6 @@ interface StateShape {
     firingToggles: FiringFlags;
     firingRates: FiringRates;
     bundled: boolean;
-    bundledRate: number;
     minHeight: number;
     rounding: Rounding;
     pieces: Piece[];
@@ -278,7 +276,6 @@ interface StateShape {
     // discarding them. Updated on basis change and on every rate-input
     // event for the active basis.
     firingRatesByBasis: Record<Basis, FiringRates>;
-    bundledRateByBasis: Record<Basis, number>;
 }
 
 export const INITIAL_STATE: StateShape = {
@@ -288,9 +285,8 @@ export const INITIAL_STATE: StateShape = {
     firingToggles: { bisque: true, glaze: false, luster: false },
     firingRates: { ...BASIS_META.volume.defaults },
     bundled: false,
-    bundledRate: BASIS_META.volume.bundledDefault,
     minHeight: DEFAULT_MIN_HEIGHTS[detectDefaultDimensionUnit()],
-    rounding: "dim-ceil",
+    rounding: "dimension-ceil",
     pieces: [
         { id: 1, L: "", W: "", H: "", weight: "",
           firings: { bisque: true, glaze: false, luster: false } },
@@ -301,11 +297,6 @@ export const INITIAL_STATE: StateShape = {
         volume:    { ...BASIS_META.volume.defaults },
         footprint: { ...BASIS_META.footprint.defaults },
         weight:    { ...BASIS_META.weight.defaults },
-    },
-    bundledRateByBasis: {
-        volume:    BASIS_META.volume.bundledDefault,
-        footprint: BASIS_META.footprint.bundledDefault,
-        weight:    BASIS_META.weight.bundledDefault,
     },
 };
 
@@ -325,7 +316,6 @@ export function cloneInitialState(): StateShape {
             footprint: { ...INITIAL_STATE.firingRatesByBasis.footprint },
             weight:    { ...INITIAL_STATE.firingRatesByBasis.weight },
         },
-        bundledRateByBasis: { ...INITIAL_STATE.bundledRateByBasis },
     };
 }
 
@@ -339,7 +329,6 @@ export const studioSnapshot = (): Studio => ({
     firingToggles: { ...state.firingToggles },
     firingRates: { ...state.firingRates },
     bundled: state.bundled,
-    bundledRate: state.bundledRate,
     minHeight: state.minHeight,
     rounding: state.rounding,
 });
@@ -371,10 +360,8 @@ export const handleBasisChange = (event: Event) => {
     // from defaults. Rates carry semantic meaning per basis (cents/in³ vs
     // $/lb), so the cache is segmented by basis rather than shared.
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
-    state.bundledRateByBasis[state.basis] = state.bundledRate;
     state.basis = next;
     state.firingRates = { ...state.firingRatesByBasis[next] };
-    state.bundledRate = state.bundledRateByBasis[next];
 };
 
 export const handleDimensionUnitChange = (next: DimensionUnit) => {
@@ -419,46 +406,38 @@ export const toggleFiring = (key: FiringKey) => {
 };
 
 // Bundled is a rate-structure change, not a firing-state change. On
-// activation, pieces already paying for bisque or glaze get both forced
-// on (now sharing the bundled rate). Pieces with neither (e.g. a
-// luster-only piece) stay untouched. On deactivation, the bundled rate
-// spreads back into both individual rates so the user can diverge
-// them. Pieces are not touched.
+// activation, pieces already paying for bisque or glaze get both
+// forced on (sharing firingRates.bundled). Pieces with neither
+// (e.g. luster-only) stay untouched. Bisque/glaze rates live in
+// firingRates alongside the bundled rate, so they survive the
+// round-trip without explicit save/restore.
 export const toggleBundled = () => {
-    // Pulse fires regardless of direction. Both transitions (OFF→ON
-    // and ON→OFF) reshape which rate inputs are visible and the
-    // user likely needs to refresh those values.
     state.bundlePulseKey += 1;
     if (state.bundled) {
-        state.firingRates = {
-            ...state.firingRates,
-            bisque: state.bundledRate,
-            glaze: state.bundledRate,
-        };
-        state.firingRatesByBasis[state.basis] = state.firingRates;
         state.bundled = false;
         return;
     }
-    // Seed the shared rate. Three cases, in priority order:
-    //   1. User has edited bisque or glaze away from defaults: preserve
-    //      that edit (prefer bisque, then glaze).
-    //   2. Rates still at their per-basis defaults: use the bundled
-    //      default (≈ 2× bisque), so toggling on a fresh page changes
-    //      the visible total instead of producing the same number.
-    //   3. Both rates explicitly cleared to 0: also use the bundled
-    //      default rather than leave the input empty.
+    // Seed the bundled rate if the user hasn't edited it yet. When
+    // bisque/glaze are still at their per-basis defaults, use the
+    // bundled default so toggling on a fresh page visibly changes
+    // the total instead of echoing the bisque rate.
     const meta = BASIS_META[state.basis];
-    const bisqueRate = toPositive(state.firingRates.bisque);
-    const glazeRate = toPositive(state.firingRates.glaze);
     const ratesAtDefaults =
         state.firingRates.bisque === meta.defaults.bisque
         && state.firingRates.glaze === meta.defaults.glaze;
-    state.bundledRate = ratesAtDefaults
-        ? meta.bundledDefault
-        : (bisqueRate > 0 ? bisqueRate
-            : glazeRate > 0 ? glazeRate
-            : meta.bundledDefault);
-    state.bundledRateByBasis[state.basis] = state.bundledRate;
+    if (ratesAtDefaults && state.firingRates.bundled === meta.defaults.bundled) {
+        // Leave the default bundled rate as-is.
+    } else if (state.firingRates.bundled === meta.defaults.bundled) {
+        const bisqueRate = toPositive(state.firingRates.bisque);
+        const glazeRate = toPositive(state.firingRates.glaze);
+        state.firingRates = {
+            ...state.firingRates,
+            bundled: bisqueRate > 0 ? bisqueRate
+                : glazeRate > 0 ? glazeRate
+                : meta.defaults.bundled,
+        };
+    }
+    state.firingRatesByBasis[state.basis] = { ...state.firingRates };
     state.firingToggles = { ...state.firingToggles, bisque: true, glaze: true };
     state.bundled = true;
     state.pieces = state.pieces.map((piece) => {
@@ -479,8 +458,8 @@ export const handleFiringRateInput = (key: FiringKey, event: Event) => {
 
 export const handleBundledRateInput = (event: Event) => {
     const value = (event.currentTarget as HTMLInputElement).value;
-    state.bundledRate = toStoredRate(value, state.basis);
-    state.bundledRateByBasis[state.basis] = state.bundledRate;
+    state.firingRates = { ...state.firingRates, bundled: toStoredRate(value, state.basis) };
+    state.firingRatesByBasis[state.basis] = { ...state.firingRates };
 };
 
 
