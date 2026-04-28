@@ -1,11 +1,7 @@
 import m from "mithril";
 import { Silhouette } from "./comparison";
+import { formatPrice, formatQuantity } from "./state";
 import type { Derived } from "./state";
-
-
-// Aggregate quantity uses the same per-basis precision as per-piece quantity.
-const formatTotalQuantity = (value: number, basis: string): string =>
-    basis === "weight" ? value.toFixed(2) : value.toFixed(0);
 
 
 /* ── Total Band ──
@@ -19,7 +15,7 @@ export const TotalBand: m.Component<{ derived: Derived }> = {
         const { aggregate, studio, pieces, totalQuantityUnit } = derived;
         const pieceCount = pieces.length;
         const subtitle = aggregate.totalQuantity > 0
-            ? `${pieceCount} piece${pieceCount === 1 ? "" : "s"} · ${formatTotalQuantity(aggregate.totalQuantity, studio.basis)} ${totalQuantityUnit}`
+            ? `${pieceCount} piece${pieceCount === 1 ? "" : "s"} \u00b7 ${formatQuantity(aggregate.totalQuantity, studio.basis)} ${totalQuantityUnit}`
             : `${pieceCount} piece${pieceCount === 1 ? "" : "s"}`;
 
         // The aggregate comparison is suppressed for a single piece because
@@ -43,7 +39,7 @@ export const TotalBand: m.Component<{ derived: Derived }> = {
             // of the entire region on every redraw was extremely chatty.
             m(".total-band__amount",
                 { role: "status", "aria-live": "polite" },
-                `$${aggregate.total.toFixed(2)}`),
+                formatPrice(aggregate.total)),
         );
     },
 };

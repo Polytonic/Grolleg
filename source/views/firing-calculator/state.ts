@@ -1,3 +1,4 @@
+import { parseLocaleNumber, detectDefaultDimensionUnit, detectDefaultWeightUnit, decimalFormat } from "../../components/locale";
 import {
     bucketOf, findComparison, COMPARISONS,
     INCHES_PER_UNIT,
@@ -65,7 +66,7 @@ export const FIRING_TYPES: { key: FiringKey; label: string }[] = [
 // (third firing, gold compounds, small batches), not 2x; the volume
 // luster default sits at the low end of that band. `bundledDefault`
 // is the combined bisque+glaze rate a studio pricing the two
-// together would charge — meaningfully higher than bisque alone so
+// together would charge, meaningfully higher than bisque alone so
 // toggling Bundled on a single-piece view actually changes the
 // total instead of leaving it at the bisque rate.
 interface BasisMetaEntry {
@@ -108,8 +109,9 @@ export const WEIGHT_UNITS: readonly WeightUnit[] = ["g", "kg", "oz", "lb"];
 // Coerces unknown input to a positive number, returning 0 for empty,
 // non-finite, or non-positive values. Treating empty inputs as zero lets
 // quantity/rate calculations short-circuit to a $0 price without throwing.
+// Strings use parseLocaleNumber for locale-aware decimal handling.
 export const toPositive = (value: unknown): number => {
-    const parsed = Number(value);
+    const parsed = typeof value === "string" ? parseLocaleNumber(value) : Number(value);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 };
 
@@ -198,7 +200,7 @@ export const toDisplayRate = (stored: number, basis: Basis): number =>
 export const MAX_DISPLAY_RATE = 1000;
 
 export const toStoredRate = (display: number | string, basis: Basis): number => {
-    const value = Number(display);
+    const value = typeof display === "string" ? parseLocaleNumber(display) : display;
     if (!Number.isFinite(value)) return 0;
     const clamped = Math.max(0, Math.min(MAX_DISPLAY_RATE, value));
     return rateIsCents(basis) ? clamped / 100 : clamped;
@@ -228,26 +230,25 @@ export const expandUnit = (unit: string): string =>
     UNIT_VERBOSE[unit] ?? unit;
 
 
-/* ── Locale Detection ──
-   US users default to inches and pounds. Liberia and Myanmar are the
-   other imperial-leaning regions; included for correctness even though
-   their en-locale presence is small. */
+/* ── Number Formatting ── */
 
-const detectDefaultDimensionUnit = (): DimensionUnit => {
-    try {
-        const region = new Intl.Locale(navigator?.language ?? "").region ?? "";
-        if (["US", "LR", "MM"].includes(region)) return "in";
-    } catch (_) { /* Intl.Locale unavailable */ }
-    return "cm";
-};
+const wholeFormat = new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+});
 
-const detectDefaultWeightUnit = (): WeightUnit => {
-    try {
-        const region = new Intl.Locale(navigator?.language ?? "").region ?? "";
-        if (["US", "LR", "MM"].includes(region)) return "lb";
-    } catch (_) { /* Intl.Locale unavailable */ }
-    return "kg";
-};
+export const formatPrice = (value: number): string =>
+    `$${decimalFormat.format(value)}`;
+
+// Weight basis prints two decimals (small numbers like 1.25 lb);
+// volume and footprint print whole numbers (large numbers like 240 in³).
+export const formatQuantity = (value: number, basis: string): string =>
+    basis === "weight" ? decimalFormat.format(value) : wholeFormat.format(value);
+
+
+/* ── Unit-Aware Defaults ── */
+
+const DEFAULT_MIN_HEIGHTS: Record<DimensionUnit, number> = { in: 2, cm: 5, mm: 50 };
 
 
 /* ── State ──
@@ -288,7 +289,7 @@ export const INITIAL_STATE: StateShape = {
     firingRates: { ...BASIS_META.volume.defaults },
     bundled: false,
     bundledRate: BASIS_META.volume.bundledDefault,
-    minHeight: 2,
+    minHeight: DEFAULT_MIN_HEIGHTS[detectDefaultDimensionUnit()],
     rounding: "dim-ceil",
     pieces: [
         { id: 1, L: "", W: "", H: "", weight: "",
@@ -395,7 +396,8 @@ export const handleRoundingChange = (event: Event) => {
 // every billed quantity to nonsense.
 const MIN_HEIGHT_MAX = 100;
 export const handleMinHeightInput = (event: Event) => {
-    const value = Number((event.currentTarget as HTMLInputElement).value);
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    const value = parseLocaleNumber(raw);
     if (!Number.isFinite(value) || value < 0) {
         state.minHeight = 0;
         return;

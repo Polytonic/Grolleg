@@ -42,7 +42,7 @@ m.route(document.body, "/shrinkage", {
     "/":            redirectToShrinkage,
     "/shrinkage":   titled("Grolleg • Shrinkage Calculator", ShrinkageCalculatorView),
     "/firing":      titled("Grolleg • Firing Calculator", FiringCalculatorView),
-    "/:rest...":    NotFoundView,
+    "/:rest...":    titled("Grolleg • Page Not Found", NotFoundView),
 });
 
 if ("serviceWorker" in navigator) {

@@ -2,11 +2,12 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import {
     state, toggleFiring, toggleBundled,
     togglePieceFiring, togglePiecePair,
-    addPiece, removePiece,
+    addPiece, removePiece, updatePiece,
     handleBasisChange, handleDimensionUnitChange, handleWeightUnitChange,
+    handleBundledRateInput,
     BASIS_META,
 } from "../../../source/views/firing-calculator/state";
-import { resetState, makePiece, setStudio, setPieces } from "./helpers";
+import { resetState, makePiece, setStudio, setPieces, mockInputEvent } from "./helpers";
 
 beforeEach(() => resetState());
 
@@ -282,6 +283,49 @@ describe("basis change reseeds rates; unit change does not", () => {
         handleWeightUnitChange("kg");
         expect(state.weightUnit).toBe("kg");
         expect(state.firingRates.bisque).toBeCloseTo(1.5);
+    });
+});
+
+
+/* ── updatePiece ── */
+
+describe("updatePiece", () => {
+    it("updates the targeted piece and leaves others intact", () => {
+        setPieces([makePiece({ id: 1, L: "4" }), makePiece({ id: 2, L: "5" })]);
+        updatePiece(1, { L: "10" });
+        expect(state.pieces[0].L).toBe("10");
+        expect(state.pieces[1].L).toBe("5");
+    });
+
+    it("spreads fields without clobbering unrelated keys", () => {
+        setPieces([makePiece({ id: 1, L: "4", W: "3", H: "2" })]);
+        updatePiece(1, { H: "8" });
+        expect(state.pieces[0].L).toBe("4");
+        expect(state.pieces[0].W).toBe("3");
+        expect(state.pieces[0].H).toBe("8");
+    });
+
+    it("no-op for a non-existent id", () => {
+        setPieces([makePiece({ id: 1, L: "4" })]);
+        updatePiece(999, { L: "10" });
+        expect(state.pieces[0].L).toBe("4");
+    });
+});
+
+
+/* ── bundledRateByBasis Round-Trip ── */
+
+describe("bundledRateByBasis round-trip preserves user edits", () => {
+    it("edited bundledRate survives a basis round-trip via the per-basis cache", () => {
+        setStudio({ basis: "volume", bundled: true });
+        handleBundledRateInput(mockInputEvent("9"));
+        const editedRate = state.bundledRate;
+        const toWeight = { currentTarget: { value: "weight" } } as unknown as Event;
+        handleBasisChange(toWeight);
+        expect(state.bundledRate).toBeCloseTo(BASIS_META.weight.bundledDefault);
+        const backToVolume = { currentTarget: { value: "volume" } } as unknown as Event;
+        handleBasisChange(backToVolume);
+        expect(state.bundledRate).toBeCloseTo(editedRate);
     });
 });
 

@@ -17,8 +17,11 @@ import type { Basis, Derived } from "./state";
    Mirrors the short suffix shown next to the input ("¢/in³" → "cents
    per cubic inch"). Falls back to the raw rateUnit string for any
    shape not anticipated. */
-const singularize = (word: string): string =>
-    word.endsWith("s") ? word.slice(0, -1) : word;
+const singularize = (word: string): string => {
+    if (word === "inches") return "inch";
+    if (word === "ounces") return "ounce";
+    return word.endsWith("s") ? word.slice(0, -1) : word;
+};
 
 const expandRateUnit = (basis: Basis, dimensionUnit: string, weightUnit: string): string => {
     if (basis === "volume")    return `cents per cubic ${singularize(expandUnit(dimensionUnit))}`;
@@ -52,14 +55,13 @@ const chainLinkIcon = (size: number = 16): m.Vnode =>
 interface PillAttrs {
     active: boolean;
     onclick: () => void;
-    flex?: boolean;
     ariaLabel?: string;
     title?: string;
 }
 
 const Pill: m.Component<PillAttrs> = {
     view: ({ attrs, children }) =>
-        m(`button.pill${attrs.active ? ".active" : ""}${attrs.flex ? ".flex" : ""}`,
+        m(`button.pill${attrs.active ? ".active" : ""}`,
             {
                 type: "button",
                 "aria-pressed": attrs.active ? "true" : "false",
@@ -214,8 +216,7 @@ const FiringsAndHeightRow: m.Component<{ derived: Derived }> = {
    an individual firing dims its slot rather than reflowing the row.
    The unit toggle inlines with the section label because units determine
    the rate suffix (¢/in³ vs $/lb) and the dimension-input placeholders
-   on each piece. The unit-change hint sits between the label row and
-   the inputs when active. */
+   on each piece. */
 
 interface RateField {
     key: string;
@@ -236,6 +237,8 @@ interface RateField {
 //   3.25               → "3.25"
 //   8                  → "8"
 //   NaN                → "0"
+// .toFixed(2) is intentional: rate inputs are type="number" and need
+// a plain decimal string, not a locale-formatted one with group separators.
 const formatRateNumber = (value: number): string =>
     Number(toPositive(value).toFixed(2)).toString();
 
@@ -256,13 +259,12 @@ const collectRateFields = (basis: Basis): RateField[] => {
     const fields: RateField[] = [];
     if (state.bundled) {
         // Bundled rate is shared between bisque and glaze. The slot
-        // stays active as long as either firing is on. Placeholder uses
-        // the bisque default since most studios price bundled near bisque.
+        // stays active as long as either firing is on.
         fields.push({
             key: "bundled",
             label: "Bundled",
             value: formatRateValue(state.bundledRate, basis),
-            placeholder: formatPlaceholder(defaults.defaults.bisque, basis),
+            placeholder: formatPlaceholder(defaults.bundledDefault, basis),
             onInput: handleBundledRateInput,
             disabled: !state.firingToggles.bisque && !state.firingToggles.glaze,
         });
@@ -313,10 +315,12 @@ const collectRateFields = (basis: Basis): RateField[] => {
    Honors prefers-reduced-motion: the snapshot/play logic is skipped
    entirely under that media query (see CSS). */
 
-const PREFERS_REDUCED_MOTION =
-    typeof window !== "undefined"
-        && window.matchMedia
-        && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reducedMotionQuery =
+    typeof window !== "undefined" && window.matchMedia
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : null;
+
+const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
 
 interface RateInputsState {
     snapshot: Map<string, DOMRect> | null;
@@ -325,7 +329,7 @@ interface RateInputsState {
 const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInputsState> = {
     onbeforeupdate(vnode) {
         const dom = (vnode as m.VnodeDOM<{ derived: Derived; fields: RateField[] }, RateInputsState>).dom;
-        if (PREFERS_REDUCED_MOTION || !dom) return true;
+        if (prefersReducedMotion() || !dom) return true;
         const snapshot = new Map<string, DOMRect>();
         for (const child of Array.from(dom.children) as HTMLElement[]) {
             // Skip "zombie" cells already in their leave animation (Mithril
@@ -343,7 +347,7 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
     onupdate(vnode) {
         const snapshot = vnode.state.snapshot;
         vnode.state.snapshot = null;
-        if (!snapshot || PREFERS_REDUCED_MOTION) return;
+        if (!snapshot || prefersReducedMotion()) return;
         for (const child of Array.from(vnode.dom.children) as HTMLElement[]) {
             if (child.dataset.flipping === "leaving") continue;
             const key = child.dataset.flipKey;
@@ -371,7 +375,7 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
                 key: field.key,
                 "data-flip-key": field.key,
                 onbeforeremove(removingVnode: m.VnodeDOM) {
-                    if (PREFERS_REDUCED_MOTION) return;
+                    if (prefersReducedMotion()) return;
                     const element = removingVnode.dom as HTMLElement;
                     const parent = element.parentElement;
                     if (!parent) return;
@@ -451,7 +455,7 @@ export const ControlsSection: m.Component<{ derived: Derived }> = {
         // Anchors SR navigation between the page <h1> and the per-piece
         // h3 badges below. Visually hidden because the row labels
         // (Pricing By, Rounding, Firing Types) already orient sighted users.
-        m("h2.sr-only", "Studio Settings"),
+        m("h2.sr-only", "Controls"),
         m(BillingRow, { derived }),
         m(FiringsAndHeightRow, { derived }),
         m(FiringRatesSection, { derived }),

@@ -3,15 +3,9 @@ import "@css/views/exceptions/not-found.css";
 
 // 404 view, rendered when the URL doesn't match any registered route. The
 // visual stays minimal so the user's attention goes to the recovery action
-// (a link back to the default tool) rather than the explanation. Sets
-// document.title in parallel with the calculator views so the browser tab
-// and screen readers reflect the state.
+// (a link back to the default tool) rather than the explanation. The route
+// resolver in index.ts handles document.title via the titled() wrapper.
 export const NotFoundView: m.Component = {
-    oncreate: () => {
-        if (typeof document !== "undefined") {
-            document.title = "Grolleg • Page Not Found";
-        }
-    },
     view: () => m(".not-found-view",
         m(".container",
             m("h1.title", "Page Not Found"),

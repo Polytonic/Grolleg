@@ -1,3 +1,6 @@
+import { parseLocaleNumber, detectDefaultDimensionUnit, formatNumber } from "../../components/locale";
+
+
 /* ── Types ── */
 
 interface Preset {
@@ -33,9 +36,6 @@ export interface Stage {
 // Tracks which dimension the user enters: "fired-to-wet" = user inputs fired, calculator shows wet.
 export type Direction = "fired-to-wet" | "wet-to-fired";
 export type Unit = "mm" | "cm" | "in";
-
-// Per-vnode state the dimension input carries to track pulse replays.
-export type PulseState = { lastPulseKey: number };
 
 
 /* ── Clay Body Presets ── */
@@ -86,30 +86,7 @@ export const applyRate = (dimension: number, percent: number): number =>
 export const reverseRate = (dimension: number, percent: number): number =>
     dimension / (1 - percent / 100);
 
-// Locale-aware number formatter for display output.
-const numberFormat = new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-});
-
-// Em dash signals empty or invalid state, distinguishing it from a zero value.
-export const format = (value: number | null): string =>
-    value !== null && Number.isFinite(value) ? numberFormat.format(value) : "—";
-
-// Normalizes locale number formats before parsing. Detects whether comma
-// is a decimal or thousands separator based on position, then strips
-// grouping separators and normalizes the decimal to a period.
-export const parseLocaleNumber = (value: string): number => {
-    const trimmed = value.trim();
-    // If the last separator is a comma, treat it as decimal (e.g., "1.500,75" or "12,5")
-    const lastComma = trimmed.lastIndexOf(",");
-    const lastDot = trimmed.lastIndexOf(".");
-    if (lastComma > lastDot) {
-        return parseFloat(trimmed.replace(/\./g, "").replace(",", "."));
-    }
-    // Otherwise treat dot as decimal (e.g., "1,500.75" or "12.5")
-    return parseFloat(trimmed.replace(/,/g, ""));
-};
+export const format = formatNumber;
 
 export const calculateVolume = (dimensions: number[], shapeId: ShapeMode["id"]): number | null => {
     if (shapeId === "rect" && dimensions.length >= 3) return dimensions[0] * dimensions[1] * dimensions[2];
@@ -136,11 +113,7 @@ export const deriveFiringPercent = (
 // iOS Safari silently ignores vibration, so no error handling needed.
 const haptic = () => { navigator?.vibrate?.(15); };
 
-// US/Canada default to inches, everywhere else to centimeters.
-const defaultUnit: Unit = (() => {
-    const language = navigator?.language ?? "";
-    return language.startsWith("en-US") || language.startsWith("en-CA") ? "in" : "cm";
-})();
+const defaultUnit: Unit = detectDefaultDimensionUnit();
 
 // Defer focus to next tick so the DOM reflects the latest state mutation.
 const focusLater = (id: string) =>
@@ -178,7 +151,10 @@ export const INITIAL_STATE: StateShape = {
     pulseKey: 0,
 };
 
-export const state: StateShape = { ...INITIAL_STATE };
+export const state: StateShape = {
+    ...INITIAL_STATE,
+    dimensions: [...INITIAL_STATE.dimensions],
+};
 
 
 /* ── Event Handlers ── */

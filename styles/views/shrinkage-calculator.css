@@ -100,9 +100,7 @@
         min-height: 24px;
     }
 
-    .section-title {
-        display: flex;
-        align-items: center;
+    .mode-row + .section-label {
         margin-top: 20px;
     }
 
@@ -123,25 +121,8 @@
         gap: 6px;
     }
 
-    .dimension-label {
-        font-size: 13px;
-        color: var(--color-muted);
-    }
-
-    /* The dimension row's input is its own class because it carries the
-       pulse animation applied on direction change. The wrapper and
-       suffix span use the suite-shared .input-with-suffix / .input-suffix
-       (in controls.css). */
-    .dimension-input {
-        font-size: 16px;
-        padding: 10px 36px 10px 12px;
-        border-radius: 8px;
-        border: 1px solid var(--color-border);
-        background: var(--color-card);
-        color: var(--color-text);
-        width: 100%;
-
-        &.pulsing {
+    @media (prefers-reduced-motion: no-preference) {
+        .input.pulsing {
             animation: shrinkage-calc-pulse 0.4s ease-out;
         }
     }
@@ -312,13 +293,13 @@
 
 
     /* Monospace family for entered data and computed values */
-    :is(.input, .dimension-input, .derived-value, .result-value, .result-unit, .result-delta,
+    :is(.input, .derived-value, .result-value, .result-unit, .result-delta,
         .volume-value, .arrow-percent, .timeline-label, .timeline-dimension-value) {
         font-family: var(--font-mono);
     }
 
     /* WCAG tap targets for tool-specific interactive elements */
-    :is(.derived-value, .dimension-input) {
+    .derived-value {
         min-height: 44px;
     }
 

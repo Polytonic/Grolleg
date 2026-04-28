@@ -37,6 +37,11 @@
         border-color: var(--color-error-text);
         background: var(--color-error-bg);
     }
+
+    &.warn {
+        border-color: var(--color-warn-border);
+        background: var(--color-warn-bg);
+    }
 }
 
 /* Input + Suffix Wrapper
@@ -102,7 +107,7 @@
     background: var(--color-card);
     color: var(--color-muted);
     cursor: pointer;
-    transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -129,7 +134,6 @@
         border-color: var(--color-accent);
         background: var(--color-accent);
         color: var(--color-accent-text);
-        transition: none;
     }
 
     @media (hover: hover) {
@@ -154,8 +158,8 @@
     color: var(--color-muted);
     user-select: none;
 
-    &::before { content: "("; }
-    &::after  { content: ")"; }
+    &::before { content: "(" / ""; }
+    &::after  { content: ")" / ""; }
 }
 
 .unit-separator {
@@ -172,7 +176,7 @@
     font-size: 11px;
     letter-spacing: 0.06em;
     color: var(--color-muted);
-    transition: color 0.15s;
+    transition: color 0.12s;
     display: flex;
     align-items: center;
 
@@ -202,6 +206,7 @@
 }
 
 .divider {
+    border: none;
     border-top: 1px solid var(--color-border);
     margin-bottom: 20px;
     margin-top: 0;

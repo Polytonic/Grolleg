@@ -30,7 +30,7 @@ export const ShrinkageCalculatorView: m.Component = {
                 ),
                 state.showStages && m(StageInputs, { derived }),
                 m(ClayControls, { derived }),
-                m(".divider", { role: "separator" }),
+                m("hr.divider"),
                 !derived.anyResults && m(".hint-box",
                     { role: "status", "aria-live": "polite" },
                     hintMessage(derived),

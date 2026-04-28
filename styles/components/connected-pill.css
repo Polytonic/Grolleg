@@ -21,7 +21,6 @@
         --cp-color:  var(--color-text);
 
         font-family: var(--font-sans);
-        outline: none;
         cursor: pointer;
         line-height: 1.2;
         box-sizing: border-box;

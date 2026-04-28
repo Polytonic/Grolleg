@@ -103,7 +103,7 @@
     }
 
     .section-label {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     /* When the unit toggle inlines with a section header, push it to
@@ -132,13 +132,6 @@
         padding-right: 56px;
     }
 
-    /* Warning state on a numeric input: amber border + cream tint. Used by
-       the H input when a piece's height is below the studio minimum. */
-    .input.numeric.warn {
-        border-color: var(--color-warn-border);
-        background: var(--color-warn-bg);
-    }
-
 
     /* ── Pill ──
        Sized to align with input row height (10px-equivalent vertical
@@ -159,7 +152,6 @@
         border: 1px solid var(--pill-border);
         border-radius: 10px;
         cursor: pointer;
-        outline: none;
         line-height: 1;
         display: inline-flex;
         align-items: center;
@@ -167,11 +159,7 @@
         gap: 6px;
         box-sizing: border-box;
         min-height: 44px;
-        transition: background-color 0.12s, color 0.12s, border-color 0.12s;
-
-        &.flex {
-            flex: 1 1 0;
-        }
+        transition: background-color 0.12s, border-color 0.12s, color 0.12s;
 
         &.active {
             --pill-border: var(--color-accent);
@@ -284,12 +272,9 @@
        vs 12% transparent) because the firing calc's pulse fires only
        on NEW elements (not survivors), and a single brief flash needs
        to register on its own. Suppressed under reduced-motion. */
-    .rate-inputs .input.pulsing {
-        animation: firing-calc-rate-pulse 0.55s ease-out;
-    }
-    @media (prefers-reduced-motion: reduce) {
+    @media (prefers-reduced-motion: no-preference) {
         .rate-inputs .input.pulsing {
-            animation: none;
+            animation: firing-calc-rate-pulse 0.55s ease-out;
         }
     }
     /* Hide the native number-input spinners when disabled. The arrows
@@ -308,11 +293,10 @@
 
     /* Hint shown beneath the rate inputs when every slot is disabled. */
     .ghost-hint {
-        font-family: var(--font-sans);
         font-size: 12px;
         color: var(--color-muted);
         font-style: italic;
-        margin-top: 6px;
+        margin-top: 4px;
         display: inline-block;
     }
 
@@ -383,6 +367,10 @@
         display: inline-block;
     }
 
+    /* Ghost button on transparent base: 10%/18% instead of the usual
+       15%/15% because the blend is color-text into transparent, not
+       accent into a solid fill. Lower hover keeps the X understated;
+       higher press gives tactile feedback. */
     .piece-row__remove {
         background: transparent;
         border: none;
@@ -391,6 +379,11 @@
         padding: 4px;
         line-height: 0;
         border-radius: 6px;
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         transition: color 0.12s, background-color 0.12s;
 
         @media (hover: hover) {
@@ -421,8 +414,6 @@
         &.zero {
             color: var(--color-muted);
             font-weight: 400;
-            font-family: var(--font-mono);
-            font-size: 16px;
         }
     }
 
@@ -477,7 +468,6 @@
         padding: 8px 12px;
         background: var(--color-warning-bg);
         border-radius: 8px;
-        font-family: var(--font-sans);
         font-size: 13px;
         color: var(--color-warning-text);
         line-height: 1.4;
@@ -529,12 +519,11 @@
         border: 1px solid var(--chip-border);
         border-radius: 6px;
         cursor: pointer;
-        outline: none;
         display: inline-flex;
         align-items: center;
         gap: 4px;
         line-height: 1.2;
-        transition: background-color 0.12s, color 0.12s, border-color 0.12s;
+        transition: background-color 0.12s, border-color 0.12s, color 0.12s;
 
         &.active {
             --chip-border: var(--color-accent);
@@ -651,7 +640,6 @@
     /* The Total heading reuses the .results-header treatment from
        shrinkage's typographic vocabulary: uppercase 11px accent color. */
     .total-band__label {
-        font-family: var(--font-sans);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
@@ -666,19 +654,23 @@
         align-items: center;
         gap: 10px;
         color: var(--color-muted);
+        min-width: 0;
     }
 
     .total-band__comparison-label {
         font-family: var(--font-sans);
         font-size: 14px;
         color: var(--color-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
     }
 
     .total-band__subtitle {
         font-family: var(--font-mono);
         font-size: 12px;
         color: var(--color-muted);
-        margin-top: 2px;
     }
 
     .total-band__amount {
@@ -697,20 +689,10 @@
     }
 
 
-    /* ── Tap Targets ──
-       The shared .input and .select from controls.css declare their own
-       44px floor. .pill, .chip, .connected-pill__half, and .add-piece
-       declare theirs in their own scopes. This rule covers the
-       remaining tool-specific buttons. */
-    :is(.input, .piece-row__remove) {
-        min-height: 44px;
-    }
-    .piece-row__remove {
-        min-width: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
+    /* Tap targets: .input and .select get 44px from controls.css. .pill,
+       .chip, .connected-pill__half, and .add-piece declare theirs in
+       their own scopes. .piece-row__remove gets its 44px floor in the
+       main block above. */
 
 
     /* ── Narrow Viewport ──

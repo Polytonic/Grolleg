@@ -42,7 +42,7 @@ const createState = (groupId: string): TooltipState => {
             state.open = true;
             state.pinned = asPinned;
             globalCloseTooltip = state.close;
-            document.addEventListener("pointerdown", handleOutsidePointerDown);
+            if (typeof document !== "undefined") document.addEventListener("pointerdown", handleOutsidePointerDown);
         },
 
         close() {
@@ -51,7 +51,7 @@ const createState = (groupId: string): TooltipState => {
             state.pinned = false;
             if (state.closeTimer) { clearTimeout(state.closeTimer); state.closeTimer = null; }
             if (globalCloseTooltip === state.close) globalCloseTooltip = null;
-            document.removeEventListener("pointerdown", handleOutsidePointerDown);
+            if (typeof document !== "undefined") document.removeEventListener("pointerdown", handleOutsidePointerDown);
         },
     };
 
@@ -144,7 +144,11 @@ export const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
                         state.close();
                     }
                 },
-                onblur: () => { if (state.open && state.pinned) state.close(); },
+                onfocusout: (event: FocusEvent) => {
+                    if (state.open && !state.portalElement?.contains(event.relatedTarget as Node)) {
+                        state.close();
+                    }
+                },
             }, vnode.children);
         },
     };

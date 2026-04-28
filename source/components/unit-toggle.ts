@@ -21,7 +21,7 @@ export const UnitToggle: m.Component<UnitToggleAttrs> = {
         const children: m.Children[] = [];
         units.forEach((unit, index) => {
             if (index > 0) {
-                children.push(m("span.unit-separator", { key: `${unit}-sep` }, "|"));
+                children.push(m("span.unit-separator", { key: `${unit}-sep`, "aria-hidden": "true" }, "|"));
             }
             const isActive = active === unit;
             children.push(m(`button.unit-text${isActive ? ".active" : ""}`,

@@ -19,15 +19,21 @@ export const FiringCalculatorView: m.Component = {
         // single-piece run gets its price in the piece card itself).
         // Hidden in single-piece mode, along with its preceding divider.
         const showTotal = derived.pieces.length > 1;
+        const hasAnyQuantity = derived.pieces.some((computed) => computed.result.quantity > 0);
+        const hasAnyPrice = derived.pieces.some((computed) => computed.result.price > 0);
         return m(".firing-calculator",
             m(".container",
                 m("h1.title", "Firing Calculator"),
-                m("p.subtitle", "Estimate firing costs."),
+                m("p.subtitle",
+                    "Estimate firing costs based on piece dimensions and configurable rates."),
                 m(ControlsSection, { derived }),
-                m(".divider", { role: "separator" }),
+                m("hr.divider"),
                 m(PiecesSection, { derived }),
+                !hasAnyQuantity && m(".hint-box",
+                    { role: "status", "aria-live": "polite" },
+                    "Enter piece dimensions to see pricing."),
                 showTotal && m(TotalBand, { derived }),
-                m("p.disclaimer", "Estimates only. Actual billing may differ."),
+                hasAnyPrice && m("p.disclaimer", "Estimates only. Actual billing may differ."),
             ),
         );
     },

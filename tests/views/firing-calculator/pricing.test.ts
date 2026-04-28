@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import {
     state, calculatePrice, computeQuantity, studioSnapshot,
     toDisplayRate, toStoredRate, rateUnitFor, rateIsCents,
-    toPositive, BASIS_META, FIRING_TYPES,
+    toPositive, formatPrice, formatQuantity,
+    expandUnit, BASIS_META, FIRING_TYPES,
 } from "../../../source/views/firing-calculator/state";
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
@@ -19,6 +20,59 @@ describe("toPositive() coerces input to a positive number or zero", () => {
     it("negative returns 0",     () => expect(toPositive(-5)).toBe(0));
     it("positive number passes", () => expect(toPositive(3.14)).toBe(3.14));
     it("numeric string parses",  () => expect(toPositive("12.5")).toBe(12.5));
+    it("European decimal (comma) parses", () => expect(toPositive("12,5")).toBe(12.5));
+    it("European thousands parses", () => expect(toPositive("1.500,75")).toBe(1500.75));
+});
+
+
+/* ── expandUnit ── */
+
+describe("expandUnit", () => {
+    it("maps known abbreviation to verbose name", () => {
+        expect(expandUnit("in")).toBe("inches");
+        expect(expandUnit("cm")).toBe("centimeters");
+        expect(expandUnit("lb")).toBe("pounds");
+    });
+
+    it("falls back to the raw unit string for unknown keys", () => {
+        expect(expandUnit("xyz")).toBe("xyz");
+    });
+});
+
+
+/* ── formatPrice / formatQuantity ── */
+
+describe("formatPrice", () => {
+    it("formats zero as $0.00", () => {
+        expect(formatPrice(0)).toBe("$0.00");
+    });
+
+    it("formats a dollar amount with two decimals", () => {
+        expect(formatPrice(3.2)).toBe("$3.20");
+    });
+
+    it("prepends dollar sign", () => {
+        expect(formatPrice(100)).toMatch(/^\$/);
+    });
+});
+
+describe("formatQuantity", () => {
+    it("weight basis formats with two decimals", () => {
+        const result = formatQuantity(1.5, "weight");
+        expect(result).toContain("1");
+        expect(result).toContain("50");
+    });
+
+    it("volume basis formats as whole number", () => {
+        const result = formatQuantity(80, "volume");
+        expect(result).toContain("80");
+        expect(result).not.toContain(".");
+    });
+
+    it("footprint basis formats as whole number", () => {
+        const result = formatQuantity(16, "footprint");
+        expect(result).toContain("16");
+    });
 });
 
 
@@ -154,6 +208,15 @@ describe("rate conversion (display vs stored)", () => {
 
     it("toStoredRate of non-numeric returns 0", () => {
         expect(toStoredRate("abc", "volume")).toBe(0);
+    });
+
+    it("toStoredRate with numeric (non-string) first argument", () => {
+        expect(toStoredRate(4, "volume")).toBeCloseTo(0.04);
+        expect(toStoredRate(1.5, "weight")).toBeCloseTo(1.5);
+    });
+
+    it("toDisplayRate for footprint is also cents-based", () => {
+        expect(toDisplayRate(0.07, "footprint")).toBeCloseTo(7);
     });
 
     it("rate unit suffix matches basis", () => {

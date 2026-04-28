@@ -5,8 +5,8 @@ import {
     format,
     calculateVolume,
     deriveFiringPercent,
-    parseLocaleNumber,
 } from "../../../source/views/shrinkage-calculator/state";
+import { parseLocaleNumber } from "../../../source/components/locale";
 
 
 // Shrinkage application and reversal

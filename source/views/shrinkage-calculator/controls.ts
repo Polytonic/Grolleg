@@ -1,12 +1,13 @@
 import m from "mithril";
 import { Tooltip } from "../../components/tooltip";
 import { UnitToggle } from "../../components/unit-toggle";
+import { InputWithSuffix } from "../../components/input-with-suffix";
 import {
     state, SHAPE_MODES,
     handleShapeChange, handleDirectionChange, handleUnitChange,
     handleDimensionInput, handleDimensionKey,
 } from "./state";
-import type { Direction, Unit, Derived, PulseState } from "./state";
+import type { Direction, Unit, Derived } from "./state";
 
 
 // Shape, direction, unit toggle, and dimension inputs grouped as one section
@@ -17,7 +18,7 @@ export const ClayControls: m.Component<{ derived: Derived }> = {
             m(ShapeSection),
             m(DirectionSection),
         ),
-        m("span.section-title",
+        m("span.section-label",
             `${state.direction === "fired-to-wet" ? "Fired" : "Wet"} Dimensions`,
             m(UnitToggle, {
                 units: UNITS,
@@ -54,7 +55,7 @@ const ShapeSection: m.Component = {
                     {
                         key: shapeMode.id,
                         type: "button",
-                        "aria-pressed": isActive,
+                        "aria-pressed": isActive ? "true" : "false",
                         onclick: () => handleShapeChange(index),
                     },
                     shapeMode.label,
@@ -72,7 +73,13 @@ const DIRECTION_OPTIONS: [Direction, string, string][] = [
 
 const DirectionSection: m.Component = {
     view: () => m("div",
-        m(".section-label", "Direction"),
+        m(".section-label",
+            "Direction",
+            m(Tooltip, {
+                label: "direction",
+                text: "Controls which way the conversion runs. Fired to Wet shows the wet size you need to throw to reach a given fired dimension. Wet to Fired shows how much a piece at a given wet size will shrink after firing.",
+            }),
+        ),
         m(".shape-pills",
             DIRECTION_OPTIONS.map(([value, label, ariaLabel]) => {
                 const isActive = state.direction === value;
@@ -80,7 +87,7 @@ const DirectionSection: m.Component = {
                     {
                         key: value,
                         type: "button",
-                        "aria-pressed": isActive,
+                        "aria-pressed": isActive ? "true" : "false",
                         "aria-label": ariaLabel,
                         onclick: () => handleDirectionChange(value),
                     },
@@ -101,37 +108,21 @@ const UNIT_ARIA_LABELS: Record<string, string> = {
 // Single numeric input with unit suffix and pulse animation on direction change
 const DimensionInput: m.Component<{ field: string; fieldIndex: number; isLast: boolean }> = {
     view: ({ attrs: { field, fieldIndex, isLast } }) => m(".dimension-field",
-        m("label.dimension-label", { for: `dimension-${field.toLowerCase()}` }, field),
-        m(".input-with-suffix",
-            m("input.dimension-input", {
-                id: `dimension-${field.toLowerCase()}`,
-                type: "number",
-                inputmode: "decimal",
-                enterkeyhint: isLast ? "done" : "next",
-                step: "any",
-                min: "0",
-                placeholder: "—",
-                value: state.dimensions[fieldIndex],
-                oninput: (event: Event) => handleDimensionInput(fieldIndex, event),
-                onkeydown: (event: KeyboardEvent) => handleDimensionKey(fieldIndex, event),
-                // Remove-reflow-add replays the CSS animation reliably, regardless
-                // of whether Mithril reused the DOM node. A key-change approach is
-                // fragile because the input's sibling span is unkeyed.
-                oncreate: (vnode: m.VnodeDOM) => {
-                    (vnode.state as PulseState).lastPulseKey = state.pulseKey;
-                },
-                onupdate: (vnode: m.VnodeDOM) => {
-                    const tracker = vnode.state as PulseState;
-                    if (tracker.lastPulseKey === state.pulseKey) return;
-                    tracker.lastPulseKey = state.pulseKey;
-                    if (state.pulseKey === 0) return;
-                    const element = vnode.dom as HTMLElement;
-                    element.classList.remove("pulsing");
-                    void element.offsetHeight;
-                    element.classList.add("pulsing");
-                },
-            }),
-            m("span.input-suffix", state.unit),
-        ),
+        m("label.input-label", { for: `dimension-${field.toLowerCase()}` }, field),
+        m(InputWithSuffix, {
+            suffix: state.unit,
+            modifiers: ["numeric"],
+            pulseKey: state.pulseKey,
+            id: `dimension-${field.toLowerCase()}`,
+            type: "number",
+            inputmode: "decimal",
+            enterkeyhint: isLast ? "done" : "next",
+            step: "any",
+            min: "0",
+            placeholder: "\u2014",
+            value: state.dimensions[fieldIndex],
+            oninput: (event: Event) => handleDimensionInput(fieldIndex, event),
+            onkeydown: (event: KeyboardEvent) => handleDimensionKey(fieldIndex, event),
+        }),
     ),
 };

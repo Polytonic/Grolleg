@@ -39,8 +39,6 @@ body {
 
     /* Text */
     --color-muted:           #4A4D4F;
-    --color-muted-soft:      #8A8D8F;
-
     /* Accent tints and shades
        Interactive convention: hover mixes 15% toward light, press mixes 15%
        toward dark (or 30% for inactive elements toward accent). Apply the
@@ -61,7 +59,7 @@ body {
     /* Semantic: warn (saturated amber for input borders and inline note boxes,
        distinct from --color-warning which serves softer warning text) */
     --color-warn-border:     #B8860B;
-    --color-warn-bg:         #FEF8E1;
+    --color-warn-bg:         color-mix(in srgb, var(--color-warn-border) 8%, white);
 
     /* Endpoint label text (white, slightly transparent for contrast on accent) */
     --color-accent-text-muted: color-mix(in srgb, white 85%, transparent);
@@ -80,7 +78,7 @@ body {
    targets get matching ring shapes. */
 *:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 1px var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-card), 0 0 0 4px var(--color-accent);
     border-radius: inherit;
 }
 

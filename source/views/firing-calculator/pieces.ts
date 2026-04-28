@@ -5,6 +5,7 @@ import { Silhouette } from "./comparison";
 import {
     state, addPiece, removePiece, updatePiece,
     togglePieceFiring, togglePiecePair, expandUnit,
+    formatPrice, formatQuantity,
 } from "./state";
 import type { Derived, Piece, PieceComputed } from "./state";
 
@@ -63,15 +64,6 @@ const Chip: m.Component<ChipAttrs> = {
         ),
 };
 
-
-/* ── Number Formatting ──
-   Weight basis prints two decimals (small numbers like 1.25 lb);
-   volume and footprint print whole numbers (large numbers like 240 in³).
-   Price always prints two decimals as a dollar amount. */
-
-const formatPrice = (value: number): string => `$${value.toFixed(2)}`;
-const formatQuantity = (value: number, basis: string): string =>
-    basis === "weight" ? value.toFixed(2) : value.toFixed(0);
 
 
 /* ── Price Label ──
@@ -145,6 +137,7 @@ const Dimensions: m.Component<DimensionsAttrs> = {
                         id: `piece-${piece.id}-weight`,
                         type: "number",
                         inputmode: "decimal",
+                        enterkeyhint: "done",
                         step: "0.1",
                         min: "0",
                         placeholder: "—",
@@ -173,6 +166,7 @@ const Dimensions: m.Component<DimensionsAttrs> = {
                     id: `piece-${piece.id}-${column.key}`,
                     type: "number",
                     inputmode: "decimal",
+                    enterkeyhint: "done",
                     step: "0.1",
                     min: "0",
                     placeholder: "—",
@@ -211,6 +205,7 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
                 ? togglePiecePair(piece.id, key)
                 : togglePieceFiring(piece.id, key);
         return m(".piece-row__include",
+            { role: "group", "aria-label": "Firing inclusions and price" },
             m("span.label", "Include"),
             m(".piece-row__include-chips",
                 m(ConnectedPill, {

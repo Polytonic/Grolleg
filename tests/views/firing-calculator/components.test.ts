@@ -37,10 +37,16 @@ describe("FiringCalculatorView orchestrator", () => {
         expect(output.should.have(".total-band"));
     });
 
-    it("renders the disclaimer", () => {
+    it("renders the disclaimer when a piece has a non-zero price", () => {
+        setPieces([makePiece({ id: 1, L: "10", W: "10", H: "10" })]);
         const output = mq(FiringCalculatorView);
         expect(output.should.contain("Estimates only"));
         expect(output.should.contain("Actual billing may differ."));
+    });
+
+    it("hides the disclaimer when no piece has a price", () => {
+        const output = mq(FiringCalculatorView);
+        expect(output.should.not.contain("Estimates only"));
     });
 });
 
@@ -256,6 +262,13 @@ describe("PiecesSection", () => {
         expect(output.should.not.have(".piece-row__warning"));
     });
 
+    it("warning box does not render when H exactly equals minHeight (boundary)", () => {
+        setStudio({ minHeight: 2 });
+        setPieces([makePiece({ L: "4", W: "4", H: "2" })]);
+        const output = mq(PiecesSection, { derived: computeDerived() });
+        expect(output.should.not.have(".piece-row__warning"));
+    });
+
     it("piece-row Bisque|Glaze ConnectedPill connected reflects only `bundled`", () => {
         // Bundled off, both firings on at studio: connected should be false.
         setStudio({
@@ -284,6 +297,17 @@ describe("PiecesSection", () => {
         const output = mq(PiecesSection, { derived: computeDerived() });
         expect(output.should.have(".piece-row__price.zero"));
         expect(output.should.contain("$0.00"));
+    });
+
+    it("shows quantity but $0.00 when piece has dimensions but all firings are off", () => {
+        setStudio({ firingToggles: { bisque: false, glaze: false, luster: false } });
+        setPieces([makePiece({
+            L: "4", W: "4", H: "5",
+            firings: { bisque: false, glaze: false, luster: false },
+        })]);
+        const output = mq(PiecesSection, { derived: computeDerived() });
+        expect(output.should.have(".piece-row__size-block"));
+        expect(output.should.have(".piece-row__price.zero"));
     });
 });
 
