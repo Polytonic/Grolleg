@@ -1,68 +1,17 @@
 import m from "mithril";
 import { ConnectedPill } from "../../components/connected-pill";
+import { xIcon, plusIcon } from "../../components/icons";
 import { InputWithSuffix } from "../../components/input-with-suffix";
+import { TogglePill } from "../../components/toggle-pill";
 import { Silhouette } from "./comparison";
 import {
     state, addPiece, removePiece, updatePiece,
     togglePieceFiring, togglePiecePair, expandUnit,
     formatPrice, formatQuantity,
 } from "./state";
-import type { Derived, Piece, PieceComputed } from "./state";
+import type { Piece } from "./state";
+import type { Derived, PieceComputed } from "./derived";
 
-
-/* ── Local Icons ── */
-
-const xIcon = (size: number = 16): m.Vnode =>
-    m("svg", {
-        width: size, height: size, viewBox: "0 0 24 24",
-        fill: "none", stroke: "currentColor", "stroke-width": 2,
-        "stroke-linecap": "round", "stroke-linejoin": "round",
-        "aria-hidden": "true",
-    },
-        m("path", { d: "M18 6 6 18" }),
-        m("path", { d: "m6 6 12 12" }),
-    );
-
-const plusIcon = (size: number = 14): m.Vnode =>
-    m("svg", {
-        width: size, height: size, viewBox: "0 0 24 24",
-        fill: "none", stroke: "currentColor", "stroke-width": 2,
-        "stroke-linecap": "round", "stroke-linejoin": "round",
-        "aria-hidden": "true",
-    },
-        m("path", { d: "M5 12h14" }),
-        m("path", { d: "M12 5v14" }),
-    );
-
-
-/* ── Local Chip Primitive ──
-   Smaller than the controls Pill (12px font, 5px/11px padding).
-   Inactive uses font-weight 400 because the suite forbids 500 (Segoe
-   UI on Windows renders 500 inconsistently). Disabled chips dim to
-   50% opacity, signalling "studio doesn't bill for this firing" while
-   preserving the underlying coloring. */
-
-interface ChipAttrs {
-    active: boolean;
-    disabled?: boolean;
-    onclick: () => void;
-}
-
-const Chip: m.Component<ChipAttrs> = {
-    view: ({ attrs, children }) =>
-        m(`button.chip${attrs.active ? ".active" : ""}${attrs.disabled ? ".disabled" : ""}`,
-            {
-                type: "button",
-                // ARIA expects string "true"/"false", not the HTML5 boolean
-                // attribute presence form Mithril uses for raw booleans.
-                "aria-pressed": attrs.active ? "true" : "false",
-                "aria-disabled": attrs.disabled ? "true" : undefined,
-                disabled: attrs.disabled,
-                onclick: attrs.disabled ? undefined : attrs.onclick,
-            },
-            children,
-        ),
-};
 
 
 
@@ -220,7 +169,8 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
                     onToggleA: () => onPair("bisque"),
                     onToggleB: () => onPair("glaze"),
                 }),
-                m(Chip, {
+                m(TogglePill, {
+                    className: "chip",
                     active: !!piece.firings.luster,
                     disabled: !state.firingToggles.luster,
                     onclick: () => togglePieceFiring(piece.id, "luster"),

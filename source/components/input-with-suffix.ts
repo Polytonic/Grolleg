@@ -23,11 +23,7 @@ interface InputWithSuffixAttrs {
     suffix: m.Children;
     modifiers?: readonly Modifier[];
     pulseKey?: number;
-    /** Verbose unit string for screen-reader announcement (e.g. "inches",
-     *  "cents per cubic inch"). When provided, the input gains an
-     *  aria-describedby pointing to a hidden sibling so the unit is
-     *  announced alongside the label. The visible suffix can stay
-     *  short (e.g. "in", "¢/in³"). */
+    // Verbose unit string for SR announcement, adding aria-describedby to a hidden sibling.
     suffixSr?: string;
     [key: string]: unknown;
 }
@@ -101,9 +97,7 @@ export const InputWithSuffix: m.Component<InputWithSuffixAttrs, InputWithSuffixS
         return m(".input-with-suffix",
             m(`input.input.with-suffix${modifierClass}`, inputProps),
             m("span.input-suffix", attrs.suffix),
-            state.suffixSrId && attrs.suffixSr
-                ? m("span.sr-only", { id: state.suffixSrId }, attrs.suffixSr)
-                : null,
+            state.suffixSrId && attrs.suffixSr && m("span.sr-only", { id: state.suffixSrId }, attrs.suffixSr),
         );
     },
 };

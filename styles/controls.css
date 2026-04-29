@@ -18,6 +18,20 @@
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 16px 12px;
+    transition: background-color 0.12s, border-color 0.12s;
+
+    @media (hover: hover) {
+        &:hover {
+            border-color: var(--color-accent);
+            background-color: color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
+        }
+    }
+
+    &:active {
+        border-color: var(--color-accent);
+        background-color: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+        transition: none;
+    }
 }
 
 .input {

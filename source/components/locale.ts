@@ -14,9 +14,9 @@ export const parseLocaleNumber = (value: string): number => {
     const lastComma = trimmed.lastIndexOf(",");
     const lastDot = trimmed.lastIndexOf(".");
     if (lastComma > lastDot) {
-        return parseFloat(trimmed.replace(/\./g, "").replace(",", "."));
+        return parseFloat(trimmed.replaceAll(".", "").replace(",", "."));
     }
-    return parseFloat(trimmed.replace(/,/g, ""));
+    return parseFloat(trimmed.replaceAll(",", ""));
 };
 
 
@@ -27,17 +27,18 @@ export const parseLocaleNumber = (value: string): number => {
 
 const IMPERIAL_REGIONS = ["US", "LR", "MM"];
 
-const detectRegion = (): string => {
-    try {
-        return new Intl.Locale(navigator?.language ?? "").region ?? "";
-    } catch (_) { return ""; }
-};
+const region = (() => {
+    try { return new Intl.Locale(navigator?.language ?? "").region ?? ""; }
+    catch (_) { return ""; }
+})();
+
+const isImperial = IMPERIAL_REGIONS.includes(region);
 
 export const detectDefaultDimensionUnit = (): "mm" | "cm" | "in" =>
-    IMPERIAL_REGIONS.includes(detectRegion()) ? "in" : "cm";
+    isImperial ? "in" : "cm";
 
 export const detectDefaultWeightUnit = (): "g" | "kg" | "oz" | "lb" =>
-    IMPERIAL_REGIONS.includes(detectRegion()) ? "lb" : "kg";
+    isImperial ? "lb" : "kg";
 
 
 /* ── Number Formatting ── */
@@ -47,7 +48,23 @@ export const decimalFormat = new Intl.NumberFormat(undefined, {
     maximumFractionDigits: 2,
 });
 
-// Locale-aware 2-decimal format. Em dash signals empty or invalid state,
+// Locale-aware 2-decimal format. En dash signals empty or invalid state,
 // distinguishing it from zero.
 export const formatNumber = (value: number | null): string =>
-    value !== null && Number.isFinite(value) ? decimalFormat.format(value) : "\u2014";
+    value !== null && Number.isFinite(value) ? decimalFormat.format(value) : "\u2013";
+
+
+/* ── Unit Labels ── */
+
+export const UNIT_VERBOSE: Record<string, string> = {
+    mm: "millimeters",
+    cm: "centimeters",
+    in: "inches",
+    g:  "grams",
+    kg: "kilograms",
+    oz: "ounces",
+    lb: "pounds",
+};
+
+export const expandUnit = (unit: string): string =>
+    UNIT_VERBOSE[unit] ?? unit;

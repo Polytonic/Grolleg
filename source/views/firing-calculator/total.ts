@@ -1,7 +1,7 @@
 import m from "mithril";
 import { Silhouette } from "./comparison";
 import { formatPrice, formatQuantity } from "./state";
-import type { Derived } from "./state";
+import type { Derived } from "./derived";
 
 
 /* ── Total Band ──

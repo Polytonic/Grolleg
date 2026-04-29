@@ -1,248 +1,10 @@
-import { parseLocaleNumber, detectDefaultDimensionUnit, detectDefaultWeightUnit, decimalFormat } from "../../components/locale";
-import {
-    bucketOf, findComparison, COMPARISONS,
-    INCHES_PER_UNIT,
-} from "./comparison";
-import type { ComparisonEntry } from "./comparison";
+import { parseLocaleNumber, detectDefaultDimensionUnit, detectDefaultWeightUnit } from "../../components/locale";
+import { BASIS_META } from "./types";
+import type { Basis, DimensionUnit, WeightUnit, FiringKey, Rounding, FiringFlags, FiringRates, Piece, Studio } from "./types";
+import { toPositive, toStoredRate } from "./pricing";
 
-
-/* ── Types ── */
-
-export type Basis = "volume" | "footprint" | "weight";
-export type DimensionUnit = "mm" | "cm" | "in";
-export type WeightUnit = "g" | "kg" | "oz" | "lb";
-export type FiringKey = "bisque" | "glaze" | "luster";
-export type Rounding = "dimension-ceil" | "total-ceil" | "total-round" | "none";
-
-export type FiringFlags = Record<FiringKey, boolean>;
-export type FiringRates = Record<FiringKey | "bundled", number>;
-
-// Pieces store dimensions as strings so partial input like "12."
-// survives re-renders and empty distinguishes from zero. Coerced to
-// numbers via toPositive() at use.
-export interface Piece {
-    id: number;
-    L: string;
-    W: string;
-    H: string;
-    weight: string;
-    firings: FiringFlags;
-}
-
-// The studio bundle a piece needs to be priced. Constructed from state
-// every render via studioSnapshot() rather than nested in state so
-// handlers can mutate primitives directly.
-export interface Studio {
-    basis: Basis;
-    dimensionUnit: DimensionUnit;
-    weightUnit: WeightUnit;
-    firingToggles: FiringFlags;
-    firingRates: FiringRates;
-    bundled: boolean;
-    minHeight: number;
-    rounding: Rounding;
-}
-
-export interface PieceResult {
-    quantity: number;
-    rate: number;
-    raw: number;
-    price: number;
-}
-
-
-/* ── Constants ── */
-
-export const FIRING_TYPES: { key: FiringKey; label: string }[] = [
-    { key: "bisque", label: "Bisque" },
-    { key: "glaze",  label: "Glaze" },
-    { key: "luster", label: "Luster" },
-];
-
-// Defaults grounded in typical community-studio rates. Stored in
-// dollars. Volume and footprint display as cents (× 100), weight
-// displays as dollars 1:1. Luster runs 4-6x bisque in real studios
-// (third firing, gold compounds, small batches), not 2x; the volume
-// luster default sits at the low end of that band. `bundledDefault`
-// is the combined bisque+glaze rate a studio pricing the two
-// together would charge, meaningfully higher than bisque alone so
-// toggling Bundled on a single-piece view actually changes the
-// total instead of leaving it at the bisque rate.
-interface BasisMetaEntry {
-    label: string;
-    defaults: FiringRates;
-}
-
-export const BASIS_META: Record<Basis, BasisMetaEntry> = {
-    volume: {
-        label: "Volume (L × W × H)",
-        defaults: { bisque: 0.035, glaze: 0.035, luster: 0.14, bundled: 0.07 },
-    },
-    footprint: {
-        label: "Footprint (L × W)",
-        defaults: { bisque: 0.07, glaze: 0.07, luster: 0.28, bundled: 0.14 },
-    },
-    weight: {
-        label: "Weight",
-        defaults: { bisque: 1.0, glaze: 1.0, luster: 4.0, bundled: 2.0 },
-    },
-};
-
-export const ROUNDING_OPTIONS: { key: Rounding; label: string }[] = [
-    { key: "dimension-ceil",    label: "Per Dimension" },
-    { key: "total-ceil",  label: "Total" },
-    { key: "total-round", label: "Nearest Whole" },
-    { key: "none",        label: "Don't Round" },
-];
-
-export const DIMENSION_UNITS: readonly DimensionUnit[] = ["mm", "cm", "in"];
-export const WEIGHT_UNITS: readonly WeightUnit[] = ["g", "kg", "oz", "lb"];
-
-
-/* ── Pure Helpers ── */
-
-// Coerces unknown input to a positive number, returning 0 for empty,
-// non-finite, or non-positive values. Treating empty inputs as zero lets
-// quantity/rate calculations short-circuit to a $0 price without throwing.
-// Strings use parseLocaleNumber for locale-aware decimal handling.
-export const toPositive = (value: unknown): number => {
-    const parsed = typeof value === "string" ? parseLocaleNumber(value) : Number(value);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-};
-
-const applyRounding = (value: number, method: Rounding): number => {
-    if (method === "total-ceil") return Math.ceil(value);
-    if (method === "total-round") return Math.round(value);
-    return value;
-};
-
-// Quantity in display units (cm³, in³, lb, etc.). Volume applies the
-// height floor before per-dim ceiling so the floor reflects the studio's
-// true billable height. Rounding is a measurement convention layered
-// on top.
-export const computeQuantity = (
-    piece: Piece, basis: Basis, rounding: Rounding, minHeight: number,
-): number => {
-    if (basis === "volume") {
-        const rawL = toPositive(piece.L), rawW = toPositive(piece.W), rawH = toPositive(piece.H);
-        if (rawL === 0 || rawW === 0 || rawH === 0) return 0;
-        let length = rawL, width = rawW;
-        let height = Math.max(rawH, toPositive(minHeight));
-        if (rounding === "dimension-ceil") {
-            length = Math.ceil(length);
-            width = Math.ceil(width);
-            height = Math.ceil(height);
-        }
-        return applyRounding(length * width * height, rounding);
-    }
-    if (basis === "footprint") {
-        const rawL = toPositive(piece.L), rawW = toPositive(piece.W);
-        if (rawL === 0 || rawW === 0) return 0;
-        let length = rawL, width = rawW;
-        if (rounding === "dimension-ceil") {
-            length = Math.ceil(length);
-            width = Math.ceil(width);
-        }
-        return applyRounding(length * width, rounding);
-    }
-    if (basis === "weight") return toPositive(piece.weight);
-    return 0;
-};
-
-// A piece pays for a firing only when both the studio toggle and the
-// piece chip are on. The bundled flag picks one of two rate models:
-//   • Bundled: a single combined charge (firingRates.bundled) covers
-//     bisque AND glaze together, applied once if the piece includes either.
-//   • Unbundled: bisque and glaze are independent charges, summed.
-// Luster is independent in both modes. Both quantity and rate must
-// be positive for a non-zero price; either being zero produces $0.
-export const calculatePrice = (piece: Piece, studio: Studio): PieceResult => {
-    const quantity = computeQuantity(piece, studio.basis, studio.rounding, studio.minHeight);
-    let rate = 0;
-    if (studio.bundled) {
-        const bisqueOn = studio.firingToggles.bisque && piece.firings.bisque;
-        const glazeOn  = studio.firingToggles.glaze  && piece.firings.glaze;
-        if (bisqueOn || glazeOn) rate += toPositive(studio.firingRates.bundled);
-    } else {
-        if (studio.firingToggles.bisque && piece.firings.bisque) {
-            rate += toPositive(studio.firingRates.bisque);
-        }
-        if (studio.firingToggles.glaze && piece.firings.glaze) {
-            rate += toPositive(studio.firingRates.glaze);
-        }
-    }
-    if (studio.firingToggles.luster && piece.firings.luster) {
-        rate += toPositive(studio.firingRates.luster);
-    }
-    const raw = quantity * rate;
-    const price = quantity > 0 && rate > 0 ? raw : 0;
-    return { quantity, rate, raw, price };
-};
-
-
-/* ── Cents-vs-Dollars Rate Conversion ──
-   Volume and footprint rates display as cents (matching how potters speak:
-   "4 cents per cubic inch"). Weight rates display as dollars ("$2/lb").
-   All math operates on stored dollars; conversion happens at the input
-   boundary via toDisplayRate / toStoredRate. */
-
-export const rateIsCents = (basis: Basis): boolean =>
-    basis === "volume" || basis === "footprint";
-
-export const toDisplayRate = (stored: number, basis: Basis): number =>
-    rateIsCents(basis) ? toPositive(stored) * 100 : toPositive(stored);
-
-// Upper bound on display-unit rates. Catches accidental paste of
-// scientific-notation values (`1e10` would otherwise produce a
-// hundred-billion-dollar bill on a 10×10×10 piece) and absurd typos
-// without restricting realistic studio rates (typical max ~50¢/in³).
-export const MAX_DISPLAY_RATE = 1000;
-
-export const toStoredRate = (display: number | string, basis: Basis): number => {
-    const value = typeof display === "string" ? parseLocaleNumber(display) : display;
-    if (!Number.isFinite(value)) return 0;
-    const clamped = Math.max(0, Math.min(MAX_DISPLAY_RATE, value));
-    return rateIsCents(basis) ? clamped / 100 : clamped;
-};
-
-export const rateUnitFor = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: WeightUnit): string => {
-    if (basis === "volume")    return `¢/${dimensionUnit}³`;
-    if (basis === "footprint") return `¢/${dimensionUnit}²`;
-    if (basis === "weight")    return `$/${weightUnit}`;
-    return "$";
-};
-
-// Verbose unit name for screen-reader announcement (e.g. "in" → "inches",
-// "kg" → "kilograms"). Covers every dimension and weight unit the
-// calculator can show.
-export const UNIT_VERBOSE: Record<string, string> = {
-    mm: "millimeters",
-    cm: "centimeters",
-    in: "inches",
-    g:  "grams",
-    kg: "kilograms",
-    oz: "ounces",
-    lb: "pounds",
-};
-
-export const expandUnit = (unit: string): string =>
-    UNIT_VERBOSE[unit] ?? unit;
-
-
-/* ── Number Formatting ── */
-
-const wholeFormat = new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-});
-
-export const formatPrice = (value: number): string =>
-    `$${decimalFormat.format(value)}`;
-
-// Weight basis prints two decimals (small numbers like 1.25 lb);
-// volume and footprint print whole numbers (large numbers like 240 in³).
-export const formatQuantity = (value: number, basis: string): string =>
-    basis === "weight" ? decimalFormat.format(value) : wholeFormat.format(value);
+export * from "./types";
+export * from "./pricing";
 
 
 /* ── Unit-Aware Defaults ── */
@@ -425,9 +187,7 @@ export const toggleBundled = () => {
     const ratesAtDefaults =
         state.firingRates.bisque === meta.defaults.bisque
         && state.firingRates.glaze === meta.defaults.glaze;
-    if (ratesAtDefaults && state.firingRates.bundled === meta.defaults.bundled) {
-        // Leave the default bundled rate as-is.
-    } else if (state.firingRates.bundled === meta.defaults.bundled) {
+    if (!ratesAtDefaults && state.firingRates.bundled === meta.defaults.bundled) {
         const bisqueRate = toPositive(state.firingRates.bisque);
         const glazeRate = toPositive(state.firingRates.glaze);
         state.firingRates = {
@@ -465,30 +225,24 @@ export const handleBundledRateInput = (event: Event) => {
 
 /* ── Piece-Level Event Handlers ── */
 
-// Generic per-field updater. Components call this with the piece id and the
-// field they're editing. Spreads the existing piece so unrelated fields
-// stay intact.
-export const updatePiece = (id: number, fields: Partial<Piece>) => {
+const updatePieceById = (id: number, update: (piece: Piece) => Piece) => {
     state.pieces = state.pieces.map((piece) =>
-        piece.id === id ? { ...piece, ...fields } : piece,
+        piece.id === id ? update(piece) : piece,
     );
 };
 
-// Per-piece chip toggle. Does not propagate up to studio. Studio is the
-// source of truth. Pieces follow studio.
-export const togglePieceFiring = (id: number, key: FiringKey) => {
-    state.pieces = state.pieces.map((piece) => {
-        if (piece.id !== id) return piece;
-        return { ...piece, firings: { ...piece.firings, [key]: !piece.firings[key] } };
-    });
+export const updatePiece = (id: number, fields: Partial<Piece>) => {
+    updatePieceById(id, (piece) => ({ ...piece, ...fields }));
 };
 
-// Pair-toggle for the piece-row Bisque|Glaze chip when the studio is
-// bundled. Both halves follow the tapped chip's new value, so tapping a
-// lit chip turns both off and tapping an unlit chip turns both on.
+export const togglePieceFiring = (id: number, key: FiringKey) => {
+    updatePieceById(id, (piece) => ({
+        ...piece, firings: { ...piece.firings, [key]: !piece.firings[key] },
+    }));
+};
+
 export const togglePiecePair = (id: number, tappedKey: "bisque" | "glaze") => {
-    state.pieces = state.pieces.map((piece) => {
-        if (piece.id !== id) return piece;
+    updatePieceById(id, (piece) => {
         const nextValue = !piece.firings[tappedKey];
         return {
             ...piece,
@@ -516,117 +270,4 @@ export const removePiece = (id: number) => {
     // a future keyboard shortcut) would otherwise leave the page empty.
     if (state.pieces.length <= 1) return;
     state.pieces = state.pieces.filter((piece) => piece.id !== id);
-};
-
-
-/* ── Derived View Data ──
-   Computed once per render. Bundles per-piece pricing, comparison
-   lookups, warning state, and the affordances the controls section
-   needs (which fields show, what step value, what unit suffix) so view
-   code stays declarative. */
-
-export interface PieceComputed {
-    piece: Piece;
-    result: PieceResult;
-    comparison: ComparisonEntry | null;
-    heightBelowMin: boolean;
-    quantityUnit: string;
-}
-
-export interface Derived {
-    studio: Studio;
-    pieces: PieceComputed[];
-    aggregate: {
-        total: number;
-        totalQuantity: number;
-        comparison: ComparisonEntry | null;
-    };
-    rateUnit: string;
-    rateStep: number;
-    showRounding: boolean;
-    showMinHeight: boolean;
-    activeUnitSet: readonly DimensionUnit[] | readonly WeightUnit[];
-    activeUnit: DimensionUnit | WeightUnit;
-    // Widened to `string` so the shared UnitToggle's `onSelect: (unit:
-    // string) => void` accepts it. The implementation knows the unit
-    // is a member of `activeUnitSet` and casts internally.
-    setActiveUnit: (unit: string) => void;
-    totalQuantityUnit: string;
-}
-
-const computePieceComparison = (piece: Piece, studio: Studio): ComparisonEntry | null => {
-    if (studio.basis === "weight") return null;
-    const inchesPerUnit = INCHES_PER_UNIT[studio.dimensionUnit];
-    const lengthIn = toPositive(piece.L) * inchesPerUnit;
-    const widthIn = toPositive(piece.W) * inchesPerUnit;
-    if (studio.basis === "footprint") {
-        // Footprint mode falls back to the flat-aspect table by area. The L/W
-        // sort handles non-square footprints. Bucket selection is moot since
-        // we're directly indexing the flat table.
-        const sorted = [lengthIn, widthIn].sort((a, b) => b - a);
-        if (sorted[1] === 0) return null;
-        const area = sorted[0] * sorted[1];
-        return COMPARISONS.flat.find((entry) => area <= entry.max) ?? null;
-    }
-    const heightIn = toPositive(piece.H) * inchesPerUnit;
-    if (lengthIn * widthIn * heightIn <= 0) return null;
-    return findComparison(lengthIn * widthIn * heightIn, bucketOf(lengthIn, widthIn, heightIn));
-};
-
-const computeQuantityUnit = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: WeightUnit): string =>
-    basis === "volume"    ? `${dimensionUnit}³`
-  : basis === "footprint" ? `${dimensionUnit}²`
-  : weightUnit;
-
-export const computeDerived = (): Derived => {
-    const studio = studioSnapshot();
-    const pieces: PieceComputed[] = state.pieces.map((piece) => {
-        const result = calculatePrice(piece, studio);
-        const comparison = computePieceComparison(piece, studio);
-        const heightBelowMin = studio.basis === "volume"
-            && toPositive(piece.H) > 0
-            && toPositive(studio.minHeight) > 0
-            && toPositive(piece.H) < toPositive(studio.minHeight);
-        return {
-            piece, result, comparison, heightBelowMin,
-            quantityUnit: computeQuantityUnit(studio.basis, studio.dimensionUnit, studio.weightUnit),
-        };
-    });
-
-    // Aggregate. Total volume is computed in cubic inches across all pieces
-    // for the cubeish silhouette lookup, which always uses inches regardless
-    // of the user's display unit.
-    let total = 0, totalQuantity = 0, totalVolumeIn3 = 0;
-    for (const computed of pieces) {
-        total += computed.result.price;
-        totalQuantity += computed.result.quantity;
-        if (studio.basis === "volume" || studio.basis === "footprint") {
-            const inchesPerUnit = INCHES_PER_UNIT[studio.dimensionUnit];
-            const lengthIn = toPositive(computed.piece.L) * inchesPerUnit;
-            const widthIn = toPositive(computed.piece.W) * inchesPerUnit;
-            const heightIn = studio.basis === "volume"
-                ? toPositive(computed.piece.H) * inchesPerUnit
-                : 1;
-            totalVolumeIn3 += lengthIn * widthIn * heightIn;
-        }
-    }
-    const aggregateComparison = totalVolumeIn3 > 0
-        ? findComparison(totalVolumeIn3, "cubeish")
-        : null;
-
-    return {
-        studio,
-        pieces,
-        aggregate: { total, totalQuantity, comparison: aggregateComparison },
-        rateUnit: rateUnitFor(studio.basis, studio.dimensionUnit, studio.weightUnit),
-        rateStep: rateIsCents(studio.basis) ? 0.1 : 0.05,
-        showRounding: studio.basis === "volume" || studio.basis === "footprint",
-        showMinHeight: studio.basis === "volume",
-        activeUnitSet: studio.basis === "weight" ? WEIGHT_UNITS : DIMENSION_UNITS,
-        activeUnit: studio.basis === "weight" ? studio.weightUnit : studio.dimensionUnit,
-        setActiveUnit: studio.basis === "weight"
-            ? (unit) => handleWeightUnitChange(unit as WeightUnit)
-            : (unit) => handleDimensionUnitChange(unit as DimensionUnit),
-        totalQuantityUnit: computeQuantityUnit(studio.basis, studio.dimensionUnit, studio.weightUnit),
-    };
 };

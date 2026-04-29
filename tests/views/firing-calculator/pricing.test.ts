@@ -52,7 +52,7 @@ describe("formatPrice", () => {
     });
 
     it("prepends dollar sign", () => {
-        expect(formatPrice(100)).toMatch(/^\$/);
+        expect(formatPrice(100).startsWith("$")).toBe(true);
     });
 });
 
@@ -85,7 +85,7 @@ describe("calculatePrice edge cases", () => {
         expect(result.quantity).toBe(0);
     });
 
-    it("piece with no firings selected returns 0 even with valid dims", () => {
+    it("piece with no firings selected returns 0 even with valid dimensions", () => {
         const piece = makePiece({
             L: "4", W: "4", H: "4",
             firings: { bisque: false, glaze: false, luster: false },

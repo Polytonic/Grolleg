@@ -36,6 +36,7 @@
         cursor: pointer;
         margin-bottom: 20px;
         padding-left: 12px;
+        min-height: 44px;
 
         &.collapsed {
             margin-bottom: 0;
@@ -292,19 +293,19 @@
     }
 
 
-    /* Monospace family for entered data and computed values */
+    /* Monospace Family for Entered Data and Computed Values */
     :is(.input, .derived-value, .result-value, .result-unit, .result-delta,
         .volume-value, .arrow-percent, .timeline-label, .timeline-dimension-value) {
         font-family: var(--font-mono);
     }
 
-    /* WCAG tap targets for tool-specific interactive elements */
+    /* WCAG Tap Targets for Tool-Specific Interactive Elements */
     .derived-value {
         min-height: 44px;
     }
 
 
-    /* Narrow viewport: stack the two-column grids */
+    /* Narrow Viewport: Stack the Two-Column Grids */
     @media (max-width: 580px) {
         .controls-row,
         .mode-row {

@@ -43,8 +43,7 @@ describe("ConnectedPill active state", () => {
             onToggleA: () => {}, onToggleB: () => {},
         });
         // Two halves with .active.
-        const html = output.rootEl.outerHTML;
-        const matches = html.match(/connected-pill__half[^"]*active/g) ?? [];
+        const matches = output.rootEl.querySelectorAll(".connected-pill__half.active");
         expect(matches.length).toBe(2);
     });
 });
@@ -65,7 +64,8 @@ describe("ConnectedPill disabled state", () => {
     });
 
     it("does not invoke onToggle when half is disabled", () => {
-        let aCalls = 0, bCalls = 0;
+        let aCalls = 0;
+        let bCalls = 0;
         const output = mq(ConnectedPill, {
             connected: false,
             aActive: false, bActive: false,

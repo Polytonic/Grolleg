@@ -2,9 +2,8 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import {
     bucketOf, findComparison, INCHES_PER_UNIT, COMPARISONS,
 } from "../../../source/views/firing-calculator/comparison";
-import {
-    state, computeDerived,
-} from "../../../source/views/firing-calculator/state";
+import { state } from "../../../source/views/firing-calculator/state";
+import { computeDerived } from "../../../source/views/firing-calculator/derived";
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
 beforeEach(() => resetState());
@@ -94,8 +93,8 @@ describe("comparison tables are well-formed", () => {
     it("every bucket is sorted ascending by max", () => {
         for (const bucket of ["cubeish", "narrow", "flat"] as const) {
             const table = COMPARISONS[bucket];
-            for (let i = 1; i < table.length; i++) {
-                expect(table[i].max).toBeGreaterThan(table[i - 1].max);
+            for (let index = 1; index < table.length; index++) {
+                expect(table[index].max).toBeGreaterThan(table[index - 1].max);
             }
         }
     });

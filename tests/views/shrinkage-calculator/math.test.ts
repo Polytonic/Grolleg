@@ -2,14 +2,12 @@ import { describe, it, expect } from "bun:test";
 import {
     applyRate,
     reverseRate,
-    format,
     calculateVolume,
     deriveFiringPercent,
 } from "../../../source/views/shrinkage-calculator/state";
-import { parseLocaleNumber } from "../../../source/components/locale";
 
 
-// Shrinkage application and reversal
+// Shrinkage Application and Reversal
 
 describe("applyRate", () => {
     it("shrinks 100 by 12% to 88", () => {
@@ -55,112 +53,13 @@ describe("reverseRate", () => {
 });
 
 
-// Number formatting
-
-describe("format", () => {
-    it("formats with two decimal places", () => {
-        const result = format(12.5);
-        expect(result).toContain("12");
-        expect(result).toContain("50");
-    });
-
-    it("null returns em dash", () => {
-        expect(format(null)).toBe("—");
-    });
-
-    it("NaN returns em dash", () => {
-        expect(format(NaN)).toBe("—");
-    });
-
-    it("Infinity returns em dash", () => {
-        expect(format(Infinity)).toBe("—");
-    });
-
-    it("negative Infinity returns em dash", () => {
-        expect(format(-Infinity)).toBe("—");
-    });
-
-    it("zero formats with decimals", () => {
-        expect(format(0)).toContain("0");
-    });
-
-    it("negative zero formats as zero", () => {
-        const result = format(-0);
-        expect(result).toContain("0");
-    });
-});
 
 
-// Locale-aware number parsing
-
-describe("parseLocaleNumber", () => {
-    // Standard formats
-    it("12.5 (US decimal)", () => {
-        expect(parseLocaleNumber("12.5")).toBe(12.5);
-    });
-
-    it("12,5 (European decimal)", () => {
-        expect(parseLocaleNumber("12,5")).toBe(12.5);
-    });
-
-    it("100 (integer)", () => {
-        expect(parseLocaleNumber("100")).toBe(100);
-    });
-
-    // Thousands separators
-    it("1,500.75 (US thousands)", () => {
-        expect(parseLocaleNumber("1,500.75")).toBe(1500.75);
-    });
-
-    it("1.500,75 (European thousands)", () => {
-        expect(parseLocaleNumber("1.500,75")).toBe(1500.75);
-    });
-
-    // Last-separator disambiguation
-    it("1.234,56 treats comma as decimal (comma last)", () => {
-        expect(parseLocaleNumber("1.234,56")).toBe(1234.56);
-    });
-
-    it("1,234.56 treats dot as decimal (dot last)", () => {
-        expect(parseLocaleNumber("1,234.56")).toBe(1234.56);
-    });
-
-    // Edge cases
-    it("empty string returns NaN", () => {
-        expect(parseLocaleNumber("")).toBeNaN();
-    });
-
-    it("trims whitespace", () => {
-        expect(parseLocaleNumber("  12.5  ")).toBe(12.5);
-    });
-
-    it("zero", () => {
-        expect(parseLocaleNumber("0")).toBe(0);
-    });
-
-    it("negative values", () => {
-        expect(parseLocaleNumber("-5.5")).toBe(-5.5);
-    });
-
-    it("leading decimal (.75)", () => {
-        expect(parseLocaleNumber(".75")).toBe(0.75);
-    });
-
-    it("trailing decimal (12.)", () => {
-        expect(parseLocaleNumber("12.")).toBe(12);
-    });
-
-    it("non-numeric text returns NaN", () => {
-        expect(parseLocaleNumber("abc")).toBeNaN();
-    });
-});
-
-
-// Volume calculation
+// Volume Calculation
 
 describe("calculateVolume", () => {
     it("rectangular: L * W * H", () => {
-        expect(calculateVolume([10, 20, 30], "rect")).toBe(6000);
+        expect(calculateVolume([10, 20, 30], "rectangle")).toBe(6000);
     });
 
     it("cylindrical: pi * (D/2)^2 * H", () => {
@@ -172,18 +71,18 @@ describe("calculateVolume", () => {
     });
 
     it("insufficient dimensions return null", () => {
-        expect(calculateVolume([10], "rect")).toBeNull();
+        expect(calculateVolume([10], "rectangle")).toBeNull();
         expect(calculateVolume([10], "cylinder")).toBeNull();
     });
 
     it("zero dimension produces zero volume", () => {
-        expect(calculateVolume([0, 10, 20], "rect")).toBe(0);
+        expect(calculateVolume([0, 10, 20], "rectangle")).toBe(0);
         expect(calculateVolume([0, 20], "cylinder")).toBe(0);
     });
 });
 
 
-// Stage decomposition: (1 - total) = (1 - greenware) * (1 - bisque) * (1 - firing)
+// Stage Decomposition: (1 - total) = (1 - greenware) * (1 - bisque) * (1 - firing)
 
 describe("deriveFiringPercent", () => {
     it("derives firing from Stoneware Cone 6 defaults (12%, 6%, 0.75%)", () => {

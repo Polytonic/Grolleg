@@ -5,7 +5,7 @@ import {
     state, PRESET_GROUPS,
     handlePresetChange, handleShrinkageInput, handleShrinkageBlur,
 } from "./state";
-import type { Derived } from "./state";
+import type { Derived } from "./derived";
 
 
 // Preset dropdown grouped by generic and brand-name clay bodies
@@ -40,7 +40,7 @@ export const ShrinkageField: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".field-group",
         m("label.label", { for: "shrinkage-rate" },
             "Shrinkage Rate",
-            derived.shrinkInvalid && m("span.required", " *"),
+            derived.shrinkageInvalid && m("span.required", " *"),
             m(Tooltip, {
                 label: "shrinkage rate",
                 text: "Wet-to-fired shrinkage combining drying and firing. Most clay bodies publish this on their spec sheet. To measure yourself: scratch a known length into a wet test bar, fire to maturity, measure again. Shrinkage = (wet − fired) ÷ wet × 100.",
@@ -48,7 +48,7 @@ export const ShrinkageField: m.Component<{ derived: Derived }> = {
         ),
         m(InputWithSuffix, {
             suffix: "%",
-            modifiers: derived.shrinkInvalid ? ["error"] : undefined,
+            modifiers: derived.shrinkageInvalid && ["error"],
             id: "shrinkage-rate",
             type: "number",
             inputmode: "decimal",
@@ -57,12 +57,12 @@ export const ShrinkageField: m.Component<{ derived: Derived }> = {
             max: "99",
             placeholder: "e.g. 12.5",
             value: state.shrinkage,
-            "aria-invalid": derived.shrinkInvalid ? "true" : undefined,
-            "aria-describedby": derived.shrinkInvalid ? "shrinkage-rate-error" : undefined,
+            "aria-invalid": derived.shrinkageInvalid && "true",
+            "aria-describedby": derived.shrinkageInvalid && "shrinkage-rate-error",
             oninput: handleShrinkageInput,
             onblur: handleShrinkageBlur,
         }),
-        derived.shrinkInvalid && m("span.input-error-text",
+        derived.shrinkageInvalid && m("span.input-error-text",
             {
                 id: "shrinkage-rate-error",
                 role: "status",

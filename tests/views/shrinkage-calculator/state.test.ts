@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import {
-    state, computeDerived,
+    state,
     handlePresetChange, handleShrinkageInput, handleShrinkageBlur,
     handleStageToggle, handleGreenwareInput, handleBisqueInput,
     handleShapeChange, handleDirectionChange, handleUnitChange,
     handleDimensionInput, handleDimensionKey,
 } from "../../../source/views/shrinkage-calculator/state";
+import { computeDerived } from "../../../source/views/shrinkage-calculator/derived";
 import { resetState, mockInputEvent, mockCheckboxEvent, mockSelectEvent, mockKeyboardEvent } from "../../helpers";
 
 import { PRESET_GROUPS } from "../../../source/views/shrinkage-calculator/state";
@@ -13,7 +14,7 @@ import { PRESET_GROUPS } from "../../../source/views/shrinkage-calculator/state"
 beforeEach(() => resetState());
 
 
-// Preset data
+// Preset Data
 
 describe("PRESET_GROUPS", () => {
     it("has Generic and Popular Clays groups", () => {
@@ -31,25 +32,25 @@ describe("PRESET_GROUPS", () => {
 });
 
 
-// Shrinkage validation
+// Shrinkage Validation
 
 describe("shrinkage validation", () => {
     it("12% is valid", () => {
         state.shrinkage = "12";
-        state.shrinkTouched = true;
-        expect(computeDerived().shrinkInvalid).toBe(false);
+        state.shrinkageTouched = true;
+        expect(computeDerived().shrinkageInvalid).toBe(false);
     });
 
     it("empty string is invalid when touched", () => {
         state.shrinkage = "";
-        state.shrinkTouched = true;
-        expect(computeDerived().shrinkInvalid).toBe(true);
+        state.shrinkageTouched = true;
+        expect(computeDerived().shrinkageInvalid).toBe(true);
     });
 
-    it("error hidden until blur (shrinkTouched = false)", () => {
+    it("error hidden until blur (shrinkageTouched = false)", () => {
         state.shrinkage = "";
-        state.shrinkTouched = false;
-        expect(computeDerived().shrinkInvalid).toBe(false);
+        state.shrinkageTouched = false;
+        expect(computeDerived().shrinkageInvalid).toBe(false);
     });
 
     it("0% rejected (must be > 0)", () => {
@@ -84,7 +85,7 @@ describe("shrinkage validation", () => {
 });
 
 
-// Dimension results
+// Dimension Results
 
 describe("dimension results", () => {
     it("wet-to-fired applies shrinkage", () => {
@@ -145,7 +146,7 @@ describe("dimension results", () => {
 });
 
 
-// Volumetric shrinkage
+// Volumetric Shrinkage
 
 describe("volumetric shrinkage", () => {
     it("computed for cylinder", () => {
@@ -175,7 +176,7 @@ describe("volumetric shrinkage", () => {
 });
 
 
-// Shrinkage stages
+// Shrinkage Stages
 
 describe("shrinkage stages", () => {
     it("computes all stage dimensions when enabled", () => {
@@ -239,7 +240,7 @@ describe("shrinkage stages", () => {
 });
 
 
-// Hint message flags
+// Hint Message Flags
 
 describe("hint message flags", () => {
     it("only shrinkage entered: totalValid true, no dimensions", () => {
@@ -268,7 +269,7 @@ describe("hint message flags", () => {
 });
 
 
-// Event handlers: preset and shrinkage
+// Event Handlers: Preset and Shrinkage
 
 describe("handlePresetChange", () => {
     it("populates shrinkage from preset", () => {
@@ -280,20 +281,20 @@ describe("handlePresetChange", () => {
     });
 
     it("Custom preset clears shrinkage and resets touched", () => {
-        state.shrinkTouched = true;
+        state.shrinkageTouched = true;
         handlePresetChange(mockSelectEvent("4")); // Custom
         expect(state.shrinkage).toBe("");
-        expect(state.shrinkTouched).toBe(false);
+        expect(state.shrinkageTouched).toBe(false);
     });
 
     it("selecting preset after error clears the error", () => {
         state.shrinkage = "";
-        state.shrinkTouched = true;
-        expect(computeDerived().shrinkInvalid).toBe(true);
+        state.shrinkageTouched = true;
+        expect(computeDerived().shrinkageInvalid).toBe(true);
 
         handlePresetChange(mockSelectEvent("1")); // Stoneware Cone 6
         expect(state.shrinkage).toBe("12");
-        expect(computeDerived().shrinkInvalid).toBe(false);
+        expect(computeDerived().shrinkageInvalid).toBe(false);
     });
 });
 
@@ -307,15 +308,15 @@ describe("handleShrinkageInput", () => {
 });
 
 describe("handleShrinkageBlur", () => {
-    it("sets shrinkTouched flag", () => {
-        state.shrinkTouched = false;
+    it("sets shrinkageTouched flag", () => {
+        state.shrinkageTouched = false;
         handleShrinkageBlur();
-        expect(state.shrinkTouched).toBe(true);
+        expect(state.shrinkageTouched).toBe(true);
     });
 });
 
 
-// Event handlers: stages
+// Event Handlers: Stages
 
 describe("handleStageToggle", () => {
     it("toggles showStages", () => {
@@ -347,7 +348,7 @@ describe("handleBisqueInput", () => {
 });
 
 
-// Event handlers: shape, direction, unit, dimensions
+// Event Handlers: Shape, Direction, Unit, Dimensions
 
 describe("handleShapeChange", () => {
     it("Cylinder to Rectangle preserves Height", () => {

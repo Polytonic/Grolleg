@@ -1,7 +1,8 @@
 import m from "mithril";
 import { InputWithSuffix } from "../../components/input-with-suffix";
 import { state, format, handleGreenwareInput, handleBisqueInput } from "./state";
-import type { Stage, Derived } from "./state";
+import type { Stage } from "./state";
+import type { Derived } from "./derived";
 
 
 // Greenware, bisque, and derived firing percentage inputs with stage hints

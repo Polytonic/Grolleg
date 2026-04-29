@@ -578,7 +578,7 @@
        margin from the cards. Sized to chip-scale (~36px) rather than
        the 44px input floor so it doesn't compete visually with the
        piece cards above. The chip-scale falls under the WCAG 2.5.8
-       (Compact, AAA) carve-out for grouped/secondary controls — same
+       (Compact, AAA) carve-out for grouped/secondary controls, the same
        exception used by the per-piece chips. */
     .add-piece {
         display: inline-flex;
@@ -711,7 +711,7 @@
 }
 
 
-/* Module-scope keyframe (animations don't inherit cascade scope) */
+/* Module-Scope Keyframe (Animations Don't Inherit Cascade Scope) */
 @keyframes firing-calc-rate-pulse {
     0%   { background-color: color-mix(in srgb, var(--color-accent) 22%, white); }
     100% { background-color: var(--color-card); }

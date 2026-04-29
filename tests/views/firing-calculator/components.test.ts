@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import mq from "mithril-query";
-import { state, computeDerived } from "../../../source/views/firing-calculator/state";
+import { state } from "../../../source/views/firing-calculator/state";
+import { computeDerived } from "../../../source/views/firing-calculator/derived";
 import { FiringCalculatorView } from "../../../source/views/firing-calculator/firing-calculator";
 import { ControlsSection } from "../../../source/views/firing-calculator/controls";
 import { PiecesSection } from "../../../source/views/firing-calculator/pieces";

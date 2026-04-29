@@ -1,6 +1,6 @@
 import m from "mithril";
 import "@css/views/firing-calculator.css";
-import { computeDerived } from "./state";
+import { computeDerived } from "./derived";
 import { ControlsSection } from "./controls";
 import { PiecesSection } from "./pieces";
 import { TotalBand } from "./total";

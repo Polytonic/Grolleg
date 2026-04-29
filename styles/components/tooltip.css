@@ -56,7 +56,7 @@
     }
 }
 
-/* Portal mount point for tooltip bubbles */
+/* Portal Mount Point for Tooltip Bubbles */
 .tooltip-portal { display: contents; }
 
 /* Bubble is portal-rendered to document.body with fixed positioning.

@@ -1,8 +1,11 @@
 import m from "mithril";
 import { Tooltip } from "../../components/tooltip";
 import { ConnectedPill } from "../../components/connected-pill";
-import { UnitToggle } from "../../components/unit-toggle";
+import { flipSnapshot, flipPlay, flipLeave, prefersReducedMotion } from "../../components/flip";
+import { chainLinkIcon } from "../../components/icons";
 import { InputWithSuffix } from "../../components/input-with-suffix";
+import { TogglePill } from "../../components/toggle-pill";
+import { UnitToggle } from "../../components/unit-toggle";
 import {
     state, BASIS_META, ROUNDING_OPTIONS, toDisplayRate, toPositive,
     expandUnit, UNIT_VERBOSE,
@@ -10,7 +13,8 @@ import {
     handleFiringRateInput, handleBundledRateInput,
     toggleFiring, toggleBundled,
 } from "./state";
-import type { Basis, Derived } from "./state";
+import type { Basis } from "./state";
+import type { Derived } from "./derived";
 
 
 /* Verbose rate-unit string used by screen readers via aria-describedby.
@@ -30,48 +34,7 @@ const expandRateUnit = (basis: Basis, dimensionUnit: string, weightUnit: string)
 };
 
 
-/* ── Local Icon ──
-   The chain glyph signals the Bundled state without text. The icon
-   alone reads as a different class from the firing pills next to it. */
 
-const chainLinkIcon = (size: number = 16): m.Vnode =>
-    m("svg", {
-        width: size, height: size, viewBox: "0 0 24 24",
-        fill: "none", stroke: "currentColor", "stroke-width": 2,
-        "stroke-linecap": "round", "stroke-linejoin": "round",
-        "aria-hidden": "true",
-    },
-        m("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }),
-        m("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" }),
-    );
-
-
-/* ── Local Pill Primitive ──
-   Sized to align vertically with input rows. Shares the suite's
-   color-state vocabulary (hover lightens 15% toward accent, press
-   darkens 15% toward black) without inheriting the shrinkage
-   `.shape-pill`'s sizing, which targets a denser layout. */
-
-interface PillAttrs {
-    active: boolean;
-    onclick: () => void;
-    ariaLabel?: string;
-    title?: string;
-}
-
-const Pill: m.Component<PillAttrs> = {
-    view: ({ attrs, children }) =>
-        m(`button.pill${attrs.active ? ".active" : ""}`,
-            {
-                type: "button",
-                "aria-pressed": attrs.active ? "true" : "false",
-                "aria-label": attrs.ariaLabel,
-                title: attrs.title,
-                onclick: attrs.onclick,
-            },
-            children,
-        ),
-};
 
 
 /* ── Row 1: Billing + Rounding ──
@@ -135,7 +98,8 @@ const BillingRow: m.Component<{ derived: Derived }> = {
 const FiringsRow: m.Component = {
     view: () => m(".firings-row",
         m(".firings-row__bundled",
-            m(Pill, {
+            m(TogglePill, {
+                className: "pill",
                 active: state.bundled,
                 onclick: toggleBundled,
                 ariaLabel: "Bundle bisque and glaze under one shared rate",
@@ -153,7 +117,8 @@ const FiringsRow: m.Component = {
                 onToggleA: () => toggleFiring("bisque"),
                 onToggleB: () => toggleFiring("glaze"),
             }),
-            m(Pill, {
+            m(TogglePill, {
+                className: "pill",
                 active: state.firingToggles.luster,
                 onclick: () => toggleFiring("luster"),
             }, "Luster"),
@@ -291,36 +256,12 @@ const collectRateFields = (basis: Basis): RateField[] => {
     return fields;
 };
 
-/* ── Rate Inputs (FLIP-animated) ──
-   Bundled toggle reshapes the row from 2 columns (Bundled, Luster) to
-   3 columns (Bisque, Glaze, Luster) and back. Without animation the
-   inputs pop in and out, which reads as a layout glitch. This component
-   uses FLIP (First, Last, Invert, Play) for the layout transition:
-     1. Before each redraw, snapshot every rendered cell's bounding box.
-     2. Let Mithril update the DOM into its new layout.
-     3. For each cell that survived, compute the (old − new) delta and
-        snap it back to its old position with `transform`, then in the
-        next frame transition the transform to identity. The cell
-        slides smoothly to its new home.
-     4. Cells that are leaving (Mithril's onbeforeremove) lift to
-        absolute positioning so the surrounding grid can collapse around
-        them, then fade out before the DOM removal completes. The
-        `.rate-inputs` wrapper has `position: relative` so the absolute
-        children stay in their visual position rather than jumping to
-        viewport coordinates.
-   The pulse animation on the rate inputs themselves is driven separately
-   by InputWithSuffix's `pulseKey` prop (state.bundlePulseKey), so new
-   and surviving bisque/glaze/bundled inputs flash on every toggle.
-   Luster never receives the prop and stays calm.
-   Honors prefers-reduced-motion: the snapshot/play logic is skipped
-   entirely under that media query (see CSS). */
-
-const reducedMotionQuery =
-    typeof window !== "undefined" && window.matchMedia
-        ? window.matchMedia("(prefers-reduced-motion: reduce)")
-        : null;
-
-const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
+/* ── Rate Inputs ──
+   Bundled toggle reshapes the row from 2 columns (Bundled, Luster)
+   to 3 columns (Bisque, Glaze, Luster) and back. FLIP utilities
+   from components/flip handle the layout transition; InputWithSuffix's
+   pulseKey drives the flash on bisque/glaze/bundled rate inputs
+   (luster stays calm). */
 
 interface RateInputsState {
     snapshot: Map<string, DOMRect> | null;
@@ -329,87 +270,25 @@ interface RateInputsState {
 const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInputsState> = {
     onbeforeupdate(vnode) {
         const dom = (vnode as m.VnodeDOM<{ derived: Derived; fields: RateField[] }, RateInputsState>).dom;
-        if (prefersReducedMotion() || !dom) return true;
-        const snapshot = new Map<string, DOMRect>();
-        for (const child of Array.from(dom.children) as HTMLElement[]) {
-            // Skip "zombie" cells already in their leave animation (Mithril
-            // keeps them in dom.children until onbeforeremove's promise
-            // resolves). Their getBoundingClientRect would return the
-            // absolute-positioned rect, which would pollute a survivor's
-            // FLIP delta on the next toggle.
-            if (child.dataset.flipping === "leaving") continue;
-            const key = child.dataset.flipKey;
-            if (key) snapshot.set(key, child.getBoundingClientRect());
-        }
-        vnode.state.snapshot = snapshot;
+        vnode.state.snapshot = flipSnapshot(dom);
         return true;
     },
     onupdate(vnode) {
-        const snapshot = vnode.state.snapshot;
+        flipPlay(vnode.dom, vnode.state.snapshot);
         vnode.state.snapshot = null;
-        if (!snapshot || prefersReducedMotion()) return;
-        for (const child of Array.from(vnode.dom.children) as HTMLElement[]) {
-            if (child.dataset.flipping === "leaving") continue;
-            const key = child.dataset.flipKey;
-            if (!key) continue;
-            const previous = snapshot.get(key);
-            const current = child.getBoundingClientRect();
-            if (previous) {
-                const dx = previous.left - current.left;
-                const dy = previous.top - current.top;
-                if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
-                child.style.transition = "none";
-                child.style.transform = `translate(${dx}px, ${dy}px)`;
-                requestAnimationFrame(() => {
-                    child.style.transition = "transform 0.25s ease-out";
-                    child.style.transform = "";
-                });
-            }
-            // New cells need no special treatment here. Their pulse fires
-            // via InputWithSuffix's oncreate hook (gated on pulseKey > 0).
-        }
     },
     view: ({ attrs: { derived, fields } }) =>
         m(`.rate-inputs.columns-${fields.length}`,
             fields.map((field) => m(`.field-group${field.disabled ? ".disabled" : ""}`, {
                 key: field.key,
                 "data-flip-key": field.key,
-                onbeforeremove(removingVnode: m.VnodeDOM) {
-                    if (prefersReducedMotion()) return;
-                    const element = removingVnode.dom as HTMLElement;
-                    const parent = element.parentElement;
-                    if (!parent) return;
-                    const rect = element.getBoundingClientRect();
-                    const parentRect = parent.getBoundingClientRect();
-                    // Tag this cell so onbeforeupdate skips it on a
-                    // subsequent toggle while it's still mid-fade. Without
-                    // the tag, its absolute-positioned rect would pollute
-                    // the survivor's FLIP delta.
-                    element.dataset.flipping = "leaving";
-                    element.style.position = "absolute";
-                    element.style.left = `${rect.left - parentRect.left}px`;
-                    element.style.top = `${rect.top - parentRect.top}px`;
-                    element.style.width = `${rect.width}px`;
-                    element.style.transition = "opacity 0.2s ease-out";
-                    return new Promise<void>((resolve) => {
-                        requestAnimationFrame(() => {
-                            element.style.opacity = "0";
-                            // The 250ms fallback is 50ms longer than the
-                            // CSS transition duration to absorb frame jitter
-                            // and tab-throttling on background tabs.
-                            element.addEventListener("transitionend", () => resolve(), { once: true });
-                            setTimeout(resolve, 250);
-                        });
-                    });
-                },
+                onbeforeremove: flipLeave,
             },
                 m("label.input-label", { for: `rate-${field.key}` }, field.label),
                 m(InputWithSuffix, {
                     suffix: derived.rateUnit,
                     suffixSr: expandRateUnit(derived.studio.basis, derived.studio.dimensionUnit, derived.studio.weightUnit),
                     modifiers: ["numeric"],
-                    // Luster is unaffected by the bundled toggle, so it
-                    // doesn't get a pulseKey and never pulses on toggle.
                     pulseKey: field.key === "luster" ? undefined : state.bundlePulseKey,
                     id: `rate-${field.key}`,
                     type: "number",

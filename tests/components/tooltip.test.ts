@@ -75,7 +75,9 @@ describe("Tooltip click interaction", () => {
         output.redraw();
         const button = output.rootEl.querySelector("button.tooltip-button")!;
         expect(button.hasAttribute("aria-describedby")).toBe(true);
-        expect(button.getAttribute("aria-describedby")).toMatch(/^tooltip-\d+$/);
+        const describedBy = button.getAttribute("aria-describedby")!;
+        expect(describedBy.startsWith("tooltip-")).toBe(true);
+        expect(Number.isInteger(Number(describedBy.slice("tooltip-".length)))).toBe(true);
     });
 });
 

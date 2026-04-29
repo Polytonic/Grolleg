@@ -1,16 +1,12 @@
 import { state, cloneInitialState } from "../../../source/views/firing-calculator/state";
 import type { Piece, FiringFlags, FiringRates, Basis, DimensionUnit, WeightUnit, Rounding }
     from "../../../source/views/firing-calculator/state";
+export { mockInputEvent } from "../../helpers";
 
-// Resets calculator state to production defaults. Each test starts
-// with fresh nested objects so mutations don't leak across tests.
 export function resetState() {
     Object.assign(state, cloneInitialState());
 }
 
-// Builds a piece for tests with sensible defaults; spread `overrides`
-// to customize. The default firings match an added piece in the
-// default studio (bisque-only).
 let pieceCounter = 100;
 export function makePiece(overrides: Partial<Piece> = {}): Piece {
     return {
@@ -22,8 +18,6 @@ export function makePiece(overrides: Partial<Piece> = {}): Piece {
     };
 }
 
-// Direct setters compose state mutations readably in propagation tests.
-// They write to the singleton; tests should reset before and after.
 export function setStudio(options: {
     basis?: Basis;
     dimensionUnit?: DimensionUnit;
@@ -47,9 +41,4 @@ export function setStudio(options: {
 export function setPieces(pieces: Piece[]) {
     state.pieces = pieces;
     state.nextPieceId = pieces.reduce((max, piece) => Math.max(max, piece.id), 0) + 1;
-}
-
-// Mock event factory matching the shape handlers read at the call site.
-export function mockInputEvent(value: string): Event {
-    return { currentTarget: { value } } as unknown as Event;
 }

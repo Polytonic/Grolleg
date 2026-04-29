@@ -127,7 +127,7 @@ export const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
             if (!state) return vnode.children;
 
             return m("span", {
-                oncreate: (v: m.VnodeDOM) => { state.triggerElement = v.dom as HTMLElement; },
+                oncreate: (vnode: m.VnodeDOM) => { state.triggerElement = vnode.dom as HTMLElement; },
                 onmouseenter: () => {
                     cancelClose(state);
                     if (hasHover && !state.open) state.openTooltip(false);

@@ -1,13 +1,16 @@
 import m from "mithril";
+import { InputWithSuffix } from "../../components/input-with-suffix";
+import { UNIT_VERBOSE } from "../../components/locale";
+import { TogglePill } from "../../components/toggle-pill";
 import { Tooltip } from "../../components/tooltip";
 import { UnitToggle } from "../../components/unit-toggle";
-import { InputWithSuffix } from "../../components/input-with-suffix";
 import {
     state, SHAPE_MODES,
     handleShapeChange, handleDirectionChange, handleUnitChange,
     handleDimensionInput, handleDimensionKey,
 } from "./state";
-import type { Direction, Unit, Derived } from "./state";
+import type { Direction, Unit } from "./state";
+import type { Derived } from "./derived";
 
 
 // Shape, direction, unit toggle, and dimension inputs grouped as one section
@@ -24,7 +27,7 @@ export const ClayControls: m.Component<{ derived: Derived }> = {
                 units: UNITS,
                 active: state.unit,
                 onSelect: (unit) => handleUnitChange(unit as Unit),
-                ariaLabels: UNIT_ARIA_LABELS,
+                ariaLabels: UNIT_VERBOSE,
             }),
         ),
         m(".dimensions-row",
@@ -49,18 +52,14 @@ const ShapeSection: m.Component = {
             }),
         ),
         m(".shape-pills",
-            SHAPE_MODES.map((shapeMode, index) => {
-                const isActive = state.shapeIndex === index;
-                return m(`button.shape-pill${isActive ? ".active" : ""}`,
-                    {
-                        key: shapeMode.id,
-                        type: "button",
-                        "aria-pressed": isActive ? "true" : "false",
-                        onclick: () => handleShapeChange(index),
-                    },
-                    shapeMode.label,
-                );
-            }),
+            SHAPE_MODES.map((shapeMode, index) =>
+                m(TogglePill, {
+                    key: shapeMode.id,
+                    className: "shape-pill",
+                    active: state.shapeIndex === index,
+                    onclick: () => handleShapeChange(index),
+                }, shapeMode.label),
+            ),
         ),
     ),
 };
@@ -81,29 +80,20 @@ const DirectionSection: m.Component = {
             }),
         ),
         m(".shape-pills",
-            DIRECTION_OPTIONS.map(([value, label, ariaLabel]) => {
-                const isActive = state.direction === value;
-                return m(`button.shape-pill${isActive ? ".active" : ""}`,
-                    {
-                        key: value,
-                        type: "button",
-                        "aria-pressed": isActive ? "true" : "false",
-                        "aria-label": ariaLabel,
-                        onclick: () => handleDirectionChange(value),
-                    },
-                    label,
-                );
-            }),
+            DIRECTION_OPTIONS.map(([value, label, ariaLabel]) =>
+                m(TogglePill, {
+                    key: value,
+                    className: "shape-pill",
+                    active: state.direction === value,
+                    ariaLabel,
+                    onclick: () => handleDirectionChange(value),
+                }, label),
+            ),
         ),
     ),
 };
 
 const UNITS: readonly Unit[] = ["mm", "cm", "in"];
-const UNIT_ARIA_LABELS: Record<string, string> = {
-    mm: "millimeters",
-    cm: "centimeters",
-    in: "inches",
-};
 
 // Single numeric input with unit suffix and pulse animation on direction change
 const DimensionInput: m.Component<{ field: string; fieldIndex: number; isLast: boolean }> = {

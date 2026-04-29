@@ -1,6 +1,6 @@
 import m from "mithril";
 import { state, format } from "./state";
-import type { Derived } from "./state";
+import type { Derived } from "./derived";
 
 
 // Per-dimension results with delta and optional volumetric shrinkage

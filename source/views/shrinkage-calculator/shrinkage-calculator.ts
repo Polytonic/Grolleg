@@ -1,7 +1,8 @@
 import m from "mithril";
 import "@css/views/shrinkage-calculator.css";
-import { state, computeDerived, handleStageToggle } from "./state";
-import type { Derived } from "./state";
+import { state, handleStageToggle } from "./state";
+import { computeDerived } from "./derived";
+import type { Derived } from "./derived";
 import { ClayBodyField, ShrinkageField } from "./clay-selection";
 import { StageInputs, StagesCard } from "./shrinkage-stages";
 import { ClayControls } from "./controls";

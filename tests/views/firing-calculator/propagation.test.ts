@@ -251,22 +251,19 @@ describe("piece-level chip toggle leaves studio unchanged", () => {
 describe("basis change reseeds rates; unit change does not", () => {
     it("changing basis reseeds rates from the new basis' defaults", () => {
         setStudio({ firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10 } });
-        const event = { currentTarget: { value: "weight" } } as unknown as Event;
-        handleBasisChange(event);
+        handleBasisChange(mockInputEvent("weight"));
         expect(state.firingRates).toEqual(BASIS_META.weight.defaults);
     });
 
     it("changing basis reseeds bundled rate from the new basis' default", () => {
         setStudio({ firingRates: { bisque: 0.04, glaze: 0.04, luster: 0.08, bundled: 0.06 } });
-        const event = { currentTarget: { value: "footprint" } } as unknown as Event;
-        handleBasisChange(event);
+        handleBasisChange(mockInputEvent("footprint"));
         expect(state.firingRates.bundled).toBeCloseTo(BASIS_META.footprint.defaults.bundled);
     });
 
     it("re-selecting current basis is a no-op", () => {
         setStudio({ basis: "volume", firingRates: { bisque: 0.07, glaze: 0.07, luster: 0.07, bundled: 0.07 } });
-        const event = { currentTarget: { value: "volume" } } as unknown as Event;
-        handleBasisChange(event);
+        handleBasisChange(mockInputEvent("volume"));
         expect(state.firingRates.bisque).toBeCloseTo(0.07);
     });
 
@@ -279,11 +276,9 @@ describe("basis change reseeds rates; unit change does not", () => {
 
     it("round-tripping basis preserves user-edited rates via the per-basis cache", () => {
         setStudio({ basis: "volume", firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10, bundled: 0.09 } });
-        const toWeight = { currentTarget: { value: "weight" } } as unknown as Event;
-        handleBasisChange(toWeight);
+        handleBasisChange(mockInputEvent("weight"));
         expect(state.firingRates).toEqual(BASIS_META.weight.defaults);
-        const backToVolume = { currentTarget: { value: "volume" } } as unknown as Event;
-        handleBasisChange(backToVolume);
+        handleBasisChange(mockInputEvent("volume"));
         expect(state.firingRates).toEqual({ bisque: 0.05, glaze: 0.06, luster: 0.10, bundled: 0.09 });
     });
 
@@ -329,11 +324,9 @@ describe("bundled rate survives basis round-trip via the per-basis cache", () =>
         setStudio({ basis: "volume", bundled: true });
         handleBundledRateInput(mockInputEvent("9"));
         const editedRate = state.firingRates.bundled;
-        const toWeight = { currentTarget: { value: "weight" } } as unknown as Event;
-        handleBasisChange(toWeight);
+        handleBasisChange(mockInputEvent("weight"));
         expect(state.firingRates.bundled).toBeCloseTo(BASIS_META.weight.defaults.bundled);
-        const backToVolume = { currentTarget: { value: "volume" } } as unknown as Event;
-        handleBasisChange(backToVolume);
+        handleBasisChange(mockInputEvent("volume"));
         expect(state.firingRates.bundled).toBeCloseTo(editedRate);
     });
 });

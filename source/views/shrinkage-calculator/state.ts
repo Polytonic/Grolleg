@@ -1,4 +1,5 @@
-import { parseLocaleNumber, detectDefaultDimensionUnit, formatNumber } from "../../components/locale";
+import { haptic, focusLater } from "../../components/interaction";
+import { detectDefaultDimensionUnit, formatNumber } from "../../components/locale";
 
 
 /* ── Types ── */
@@ -21,7 +22,7 @@ interface PresetGroup {
 }
 
 export interface ShapeMode {
-    id: "single" | "cylinder" | "rect";
+    id: "single" | "cylinder" | "rectangle";
     label: string;
     fields: string[];
 }
@@ -74,7 +75,7 @@ export const PRESET_GROUPS: PresetGroup[] = (() => {
 export const SHAPE_MODES: ShapeMode[] = [
     { id: "single",   label: "Linear",    fields: ["Length"] },
     { id: "cylinder", label: "Cylinder",  fields: ["Diameter", "Height"] },
-    { id: "rect",     label: "Rectangle", fields: ["Length", "Width", "Height"] },
+    { id: "rectangle", label: "Rectangle", fields: ["Length", "Width", "Height"] },
 ];
 
 
@@ -89,7 +90,7 @@ export const reverseRate = (dimension: number, percent: number): number =>
 export const format = formatNumber;
 
 export const calculateVolume = (dimensions: number[], shapeId: ShapeMode["id"]): number | null => {
-    if (shapeId === "rect" && dimensions.length >= 3) return dimensions[0] * dimensions[1] * dimensions[2];
+    if (shapeId === "rectangle" && dimensions.length >= 3) return dimensions[0] * dimensions[1] * dimensions[2];
     if (shapeId === "cylinder" && dimensions.length >= 2) return Math.PI * (dimensions[0] / 2) ** 2 * dimensions[1];
     return null;
 };
@@ -108,17 +109,7 @@ export const deriveFiringPercent = (
 };
 
 
-/* ── Progressive Enhancements ── */
-
-// iOS Safari silently ignores vibration, so no error handling needed.
-const haptic = () => { navigator?.vibrate?.(15); };
-
 const defaultUnit: Unit = detectDefaultDimensionUnit();
-
-// Defer focus to next tick so the DOM reflects the latest state mutation.
-const focusLater = (id: string) =>
-    setTimeout(() => { globalThis.document?.getElementById(id)?.focus(); }, 0);
-
 
 /* ── State ── */
 
@@ -132,7 +123,7 @@ interface StateShape {
     showStages: boolean;
     unit: Unit;
     dimensions: string[];  // strings, not numbers: preserves partial input ("12.") and distinguishes empty from 0
-    shrinkTouched: boolean;
+    shrinkageTouched: boolean;
     pulseKey: number;  // monotonic counter that triggers CSS pulse animation on direction change
 }
 
@@ -147,7 +138,7 @@ export const INITIAL_STATE: StateShape = {
     showStages: false,
     unit: defaultUnit,
     dimensions: SHAPE_MODES[1].fields.map(() => ""),
-    shrinkTouched: false,
+    shrinkageTouched: false,
     pulseKey: 0,
 };
 
@@ -166,7 +157,7 @@ export const handlePresetChange = (event: Event) => {
     // Custom preset has no predefined values, so prompt the user to type one.
     if (preset.total === "") {
         state.shrinkage = "";
-        state.shrinkTouched = false;
+        state.shrinkageTouched = false;
         focusLater("shrinkage-rate");
         return;
     }
@@ -180,7 +171,7 @@ export const handleShrinkageInput = (event: Event) => {
     state.presetIndex = CUSTOM_INDEX;
 };
 
-export const handleShrinkageBlur = () => { state.shrinkTouched = true; };
+export const handleShrinkageBlur = () => { state.shrinkageTouched = true; };
 
 export const handleStageToggle = (event: Event) => {
     haptic();
@@ -241,128 +232,4 @@ export const handleDimensionKey = (fieldIndex: number, event: KeyboardEvent) => 
         return;
     }
     globalThis.document?.getElementById(`dimension-${fields[fieldIndex + 1].toLowerCase()}`)?.focus();
-};
-
-
-/* ── Derived View Data ── */
-
-export interface Derived {
-    shape: ShapeMode;
-    totalValid: boolean;
-    shrinkInvalid: boolean;
-    parsedDimensions: number[];
-    anyDimensionsEntered: boolean;
-    greenwarePercent: number;
-    bisquePercent: number;
-    firedResults: (number | null)[] | null;
-    anyResults: boolean;
-    wetDimensions: number[] | null;
-    finalDimensions: number[] | null;
-    firingPercent: number | null;
-    boneDryDimensions: number[] | null;
-    bisqueDimensions: number[] | null;
-    volumeShrink: number | null;
-    stagesWarning: string | null;
-    showStagesCard: boolean;
-}
-
-const parseInputs = () => {
-    const shape = SHAPE_MODES[state.shapeIndex];
-    const totalPercent = parseLocaleNumber(state.shrinkage);
-    const greenwarePercent = parseLocaleNumber(state.greenwareShrinkage);
-    const bisquePercent = parseLocaleNumber(state.bisqueShrinkage);
-    const totalValid = Number.isFinite(totalPercent) && totalPercent > 0 && totalPercent < 100;
-    const shrinkInvalid = state.shrinkTouched && !totalValid;
-    const parsedDimensions = state.dimensions.map((value) => parseLocaleNumber(value));
-    const anyDimensionsEntered = state.dimensions.some((value) => value !== "");
-    return {
-        shape, totalPercent, greenwarePercent, bisquePercent,
-        totalValid, shrinkInvalid, parsedDimensions, anyDimensionsEntered,
-    };
-};
-
-type ParsedInputs = ReturnType<typeof parseInputs>;
-
-const computeResults = (inputs: ParsedInputs) => {
-    if (!inputs.totalValid) {
-        return { firedResults: null, anyResults: false, wetDimensions: null, finalDimensions: null };
-    }
-    const firedResults = inputs.parsedDimensions.map((value) => {
-        if (!Number.isFinite(value) || value <= 0) return null;
-        return state.direction === "wet-to-fired"
-            ? applyRate(value, inputs.totalPercent)
-            : reverseRate(value, inputs.totalPercent);
-    });
-    const anyResults = firedResults.some((result) => result !== null);
-    // Timeline and volumetric math require all dimensions. Per-dimension
-    // partial results render above regardless.
-    const allValid = firedResults.every((result) => result !== null);
-    const wetDimensions = allValid
-        ? (state.direction === "wet-to-fired" ? inputs.parsedDimensions : firedResults as number[])
-        : null;
-    const finalDimensions = allValid
-        ? (state.direction === "wet-to-fired" ? firedResults as number[] : inputs.parsedDimensions)
-        : null;
-    return { firedResults, anyResults, wetDimensions, finalDimensions };
-};
-
-const computeStageData = (inputs: ParsedInputs, wetDimensions: number[] | null, showStages: boolean) => {
-    const stagesValid = showStages
-        && Number.isFinite(inputs.greenwarePercent) && inputs.greenwarePercent >= 0
-        && Number.isFinite(inputs.bisquePercent) && inputs.bisquePercent >= 0;
-    const firingPercent = stagesValid
-        ? deriveFiringPercent(inputs.totalPercent, inputs.greenwarePercent, inputs.bisquePercent)
-        : null;
-    const stagesConsistent = firingPercent !== null && firingPercent > 0;
-    const boneDryDimensions = wetDimensions && stagesConsistent
-        ? wetDimensions.map((value) => applyRate(value, inputs.greenwarePercent))
-        : null;
-    const bisqueDimensions = boneDryDimensions
-        ? boneDryDimensions.map((value) => applyRate(value, inputs.bisquePercent))
-        : null;
-    const stagesWarning = stagesValid && inputs.totalValid && !stagesConsistent
-        ? "Greenware + Bisque shrinkage exceeds total shrinkage rate. Try lowering either stage or raising the rate."
-        : null;
-    return { firingPercent, boneDryDimensions, bisqueDimensions, stagesWarning };
-};
-
-const computeVolumeShrink = (
-    wetDimensions: number[] | null,
-    finalDimensions: number[] | null,
-    shape: ShapeMode,
-): number | null => {
-    if (!wetDimensions || !finalDimensions) return null;
-    const volumeWet = calculateVolume(wetDimensions, shape.id);
-    const volumeFired = calculateVolume(finalDimensions, shape.id);
-    if (volumeWet === null || volumeFired === null) return null;
-    return (1 - volumeFired / volumeWet) * 100;
-};
-
-export const computeDerived = (): Derived => {
-    const inputs = parseInputs();
-    const results = computeResults(inputs);
-    const stageData = computeStageData(inputs, results.wetDimensions, state.showStages);
-    const volumeShrink = computeVolumeShrink(results.wetDimensions, results.finalDimensions, inputs.shape);
-    return {
-        shape: inputs.shape,
-        totalValid: inputs.totalValid,
-        shrinkInvalid: inputs.shrinkInvalid,
-        parsedDimensions: inputs.parsedDimensions,
-        anyDimensionsEntered: inputs.anyDimensionsEntered,
-        greenwarePercent: inputs.greenwarePercent,
-        bisquePercent: inputs.bisquePercent,
-        firedResults: results.firedResults,
-        anyResults: results.anyResults,
-        wetDimensions: results.wetDimensions,
-        finalDimensions: results.finalDimensions,
-        firingPercent: stageData.firingPercent,
-        boneDryDimensions: stageData.boneDryDimensions,
-        bisqueDimensions: stageData.bisqueDimensions,
-        stagesWarning: stageData.stagesWarning,
-        volumeShrink,
-        showStagesCard: results.anyResults
-            && results.finalDimensions !== null
-            && stageData.boneDryDimensions !== null
-            && stageData.bisqueDimensions !== null,
-    };
 };

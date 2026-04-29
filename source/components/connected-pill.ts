@@ -40,6 +40,15 @@ export interface ConnectedPillAttrs {
     bAriaLabel?: string;
 }
 
+interface Half {
+    isLeft: boolean;
+    label: m.Children;
+    active: boolean;
+    disabled: boolean;
+    onToggle: () => void;
+    ariaLabel?: string;
+}
+
 export const ConnectedPill: m.Component<ConnectedPillAttrs> = {
     view: ({ attrs }) => {
         const size = attrs.size ?? "pill";
@@ -78,15 +87,6 @@ export const ConnectedPill: m.Component<ConnectedPillAttrs> = {
                 fontWeight: active ? "600" : "400",
             };
         };
-
-        interface Half {
-            isLeft: boolean;
-            label: m.Children;
-            active: boolean;
-            disabled: boolean;
-            onToggle: () => void;
-            ariaLabel?: string;
-        }
 
         const renderHalf = (half: Half) =>
             m(`button.connected-pill__half.size-${size}${half.active ? ".active" : ""}${half.disabled ? ".disabled" : ""}`,

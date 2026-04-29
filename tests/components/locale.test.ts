@@ -95,20 +95,29 @@ describe("formatNumber", () => {
         expect(result).toContain("50");
     });
 
-    it("null returns em dash", () => {
-        expect(formatNumber(null)).toBe("\u2014");
+    it("null returns en dash", () => {
+        expect(formatNumber(null)).toBe("\u2013");
     });
 
-    it("NaN returns em dash", () => {
-        expect(formatNumber(NaN)).toBe("\u2014");
+    it("NaN returns en dash", () => {
+        expect(formatNumber(NaN)).toBe("\u2013");
     });
 
-    it("Infinity returns em dash", () => {
-        expect(formatNumber(Infinity)).toBe("\u2014");
+    it("Infinity returns en dash", () => {
+        expect(formatNumber(Infinity)).toBe("\u2013");
+    });
+
+    it("negative Infinity returns en dash", () => {
+        expect(formatNumber(-Infinity)).toBe("\u2013");
     });
 
     it("zero formats with decimals", () => {
         expect(formatNumber(0)).toContain("0");
+    });
+
+    it("negative zero formats as zero", () => {
+        const result = formatNumber(-0);
+        expect(result).toContain("0");
     });
 });
 

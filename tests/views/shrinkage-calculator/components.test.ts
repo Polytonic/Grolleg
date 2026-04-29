@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import mq from "mithril-query";
-import { state, computeDerived } from "../../../source/views/shrinkage-calculator/state";
+import { state } from "../../../source/views/shrinkage-calculator/state";
+import { computeDerived } from "../../../source/views/shrinkage-calculator/derived";
 import { ShrinkageCalculatorView } from "../../../source/views/shrinkage-calculator/shrinkage-calculator";
 import { ClayControls } from "../../../source/views/shrinkage-calculator/controls";
 import { ClayBodyField, ShrinkageField } from "../../../source/views/shrinkage-calculator/clay-selection";
@@ -11,7 +12,7 @@ import { resetState } from "../../helpers";
 beforeEach(() => resetState());
 
 
-// Orchestrator layout
+// Orchestrator Layout
 
 describe("ShrinkageCalculatorView", () => {
     it("renders title and subtitle", () => {
@@ -87,7 +88,7 @@ describe("ShrinkageCalculatorView", () => {
 });
 
 
-// Clay body and shrinkage controls
+// Clay Body and Shrinkage Controls
 
 describe("ClayBodyField", () => {
     it("renders preset dropdown with optgroups", () => {
@@ -113,7 +114,7 @@ describe("ShrinkageField", () => {
 
     it("shows error when invalid and touched", () => {
         state.shrinkage = "";
-        state.shrinkTouched = true;
+        state.shrinkageTouched = true;
         const derived = computeDerived();
         const output = mq(ShrinkageField, { derived });
         expect(output.should.have(".error"));
@@ -122,7 +123,7 @@ describe("ShrinkageField", () => {
 
     it("hides error when valid", () => {
         state.shrinkage = "12";
-        state.shrinkTouched = true;
+        state.shrinkageTouched = true;
         const derived = computeDerived();
         const output = mq(ShrinkageField, { derived });
         expect(output.should.not.have(".error"));
@@ -130,7 +131,7 @@ describe("ShrinkageField", () => {
 });
 
 
-// Shape, direction, and dimension controls
+// Shape, Direction, and Dimension Controls
 
 describe("ClayControls", () => {
     it("renders all shape options", () => {
@@ -209,7 +210,7 @@ describe("ClayControls", () => {
 });
 
 
-// Results
+// Results Card
 
 describe("ResultsCard", () => {
     it("header reflects direction", () => {
@@ -246,7 +247,7 @@ describe("ResultsCard", () => {
         expect(mq(ResultsCard, { derived: computeDerived() }).should.not.contain("Volumetric shrinkage"));
     });
 
-    it("empty result shows em dash", () => {
+    it("empty result shows en dash", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", ""];
         const output = mq(ResultsCard, { derived: computeDerived() });
@@ -255,7 +256,7 @@ describe("ResultsCard", () => {
 });
 
 
-// Shrinkage stages
+// Shrinkage Stages
 
 describe("StageInputs", () => {
     it("renders all three stage fields", () => {

@@ -2,15 +2,15 @@
    inheritance, and cross-browser consistency for elements we may use later */
 @import "npm:modern-normalize";
 
-/* Shared visual primitives available to all tools */
+/* Shared Visual Primitives Available to All Tools */
 @import "../styles/typography.css";
 @import "../styles/controls.css";
 
-/* Project-specific resets on top of normalize */
+/* Project-Specific Resets on Top of Normalize */
 *, *::before, *::after { margin: 0; padding: 0; }
 html, body { overflow-x: hidden; }
 
-/* Site-wide page styling shared across all tools */
+/* Site-Wide Page Styling Shared Across All Tools */
 body {
     color: var(--color-text);
     background: var(--color-bg);
