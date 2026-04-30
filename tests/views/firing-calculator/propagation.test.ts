@@ -4,8 +4,8 @@ import {
     togglePieceFiring, togglePiecePair,
     addPiece, removePiece, updatePiece,
     handleBasisChange, handleDimensionUnitChange, handleWeightUnitChange,
-    handleBundledRateInput,
-    BASIS_META,
+    handleFiringRateInput, handleBundledRateInput,
+    toStoredRate, BASIS_META,
 } from "../../../source/views/firing-calculator/state";
 import { resetState, makePiece, setStudio, setPieces, mockInputEvent } from "./helpers";
 
@@ -366,5 +366,43 @@ describe("addPiece and removePiece", () => {
         removePiece(1);
         expect(state.pieces.length).toBe(1);
         expect(state.pieces[0].id).toBe(1);
+    });
+});
+
+
+/* ── firingRatesByBasis Cache through Handlers ── */
+
+describe("firingRatesByBasis cache through handlers", () => {
+    it("handleFiringRateInput updates the cache for the active basis", () => {
+        handleFiringRateInput("bisque", mockInputEvent("5"));
+        expect(state.firingRatesByBasis.volume.bisque).toBe(toStoredRate("5", "volume"));
+    });
+
+    it("handleBundledRateInput updates the cache for the active basis", () => {
+        handleBundledRateInput(mockInputEvent("3"));
+        expect(state.firingRatesByBasis[state.basis].bundled).toBe(toStoredRate("3", state.basis));
+    });
+
+    it("rates entered via handler survive a basis round-trip", () => {
+        handleFiringRateInput("bisque", mockInputEvent("5"));
+        const stored = toStoredRate("5", "volume");
+        handleBasisChange(mockInputEvent("footprint"));
+        handleBasisChange(mockInputEvent("volume"));
+        expect(state.firingRates.bisque).toBeCloseTo(stored);
+    });
+});
+
+
+/* ── toggleBundled Seeding Branch: User-Edited Bundled Rate ── */
+
+describe("toggleBundled preserves user-edited bundled rate", () => {
+    it("preserves user-edited bundled rate when activating", () => {
+        // Set a non-default bisque rate so ratesAtDefaults is false
+        handleFiringRateInput("bisque", mockInputEvent("8"));
+        // Set a non-default bundled rate so the seeding condition is skipped
+        handleBundledRateInput(mockInputEvent("4"));
+        const editedBundled = state.firingRates.bundled;
+        toggleBundled();
+        expect(state.firingRates.bundled).toBeCloseTo(editedBundled);
     });
 });

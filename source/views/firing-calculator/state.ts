@@ -275,10 +275,6 @@ export const removePiece = (id: number) => {
     if (state.pieces.length <= 1) return;
     const removedIndex = state.pieces.findIndex((piece) => piece.id === id);
     state.pieces = state.pieces.filter((piece) => piece.id !== id);
-    if (state.pieces.length === 0) {
-        focusLater("add-piece-button");
-        return;
-    }
     // Focus should land on the piece immediately before the removed one,
     // or on the new last piece when the removed piece was last.
     const targetIndex = Math.min(Math.max(removedIndex - 1, 0), state.pieces.length - 1);

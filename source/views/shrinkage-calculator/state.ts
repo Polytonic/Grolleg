@@ -142,10 +142,11 @@ export const INITIAL_STATE: StateShape = {
     pulseKey: 0,
 };
 
-export const state: StateShape = {
-    ...INITIAL_STATE,
-    dimensions: [...INITIAL_STATE.dimensions],
-};
+export function cloneInitialState(): StateShape {
+    return { ...INITIAL_STATE, dimensions: [...INITIAL_STATE.dimensions] };
+}
+
+export const state: StateShape = cloneInitialState();
 
 
 /* ── Event Handlers ── */

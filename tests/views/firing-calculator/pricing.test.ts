@@ -5,6 +5,7 @@ import {
     toPositive, formatPrice, formatQuantity,
     expandUnit, BASIS_META, FIRING_TYPES,
 } from "../../../source/views/firing-calculator/state";
+import { decimalFormat } from "../../../source/components/locale";
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
 beforeEach(() => resetState());
@@ -22,6 +23,28 @@ describe("toPositive() coerces input to a positive number or zero", () => {
     it("numeric string parses",  () => expect(toPositive("12.5")).toBe(12.5));
     it("European decimal (comma) parses", () => expect(toPositive("12,5")).toBe(12.5));
     it("European thousands parses", () => expect(toPositive("1.500,75")).toBe(1500.75));
+});
+
+describe("toPositive() hostile inputs", () => {
+    it("scientific notation parses as the expanded number", () => {
+        expect(toPositive("1e5")).toBe(100000);
+    });
+
+    it("leading currency symbol returns 0 (parseFloat rejects it)", () => {
+        expect(toPositive("$12.50")).toBe(0);
+    });
+
+    it("trailing non-numeric suffix parses the leading digits", () => {
+        expect(toPositive("12abc")).toBe(12);
+    });
+
+    it("spelled-out number returns 0", () => {
+        expect(toPositive("twelve")).toBe(0);
+    });
+
+    it("negative string returns 0", () => {
+        expect(toPositive("-5")).toBe(0);
+    });
 });
 
 
@@ -43,16 +66,16 @@ describe("expandUnit", () => {
 /* ── formatPrice / formatQuantity ── */
 
 describe("formatPrice", () => {
-    it("formats zero as $0.00", () => {
-        expect(formatPrice(0)).toBe("$0.00");
+    it("formats zero as a dollar amount", () => {
+        expect(formatPrice(0)).toBe(`$${decimalFormat.format(0)}`);
     });
 
-    it("formats a dollar amount with two decimals", () => {
-        expect(formatPrice(3.2)).toBe("$3.20");
+    it("formats a positive value as a dollar amount", () => {
+        expect(formatPrice(3.2)).toBe(`$${decimalFormat.format(3.2)}`);
     });
 
-    it("prepends dollar sign", () => {
-        expect(formatPrice(100).startsWith("$")).toBe(true);
+    it("formats a large value as a dollar amount", () => {
+        expect(formatPrice(1234.56)).toBe(`$${decimalFormat.format(1234.56)}`);
     });
 });
 
@@ -248,6 +271,10 @@ describe("rate conversion (display vs stored)", () => {
         expect(rateUnitFor("volume", "in", "lb")).toBe("¢/in³");
         expect(rateUnitFor("footprint", "cm", "kg")).toBe("¢/cm²");
         expect(rateUnitFor("weight", "in", "lb")).toBe("$/lb");
+    });
+
+    it("toDisplayRate may produce IEEE 754 noise that the display layer must scrub", () => {
+        expect(toDisplayRate(0.035, "volume")).toBeCloseTo(3.5);
     });
 });
 

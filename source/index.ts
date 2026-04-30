@@ -8,8 +8,7 @@ import { NotFoundView } from "./views/exceptions/not-found";
 // detecting it at runtime keeps Mithril's routes (/shrinkage, /firing)
 // matching against pathname slices that come AFTER the base. Local dev
 // runs at the host root, so the prefix is empty.
-const detectBase = (): string => {
-    const { hostname, pathname } = window.location;
+export const detectBase = (hostname: string, pathname: string): string => {
     if (hostname.endsWith(".github.io")) {
         const firstSegment = pathname.split("/")[1] ?? "";
         if (firstSegment) return "/" + firstSegment;
@@ -37,7 +36,7 @@ const titled = (title: string, component: m.Component): m.RouteResolver => ({
     },
 });
 
-m.route.prefix = detectBase();
+m.route.prefix = detectBase(window.location.hostname, window.location.pathname);
 m.route(document.body, "/shrinkage", {
     "/":            redirectToShrinkage,
     "/shrinkage":   titled("Grolleg • Shrinkage Calculator", ShrinkageCalculatorView),

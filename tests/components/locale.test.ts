@@ -68,6 +68,40 @@ describe("parseLocaleNumber", () => {
     });
 });
 
+describe("parseLocaleNumber — ambiguous comma input", () => {
+    it("1,234 → thousands (3 digits after comma, no dot)", () => {
+        expect(parseLocaleNumber("1,234")).toBe(1234);
+    });
+
+    it("1,234,567 → thousands (multiple commas, 3 digits after last)", () => {
+        expect(parseLocaleNumber("1,234,567")).toBe(1234567);
+    });
+
+    it("12,345 → thousands (3 digits after comma)", () => {
+        expect(parseLocaleNumber("12,345")).toBe(12345);
+    });
+
+    it("100,000 → thousands (3 digits after comma)", () => {
+        expect(parseLocaleNumber("100,000")).toBe(100000);
+    });
+
+    it("1,23 → European decimal (2 digits after comma)", () => {
+        expect(parseLocaleNumber("1,23")).toBe(1.23);
+    });
+
+    it("1,5 → European decimal (1 digit after comma)", () => {
+        expect(parseLocaleNumber("1,5")).toBe(1.5);
+    });
+
+    it("0,5 → European decimal (1 digit after comma)", () => {
+        expect(parseLocaleNumber("0,5")).toBe(0.5);
+    });
+
+    it("1,2345 → European decimal (4 digits after comma)", () => {
+        expect(parseLocaleNumber("1,2345")).toBe(1.2345);
+    });
+});
+
 
 /* ── Region Detection ── */
 

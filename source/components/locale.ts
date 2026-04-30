@@ -14,6 +14,10 @@ export const parseLocaleNumber = (value: string): number => {
     const lastComma = trimmed.lastIndexOf(",");
     const lastDot = trimmed.lastIndexOf(".");
     if (lastComma > lastDot) {
+        const digitsAfterLastComma = trimmed.length - lastComma - 1;
+        if (lastDot === -1 && digitsAfterLastComma === 3) {
+            return parseFloat(trimmed.replaceAll(",", ""));
+        }
         return parseFloat(trimmed.replaceAll(".", "").replace(",", "."));
     }
     return parseFloat(trimmed.replaceAll(",", ""));

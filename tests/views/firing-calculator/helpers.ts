@@ -3,11 +3,13 @@ import type { Piece, FiringFlags, FiringRates, Basis, DimensionUnit, WeightUnit,
     from "../../../source/views/firing-calculator/state";
 export { mockInputEvent } from "../../helpers";
 
+let pieceCounter = 100;
+
 export function resetState() {
     Object.assign(state, cloneInitialState());
+    pieceCounter = 100;
 }
 
-let pieceCounter = 100;
 export function makePiece(overrides: Partial<Piece> = {}): Piece {
     return {
         id: pieceCounter++,
@@ -32,7 +34,10 @@ export function setStudio(options: {
     if (options.dimensionUnit !== undefined) state.dimensionUnit = options.dimensionUnit;
     if (options.weightUnit !== undefined) state.weightUnit = options.weightUnit;
     if (options.firingToggles) state.firingToggles = { ...state.firingToggles, ...options.firingToggles };
-    if (options.firingRates) state.firingRates = { ...state.firingRates, ...options.firingRates };
+    if (options.firingRates) {
+        state.firingRates = { ...state.firingRates, ...options.firingRates };
+        state.firingRatesByBasis[state.basis] = { ...state.firingRates };
+    }
     if (options.bundled !== undefined) state.bundled = options.bundled;
     if (options.minHeight !== undefined) state.minHeight = options.minHeight;
     if (options.rounding !== undefined) state.rounding = options.rounding;

@@ -48,6 +48,17 @@ describe("handleMinHeightInput", () => {
         handleMinHeightInput(mockInputEvent("12"));
         expect(state.minHeight).toBe(12);
     });
+
+    it("accepts the exact upper bound", () => {
+        handleMinHeightInput(mockInputEvent("100"));
+        expect(state.minHeight).toBe(100);
+    });
+
+    it("clamps one above the upper bound", () => {
+        handleMinHeightInput(mockInputEvent("101"));
+        expect(state.minHeight).toBe(100);
+    });
+
 });
 
 

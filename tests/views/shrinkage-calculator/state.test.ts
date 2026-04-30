@@ -155,8 +155,7 @@ describe("volumetric shrinkage", () => {
         state.shapeIndex = 1;
         state.dimensions = ["100", "200"];
         const volume = computeDerived().volumeShrink!;
-        expect(volume).toBeGreaterThan(0);
-        expect(volume).toBeLessThan(100);
+        expect(volume).toBeCloseTo((1 - 0.88 ** 3) * 100, 2);
     });
 
     it("computed for rectangle", () => {
@@ -164,7 +163,7 @@ describe("volumetric shrinkage", () => {
         state.shrinkage = "12";
         state.shapeIndex = 2;
         state.dimensions = ["100", "200", "50"];
-        expect(computeDerived().volumeShrink).not.toBeNull();
+        expect(computeDerived().volumeShrink).toBeCloseTo((1 - 0.88 ** 3) * 100, 2);
     });
 
     it("null for linear", () => {
