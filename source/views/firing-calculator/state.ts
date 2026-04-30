@@ -1,4 +1,5 @@
 import { parseLocaleNumber, detectDefaultDimensionUnit, detectDefaultWeightUnit } from "../../components/locale";
+import { focusLater } from "../../components/interaction";
 import { BASIS_META } from "./types";
 import type { Basis, DimensionUnit, WeightUnit, FiringKey, Rounding, FiringFlags, FiringRates, Piece, Studio } from "./types";
 import { toPositive, toStoredRate } from "./pricing";
@@ -121,6 +122,7 @@ export const handleBasisChange = (event: Event) => {
     // to this basis later restores the user's edits instead of reseeding
     // from defaults. Rates carry semantic meaning per basis (cents/in³ vs
     // $/lb), so the cache is segmented by basis rather than shared.
+    // firingRatesByBasis[basis] should always receive a spread copy, never a reference to state.firingRates
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
     state.basis = next;
     state.firingRates = { ...state.firingRatesByBasis[next] };
@@ -213,7 +215,7 @@ export const toggleBundled = () => {
 export const handleFiringRateInput = (key: FiringKey, event: Event) => {
     const value = (event.currentTarget as HTMLInputElement).value;
     state.firingRates = { ...state.firingRates, [key]: toStoredRate(value, state.basis) };
-    state.firingRatesByBasis[state.basis] = state.firingRates;
+    state.firingRatesByBasis[state.basis] = { ...state.firingRates };
 };
 
 export const handleBundledRateInput = (event: Event) => {
@@ -262,6 +264,8 @@ export const addPiece = () => {
             firings: { ...state.firingToggles },
         },
     ];
+    const firstInputId = state.basis === "weight" ? `piece-${id}-weight` : `piece-${id}-L`;
+    focusLater(firstInputId);
 };
 
 export const removePiece = (id: number) => {
@@ -269,5 +273,16 @@ export const removePiece = (id: number) => {
     // the X button on a single-piece view, but a programmatic call (or
     // a future keyboard shortcut) would otherwise leave the page empty.
     if (state.pieces.length <= 1) return;
+    const removedIndex = state.pieces.findIndex((piece) => piece.id === id);
     state.pieces = state.pieces.filter((piece) => piece.id !== id);
+    if (state.pieces.length === 0) {
+        focusLater("add-piece-button");
+        return;
+    }
+    // Focus should land on the piece immediately before the removed one,
+    // or on the new last piece when the removed piece was last.
+    const targetIndex = Math.min(Math.max(removedIndex - 1, 0), state.pieces.length - 1);
+    const target = state.pieces[targetIndex];
+    const firstInputId = state.basis === "weight" ? `piece-${target.id}-weight` : `piece-${target.id}-L`;
+    focusLater(firstInputId);
 };

@@ -1,4 +1,6 @@
 {
+    // WebWorker types are scoped to service-worker.ts via /// <reference lib="webworker" />
+    // Adding "webworker" to lib here would pollute the global DOM type scope for all other files
     "compilerOptions": {
         "strict": true,
         "esModuleInterop": true,

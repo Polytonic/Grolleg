@@ -132,6 +132,21 @@
         padding-right: 56px;
     }
 
+    /* At iPhone-SE widths the 3-column piece dimension grid squeezes
+       each cell to ~98px, leaving the 56px suffix padding only ~28px
+       of usable text area. Drop to 32px here so the dimension input
+       gets ~52px of typeable room while the suffix (anchored at
+       right: 12px) still has ~20px of clearance — enough for short
+       units like "in"/"cm". Wide rate suffixes ("¢/in³", "$/lb") are
+       a known tradeoff: at 480px the rate grid caps at 2 columns
+       (cell ≈ 166px), so the suffix may visually crowd the rightmost
+       digits but the input itself remains usable. */
+    @media (max-width: 480px) {
+        .input.with-suffix {
+            padding-right: 32px;
+        }
+    }
+
 
     /* ── Pill ──
        Sized to align with input row height (10px-equivalent vertical

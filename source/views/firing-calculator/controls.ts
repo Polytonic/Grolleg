@@ -1,7 +1,7 @@
 import m from "mithril";
 import { Tooltip } from "../../components/tooltip";
 import { ConnectedPill } from "../../components/connected-pill";
-import { flipSnapshot, flipPlay, flipLeave, prefersReducedMotion } from "../../components/flip";
+import { flipSnapshot, flipPlay, flipLeave } from "../../components/flip";
 import { chainLinkIcon } from "../../components/icons";
 import { InputWithSuffix } from "../../components/input-with-suffix";
 import { TogglePill } from "../../components/toggle-pill";

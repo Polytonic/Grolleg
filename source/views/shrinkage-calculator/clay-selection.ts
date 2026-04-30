@@ -48,7 +48,7 @@ export const ShrinkageField: m.Component<{ derived: Derived }> = {
         ),
         m(InputWithSuffix, {
             suffix: "%",
-            modifiers: derived.shrinkageInvalid && ["error"],
+            modifiers: derived.shrinkageInvalid ? ["error"] : undefined,
             id: "shrinkage-rate",
             type: "number",
             inputmode: "decimal",

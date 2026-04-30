@@ -38,7 +38,7 @@ export const TotalBand: m.Component<{ derived: Derived }> = {
             // redraw fires on every keystroke, and atomic re-announcement
             // of the entire region on every redraw was extremely chatty.
             m(".total-band__amount",
-                { role: "status", "aria-live": "polite" },
+                { role: "status", "aria-live": "polite", "aria-label": "Total price" },
                 formatPrice(aggregate.total)),
         );
     },

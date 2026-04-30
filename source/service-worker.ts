@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 import { manifest } from "@parcel/service-worker";
 
 const CACHE_NAME = "grolleg-v2";
@@ -7,21 +8,22 @@ async function install() {
     const cache = await caches.open(CACHE_NAME);
     await cache.addAll(manifest);
 }
-addEventListener("install", (event: ExtendableEvent) => event.waitUntil(install()));
+addEventListener("install", (event) => (event as ExtendableEvent).waitUntil(install()));
 
 // Remove old caches when a new version activates
 async function activate() {
     const keys = await caches.keys();
     await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
 }
-addEventListener("activate", (event: ExtendableEvent) => event.waitUntil(activate()));
+addEventListener("activate", (event) => (event as ExtendableEvent).waitUntil(activate()));
 
 // Navigation requests (SPA route changes, deep links, refreshes) all need to
 // resolve to the app shell so the Mithril router can take over. Serving the
 // cached index.html for any navigate-mode request bypasses the GitHub Pages
 // 404 round-trip when the service worker is active, and lets the app work
-// offline for any in-app route. The SW global is typed as Window in this
-// build (no @types/serviceworker), so the registration cast is local.
+// offline for any in-app route. self.registration is typed via the webworker
+// lib but self is still inferred as Window in the shared tsconfig context,
+// so the registration cast is local.
 const swScope = (self as unknown as { registration: { scope: string } }).registration.scope;
 const indexUrl = new URL("./", swScope).pathname;
 

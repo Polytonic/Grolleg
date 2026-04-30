@@ -105,7 +105,8 @@ export const rateUnitFor = (basis: Basis, dimensionUnit: DimensionUnit, weightUn
     if (basis === "volume")    return `¢/${dimensionUnit}³`;
     if (basis === "footprint") return `¢/${dimensionUnit}²`;
     if (basis === "weight")    return `$/${weightUnit}`;
-    return "$";
+    const _exhaustive: never = basis;
+    return _exhaustive;
 };
 
 // Re-export from locale so existing consumers of pricing.ts don't break.

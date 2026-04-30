@@ -432,10 +432,11 @@ describe("handleDimensionKey", () => {
     it("prevents default on Enter and blurs last field", () => {
         // Use last field index so handler takes the blur path (no document.getElementById)
         let blurred = false;
+        let prevented = false;
         const event = {
             key: "Enter",
-            defaultPrevented: false,
-            preventDefault() { this.defaultPrevented = true; },
+            get defaultPrevented() { return prevented; },
+            preventDefault() { prevented = true; },
             currentTarget: { blur() { blurred = true; } },
         } as unknown as KeyboardEvent;
 

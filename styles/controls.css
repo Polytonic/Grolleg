@@ -84,7 +84,6 @@
     color: var(--color-error-text);
     font-style: italic;
     margin-top: 4px;
-    display: block;
 }
 
 .checkbox {

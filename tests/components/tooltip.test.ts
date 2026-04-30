@@ -92,7 +92,7 @@ describe("Tooltip keyboard interaction", () => {
         output.redraw();
         expect(output.should.have("button.tooltip-button.open"));
 
-        output.trigger("span.tooltip > span", "keydown", { key: "Escape" });
+        output.trigger("span.tooltip > span", "keydown", { key: "Escape" } as Partial<KeyboardEvent>);
         expect(output.should.not.have("button.tooltip-button.open"));
     });
 
@@ -102,7 +102,7 @@ describe("Tooltip keyboard interaction", () => {
         trigger.click();
         output.redraw();
 
-        output.trigger("span.tooltip > span", "keydown", { key: "Tab" });
+        output.trigger("span.tooltip > span", "keydown", { key: "Tab" } as Partial<KeyboardEvent>);
         expect(output.should.have("button.tooltip-button.open"));
     });
 });
@@ -118,7 +118,7 @@ describe("Tooltip focus interaction", () => {
         output.redraw();
         expect(output.should.have("button.tooltip-button.open"));
 
-        output.trigger("span.tooltip > span", "focusout", { relatedTarget: null });
+        output.trigger("span.tooltip > span", "focusout", { relatedTarget: null } as Partial<FocusEvent>);
         expect(output.should.not.have("button.tooltip-button.open"));
     });
 });

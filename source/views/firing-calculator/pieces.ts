@@ -160,8 +160,8 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
                 m(ConnectedPill, {
                     size: "chip",
                     connected: state.bundled,
-                    aActive: !!piece.firings.bisque,
-                    bActive: !!piece.firings.glaze,
+                    aActive: piece.firings.bisque,
+                    bActive: piece.firings.glaze,
                     aLabel: "Bisque",
                     bLabel: "Glaze",
                     aDisabled: !state.firingToggles.bisque,
@@ -171,7 +171,7 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
                 }),
                 m(TogglePill, {
                     className: "chip",
-                    active: !!piece.firings.luster,
+                    active: piece.firings.luster,
                     disabled: !state.firingToggles.luster,
                     onclick: () => togglePieceFiring(piece.id, "luster"),
                 }, "Luster"),
@@ -252,7 +252,7 @@ export const PiecesSection: m.Component<{ derived: Derived }> = {
                 })),
             ),
             m(".pieces-add-row",
-                m("button.add-piece", { type: "button", onclick: addPiece },
+                m("button.add-piece", { id: "add-piece-button", type: "button", onclick: addPiece },
                     plusIcon(12),
                     m("span", "Add Piece"),
                 ),
