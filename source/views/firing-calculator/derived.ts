@@ -8,8 +8,7 @@ import { toPositive, calculatePrice, rateIsCents, rateUnitFor } from "./pricing"
 import { state, studioSnapshot, handleDimensionUnitChange, handleWeightUnitChange } from "./state";
 
 
-/* ── Derived View Data ──
-   Computed once per render. Bundles per-piece pricing, comparison
+/* Derived View Data   Computed once per render. Bundles per-piece pricing, comparison
    lookups, warning state, and the affordances the controls section
    needs (which fields show, what step value, what unit suffix) so view
    code stays declarative. */

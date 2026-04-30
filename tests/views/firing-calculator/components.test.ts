@@ -11,8 +11,7 @@ import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 beforeEach(() => resetState());
 
 
-/* ── Orchestrator ── */
-
+// Orchestrator
 describe("FiringCalculatorView orchestrator", () => {
     it("renders the title and subtitle", () => {
         const output = mq(FiringCalculatorView);
@@ -52,8 +51,7 @@ describe("FiringCalculatorView orchestrator", () => {
 });
 
 
-/* ── ControlsSection ── */
-
+// ControlsSection
 describe("ControlsSection", () => {
     it("renders the basis dropdown with all three bases", () => {
         const output = mq(ControlsSection, { derived: computeDerived() });
@@ -167,8 +165,7 @@ describe("ControlsSection", () => {
 });
 
 
-/* ── PiecesSection and PieceRow ── */
-
+// PiecesSection and PieceRow
 describe("PiecesSection", () => {
     it("default load: one piece, no badge, no remove button", () => {
         const output = mq(PiecesSection, { derived: computeDerived() });
@@ -313,8 +310,7 @@ describe("PiecesSection", () => {
 });
 
 
-/* ── TotalBand ── */
-
+// TotalBand
 describe("TotalBand", () => {
     it("renders the TOTAL label and a $0.00 default amount when no piece dimensions are entered", () => {
         // Default load has bisque toggled on with the studio rate

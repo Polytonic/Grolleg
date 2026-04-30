@@ -15,7 +15,6 @@ beforeEach(() => resetState());
 
 
 // Preset Data
-
 describe("PRESET_GROUPS", () => {
     it("has Generic and Popular Clays groups", () => {
         expect(PRESET_GROUPS.length).toBe(2);
@@ -33,7 +32,6 @@ describe("PRESET_GROUPS", () => {
 
 
 // Shrinkage Validation
-
 describe("shrinkage validation", () => {
     it("12% is valid", () => {
         state.shrinkage = "12";
@@ -86,7 +84,6 @@ describe("shrinkage validation", () => {
 
 
 // Dimension Results
-
 describe("dimension results", () => {
     it("wet-to-fired applies shrinkage", () => {
         state.direction = "wet-to-fired";
@@ -147,7 +144,6 @@ describe("dimension results", () => {
 
 
 // Volumetric Shrinkage
-
 describe("volumetric shrinkage", () => {
     it("computed for cylinder", () => {
         state.direction = "wet-to-fired";
@@ -176,7 +172,6 @@ describe("volumetric shrinkage", () => {
 
 
 // Shrinkage Stages
-
 describe("shrinkage stages", () => {
     it("computes all stage dimensions when enabled", () => {
         state.showStages = true;
@@ -240,7 +235,6 @@ describe("shrinkage stages", () => {
 
 
 // Hint Message Flags
-
 describe("hint message flags", () => {
     it("only shrinkage entered: totalValid true, no dimensions", () => {
         state.shrinkage = "12";
@@ -269,7 +263,6 @@ describe("hint message flags", () => {
 
 
 // Event Handlers: Preset and Shrinkage
-
 describe("handlePresetChange", () => {
     it("populates shrinkage from preset", () => {
         handlePresetChange(mockSelectEvent("0")); // Earthenware Cone 04
@@ -316,7 +309,6 @@ describe("handleShrinkageBlur", () => {
 
 
 // Event Handlers: Stages
-
 describe("handleStageToggle", () => {
     it("toggles showStages", () => {
         state.showStages = false;
@@ -347,8 +339,7 @@ describe("handleBisqueInput", () => {
 });
 
 
-// Event Handlers: Shape, Direction, Unit, Dimensions
-
+// Event Handlers: Shape, Direction, Unit, and Dimensions
 describe("handleShapeChange", () => {
     it("Cylinder to Rectangle preserves Height", () => {
         state.shapeIndex = 1;

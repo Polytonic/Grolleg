@@ -6,8 +6,7 @@ import {
 import type { ShapeMode } from "./state";
 
 
-/* ── Derived View Data ── */
-
+// Derived View Data
 export interface Derived {
     shape: ShapeMode;
     totalValid: boolean;

@@ -3,8 +3,7 @@ import mq from "mithril-query";
 import { Tooltip } from "../../source/components/tooltip";
 
 
-/* ── Default Render ── */
-
+// Default Render
 describe("Tooltip default render", () => {
     it("wraps content in a span.tooltip", () => {
         const output = mq(Tooltip, { label: "Basis", text: "How pieces are measured." });
@@ -30,8 +29,7 @@ describe("Tooltip default render", () => {
 });
 
 
-/* ── Aria Attributes ── */
-
+// Aria Attributes
 describe("Tooltip aria attributes", () => {
     it("button aria-label references the tooltip label", () => {
         const output = mq(Tooltip, { label: "Rounding", text: "How to round." });
@@ -47,8 +45,7 @@ describe("Tooltip aria attributes", () => {
 });
 
 
-/* ── Click Interaction ── */
-
+// Click Interaction
 describe("Tooltip click interaction", () => {
     it("clicking the trigger opens the tooltip", () => {
         const output = mq(Tooltip, { label: "Basis", text: "Info." });
@@ -82,8 +79,7 @@ describe("Tooltip click interaction", () => {
 });
 
 
-/* ── Keyboard Interaction ── */
-
+// Keyboard Interaction
 describe("Tooltip keyboard interaction", () => {
     it("Escape closes an open tooltip", () => {
         const output = mq(Tooltip, { label: "Basis", text: "Info." });
@@ -108,8 +104,7 @@ describe("Tooltip keyboard interaction", () => {
 });
 
 
-/* ── Focus Interaction ── */
-
+// Focus Interaction
 describe("Tooltip focus interaction", () => {
     it("losing focus closes an open tooltip", () => {
         const output = mq(Tooltip, { label: "Basis", text: "Info." });

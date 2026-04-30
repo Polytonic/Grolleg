@@ -1,8 +1,7 @@
 import m from "mithril";
 
 
-/* ── Input With Suffix ──
-   Number input with an absolutely-positioned unit string at the right
+/* Input With Suffix   Number input with an absolutely-positioned unit string at the right
    edge ("%", "in", "¢/in³"). The wrapper provides the relative
    positioning context. The suffix is non-interactive so it doesn't
    eat clicks meant for the input.

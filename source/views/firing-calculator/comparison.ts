@@ -1,8 +1,7 @@
 import m from "mithril";
 
 
-/* ── Types ── */
-
+// Types
 export type ComparisonBucket = "cubeish" | "narrow" | "flat";
 
 export type SilhouetteKey =
@@ -19,8 +18,7 @@ export interface ComparisonEntry {
 }
 
 
-/* ── Lookup Tables ──
-   Each table is ordered ascending by `max`. Find the first entry whose
+/* Lookup Tables   Each table is ordered ascending by `max`. Find the first entry whose
    max equals or exceeds the candidate volume. The final entry uses Infinity
    as a catch-all. The cubeish table doubles as the aggregate-load comparison
    since a stack of pieces has no meaningful aspect ratio. */
@@ -58,8 +56,7 @@ export const COMPARISONS: Record<ComparisonBucket, ComparisonEntry[]> = {
 };
 
 
-/* ── Conversion ──
-   Lookup tables are in inches; convert user dimensions before lookup. */
+/* Conversion   Lookup tables are in inches; convert user dimensions before lookup. */
 
 export const INCHES_PER_UNIT: Record<"mm" | "cm" | "in", number> = {
     in: 1,
@@ -68,8 +65,7 @@ export const INCHES_PER_UNIT: Record<"mm" | "cm" | "in", number> = {
 };
 
 
-/* ── Bucket Selection by Aspect Ratio ──
-     narrow:  tallest dim is more than 1.8× the next-largest (vases, bottles)
+/* Bucket Selection by Aspect Ratio     narrow:  tallest dim is more than 1.8× the next-largest (vases, bottles)
      flat:    shortest dim is less than 0.5× the next-largest (plates, tiles)
      cubeish: everything else
    For 2D inputs (footprint mode), pass H=0; the function returns 'cubeish'. */
@@ -83,8 +79,7 @@ export const bucketOf = (length: number, width: number, height: number): Compari
 };
 
 
-/* ── Lookup ──
-   Returns the first entry whose max >= vol. Returns null for non-positive
+/* Lookup   Returns the first entry whose max >= vol. Returns null for non-positive
    inputs so callers can short-circuit without rendering a silhouette. */
 
 export const findComparison = (
@@ -97,8 +92,7 @@ export const findComparison = (
 };
 
 
-/* ── Silhouette Factories ──
-   Each silhouette is a Mithril vnode factory taking a size in pixels. The
+/* Silhouette Factories   Each silhouette is a Mithril vnode factory taking a size in pixels. The
    shape uses currentColor for fill and stroke so the surrounding element's
    `color` style cascades. For cutout details (basketball cross-stripe,
    microwave window, fridge handle line) the page background color is read
@@ -201,8 +195,7 @@ const SILHOUETTES: Record<SilhouetteKey, (size: number) => m.Vnode> = {
 };
 
 
-/* ── Component ──
-   Renders the named silhouette at the given pixel size. Inherits color
+/* Component   Renders the named silhouette at the given pixel size. Inherits color
    from the surrounding element via currentColor so the parent's `color`
    style tints the silhouette. */
 

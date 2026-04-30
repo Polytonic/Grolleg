@@ -11,8 +11,7 @@ import { resetState, mockInputEvent } from "./helpers";
 beforeEach(() => resetState());
 
 
-/* ── handleMinHeightInput ── */
-
+// handleMinHeightInput
 describe("handleMinHeightInput", () => {
     it("parses a positive number and stores it", () => {
         handleMinHeightInput(mockInputEvent("3.5"));
@@ -62,8 +61,7 @@ describe("handleMinHeightInput", () => {
 });
 
 
-/* ── handleRoundingChange ── */
-
+// handleRoundingChange
 describe("handleRoundingChange", () => {
     it("updates the rounding mode from the select event", () => {
         handleRoundingChange(mockInputEvent("total-ceil"));
@@ -72,8 +70,7 @@ describe("handleRoundingChange", () => {
 });
 
 
-/* ── Rate Inputs ── */
-
+// Rate Inputs
 describe("handleFiringRateInput", () => {
     it("converts cents-display values back to stored dollars on volume basis", () => {
         // Volume basis: rate stored in dollars, displayed as cents.
@@ -121,8 +118,7 @@ describe("handleBundledRateInput", () => {
 });
 
 
-/* ── handleBasisChange Edge ── */
-
+// handleBasisChange Edge
 describe("handleBasisChange", () => {
     it("re-selecting the current basis is a no-op", () => {
         state.basis = "volume";

@@ -12,8 +12,7 @@ import { resetState, makePiece, setStudio, setPieces, mockInputEvent } from "./h
 beforeEach(() => resetState());
 
 
-/* ── Rule 1: Studio Individual Toggle Propagates Symmetrically ── */
-
+// Rule 1: Studio Individual Toggle Propagates Symmetrically
 describe("studio individual firing toggle propagates to every piece", () => {
     it("toggle bisque ON at studio: every piece gets bisque ON", () => {
         setStudio({ firingToggles: { bisque: false, glaze: false, luster: false } });
@@ -50,8 +49,7 @@ describe("studio individual firing toggle propagates to every piece", () => {
 });
 
 
-/* ── Rule 2: Bundled Pair-Toggle Propagates the Pair ── */
-
+// Rule 2: Bundled Pair-Toggle Propagates the Pair
 describe("bundled pair-toggle propagates both bisque and glaze", () => {
     it("toggle bisque under bundled flips both at studio AND on every piece", () => {
         setStudio({
@@ -83,8 +81,7 @@ describe("bundled pair-toggle propagates both bisque and glaze", () => {
 });
 
 
-/* ── Rule 3: Bundled Activation OR-Migrates Pieces ──
-   The single most-debated decision in the prototype's iteration. The panel
+/* Rule 3: Bundled Activation OR-Migrates Pieces   The single most-debated decision in the prototype's iteration. The panel
    reversed an initial unified-overwrite consensus when the luster-only piece
    was raised. */
 
@@ -164,8 +161,7 @@ describe("bundled activation OR-migrates pieces", () => {
 });
 
 
-/* ── Rule 4: Bundled Deactivation Does Not Propagate to Pieces ── */
-
+// Rule 4: Bundled Deactivation Does Not Propagate to Pieces
 describe("bundled deactivation leaves pieces unchanged", () => {
     it("pieces unchanged on deactivation", () => {
         setStudio({
@@ -210,8 +206,7 @@ describe("bundled deactivation leaves pieces unchanged", () => {
 });
 
 
-/* ── Rule 5: Per-Piece Chip Toggle Does Not Propagate Up ── */
-
+// Rule 5: Per-Piece Chip Toggle Does Not Propagate Up
 describe("piece-level chip toggle leaves studio unchanged", () => {
     it("toggling a piece chip doesn't touch studio toggles", () => {
         setStudio({ firingToggles: { bisque: true, glaze: true, luster: false } });
@@ -246,8 +241,7 @@ describe("piece-level chip toggle leaves studio unchanged", () => {
 });
 
 
-/* ── Basis Change Resets Rates; Unit Change Preserves Them ── */
-
+// Basis Change Resets Rates; Unit Change Preserves Them
 describe("basis change reseeds rates; unit change does not", () => {
     it("changing basis reseeds rates from the new basis' defaults", () => {
         setStudio({ firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10 } });
@@ -291,8 +285,7 @@ describe("basis change reseeds rates; unit change does not", () => {
 });
 
 
-/* ── updatePiece ── */
-
+// updatePiece
 describe("updatePiece", () => {
     it("updates the targeted piece and leaves others intact", () => {
         setPieces([makePiece({ id: 1, L: "4" }), makePiece({ id: 2, L: "5" })]);
@@ -317,8 +310,7 @@ describe("updatePiece", () => {
 });
 
 
-/* ── Bundled Rate Basis Round-Trip ── */
-
+// Bundled Rate Basis Round-Trip
 describe("bundled rate survives basis round-trip via the per-basis cache", () => {
     it("edited bundled rate is restored after switching basis and back", () => {
         setStudio({ basis: "volume", bundled: true });
@@ -332,8 +324,7 @@ describe("bundled rate survives basis round-trip via the per-basis cache", () =>
 });
 
 
-/* ── addPiece and removePiece Handlers ── */
-
+// addPiece and removePiece Handlers
 describe("addPiece and removePiece", () => {
     it("addPiece appends with current studio firings as the chip default", () => {
         setStudio({ firingToggles: { bisque: true, glaze: true, luster: false } });
@@ -370,8 +361,7 @@ describe("addPiece and removePiece", () => {
 });
 
 
-/* ── firingRatesByBasis Cache through Handlers ── */
-
+// firingRatesByBasis Cache through Handlers
 describe("firingRatesByBasis cache through handlers", () => {
     it("handleFiringRateInput updates the cache for the active basis", () => {
         handleFiringRateInput("bisque", mockInputEvent("5"));
@@ -393,8 +383,7 @@ describe("firingRatesByBasis cache through handlers", () => {
 });
 
 
-/* ── toggleBundled Seeding Branch: User-Edited Bundled Rate ── */
-
+// toggleBundled Seeding Branch: User-Edited Bundled Rate
 describe("toggleBundled preserves user-edited bundled rate", () => {
     it("preserves user-edited bundled rate when activating", () => {
         // Set a non-default bisque rate so ratesAtDefaults is false

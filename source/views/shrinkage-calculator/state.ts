@@ -2,8 +2,7 @@ import { haptic, focusLater } from "../../components/interaction";
 import { detectDefaultDimensionUnit, formatNumber } from "../../components/locale";
 
 
-/* ── Types ── */
-
+// Types
 interface Preset {
     name: string;
     total: string;
@@ -39,8 +38,7 @@ export type Direction = "fired-to-wet" | "wet-to-fired";
 export type Unit = "mm" | "cm" | "in";
 
 
-/* ── Clay Body Presets ── */
-
+// Clay Body Presets
 const PRESETS: Preset[] = [
     { name: "Earthenware (Cone 04)",   total: "7",  greenware: "5",   bisque: "0.5",  group: "Generic" },
     { name: "Stoneware (Cone 6)",      total: "12", greenware: "6",   bisque: "0.75", group: "Generic" },
@@ -70,8 +68,7 @@ export const PRESET_GROUPS: PresetGroup[] = (() => {
 })();
 
 
-/* ── Shape Modes ── */
-
+// Shape Modes
 export const SHAPE_MODES: ShapeMode[] = [
     { id: "single",   label: "Linear",    fields: ["Length"] },
     { id: "cylinder", label: "Cylinder",  fields: ["Diameter", "Height"] },
@@ -79,8 +76,7 @@ export const SHAPE_MODES: ShapeMode[] = [
 ];
 
 
-/* ── Pure Math ── */
-
+// Pure Math
 export const applyRate = (dimension: number, percent: number): number =>
     dimension * (1 - percent / 100);
 
@@ -111,8 +107,7 @@ export const deriveFiringPercent = (
 
 const defaultUnit: Unit = detectDefaultDimensionUnit();
 
-/* ── State ── */
-
+// State
 interface StateShape {
     direction: Direction;
     shapeIndex: number;
@@ -149,8 +144,7 @@ export function cloneInitialState(): StateShape {
 export const state: StateShape = cloneInitialState();
 
 
-/* ── Event Handlers ── */
-
+// Event Handlers
 export const handlePresetChange = (event: Event) => {
     const index = parseInt((event.currentTarget as HTMLSelectElement).value, 10);
     state.presetIndex = index;

@@ -3,8 +3,7 @@ import mq from "mithril-query";
 import { UnitToggle } from "../../source/components/unit-toggle";
 
 
-/* ── Default Render ── */
-
+// Default Render
 describe("UnitToggle default render", () => {
     it("renders all unit buttons inside a .unit-text-toggle wrapper", () => {
         const output = mq(UnitToggle, {
@@ -39,8 +38,7 @@ describe("UnitToggle default render", () => {
 });
 
 
-/* ── Active State ── */
-
+// Active State
 describe("UnitToggle active state", () => {
     it("applies .active to the currently selected unit", () => {
         const output = mq(UnitToggle, {
@@ -77,8 +75,7 @@ describe("UnitToggle active state", () => {
 });
 
 
-/* ── Interaction ── */
-
+// Interaction
 describe("UnitToggle interaction", () => {
     it("calls onSelect with the clicked unit", () => {
         let selected = "";
@@ -96,8 +93,7 @@ describe("UnitToggle interaction", () => {
 });
 
 
-/* ── ARIA Labels ── */
-
+// ARIA Labels
 describe("UnitToggle ARIA labels", () => {
     it("applies custom aria-labels when provided", () => {
         const output = mq(UnitToggle, {

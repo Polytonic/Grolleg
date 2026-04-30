@@ -1,8 +1,7 @@
 import type m from "mithril";
 
 
-/* ── FLIP Animation Utilities ──
-   Provides First-Last-Invert-Play layout transitions for children
+/* FLIP Animation Utilities   Provides First-Last-Invert-Play layout transitions for children
    marked with data-flip-key attributes. Usage:
      1. Call flipSnapshot(dom) in onbeforeupdate to capture positions.
      2. Call flipPlay(dom, snapshot) in onupdate to animate survivors.
@@ -19,8 +18,7 @@ const reducedMotionQuery =
 export const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
 
 
-/* ── Snapshot Phase ── */
-
+// Snapshot Phase
 // Captures every keyed child's bounding box. Call from
 // onbeforeupdate before Mithril patches the DOM.
 export const flipSnapshot = (dom: Element | undefined): Map<string, DOMRect> | null => {
@@ -38,8 +36,7 @@ export const flipSnapshot = (dom: Element | undefined): Map<string, DOMRect> | n
 };
 
 
-/* ── Play Phase ── */
-
+// Play Phase
 // For each surviving keyed child, computes the (old - new) delta,
 // snaps to the old position with transform, then transitions to
 // identity. Call from onupdate after Mithril patches the DOM.
@@ -65,8 +62,7 @@ export const flipPlay = (dom: Element, snapshot: Map<string, DOMRect> | null): v
 };
 
 
-/* ── Leave Animation ──
-   Attach as onbeforeremove on children to fade them out during
+/* Leave Animation   Attach as onbeforeremove on children to fade them out during
    removal while the grid collapses around them. The child lifts to
    absolute positioning so siblings reflow immediately. The parent
    element should have position: relative. */

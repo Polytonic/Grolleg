@@ -9,8 +9,7 @@ import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 beforeEach(() => resetState());
 
 
-/* ── Bucket Selection Thresholds ──
-   The narrow rule is strict greater-than (>) for 1.8×; the flat rule is
+/* Bucket Selection Thresholds   The narrow rule is strict greater-than (>) for 1.8×; the flat rule is
    strict less-than (<) for 0.5×. Boundary cases collapse to cubeish. */
 
 describe("bucketOf classifies by aspect ratio", () => {
@@ -50,8 +49,7 @@ describe("bucketOf classifies by aspect ratio", () => {
 });
 
 
-/* ── findComparison Lookup ── */
-
+// findComparison Lookup
 describe("findComparison finds the first entry where vol <= max", () => {
     it("returns mug for cubeish 50 in³", () => {
         expect(findComparison(50, "cubeish")?.name).toBe("a coffee mug");
@@ -80,8 +78,7 @@ describe("findComparison finds the first entry where vol <= max", () => {
 });
 
 
-/* ── Lookup Table Sanity ── */
-
+// Lookup Table Sanity
 describe("comparison tables are well-formed", () => {
     it("every bucket ends with an Infinity catch-all", () => {
         for (const bucket of ["cubeish", "narrow", "flat"] as const) {
@@ -115,8 +112,7 @@ describe("comparison tables are well-formed", () => {
 });
 
 
-/* ── Conversion Factors ── */
-
+// Conversion Factors
 describe("INCHES_PER_UNIT factors", () => {
     it("inch is identity", () => expect(INCHES_PER_UNIT.in).toBe(1));
     it("cm to inches is 1/2.54", () => expect(INCHES_PER_UNIT.cm).toBeCloseTo(1 / 2.54, 6));
@@ -124,8 +120,7 @@ describe("INCHES_PER_UNIT factors", () => {
 });
 
 
-/* ── End-to-End via computeDerived ──
-   The derived layer must convert user-entered dimensions to inches before
+/* End-to-End via computeDerived   The derived layer must convert user-entered dimensions to inches before
    calling findComparison. Forgetting the conversion produces nonsense
    (a 10mm cube comparing to a microwave). */
 

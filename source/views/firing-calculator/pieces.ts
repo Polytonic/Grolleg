@@ -15,8 +15,7 @@ import type { Derived, PieceComputed } from "./derived";
 
 
 
-/* ── Price Label ──
-   Right-justified inside the Include row. Active price is accent
+/* Price Label   Right-justified inside the Include row. Active price is accent
    coloured; $0 reads as muted so empty cards don't compete with
    priced ones in a stack. The price sits in the same row as the
    firings chips so it reads as "with these firings included, the
@@ -33,8 +32,7 @@ const PriceLabel: m.Component<{ computed: PieceComputed }> = {
 };
 
 
-/* ── Size Label ──
-   Silhouette icon + comparison name + parenthetical quantity, right
+/* Size Label   Silhouette icon + comparison name + parenthetical quantity, right
    justified in the piece-row header (next to the Remove X when the
    row is removable). Renders any time the piece has valid dimensions
    (quantity > 0), independent of pricing or which firings are
@@ -60,8 +58,7 @@ const SizeLabel: m.Component<{ computed: PieceComputed; derived: Derived }> = {
 };
 
 
-/* ── Dimension Inputs ──
-   Volume: 3-col grid (L, W, H). The H input gains the .warn class when the
+/* Dimension Inputs   Volume: 3-col grid (L, W, H). The H input gains the .warn class when the
    piece's entered height is below the studio minimum, which the parent
    passes via heightBelowMin. Footprint: 2-col grid (L, W). Weight: single
    input bounded to 220px so it doesn't stretch full-width. */
@@ -133,8 +130,7 @@ const Dimensions: m.Component<DimensionsAttrs> = {
 };
 
 
-/* ── Include Row ──
-   The Bisque|Glaze ConnectedPill (chip scale) and Luster chip on the
+/* Include Row   The Bisque|Glaze ConnectedPill (chip scale) and Luster chip on the
    left. Price right-justified on the right. The size cluster
    (silhouette + comparison + qty) lives in the Piece Dimensions
    header row above, so this row reads as "with these firings
@@ -182,8 +178,7 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
 };
 
 
-/* ── Piece Row ──
-   Header row: badge (multi-piece) · "Piece Dimensions" label · size
+/* Piece Row   Header row: badge (multi-piece) · "Piece Dimensions" label · size
    cluster (silhouette + comparison + qty, when dimensions are valid)
    · remove X (multi-piece, far right). The size cluster renders any
    time dimensions are valid, independent of firings, so a user
@@ -231,8 +226,7 @@ const PieceRow: m.Component<PieceRowAttrs> = {
 };
 
 
-/* ── Section Export ──
-   Naked stack of piece rows on the page background, mirroring shrinkage's
+/* Section Export   Naked stack of piece rows on the page background, mirroring shrinkage's
    convention of inputs sitting directly on the page. The Add Piece button
    right-aligns at the end of the stack. */
 

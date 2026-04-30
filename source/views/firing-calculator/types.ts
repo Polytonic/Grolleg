@@ -1,5 +1,4 @@
-/* ── Types ── */
-
+// Types
 export type Basis = "volume" | "footprint" | "weight";
 export type DimensionUnit = "mm" | "cm" | "in";
 export type WeightUnit = "g" | "kg" | "oz" | "lb";
@@ -43,8 +42,7 @@ export interface PieceResult {
 }
 
 
-/* ── Constants ── */
-
+// Constants
 export const FIRING_TYPES: { key: FiringKey; label: string }[] = [
     { key: "bisque", label: "Bisque" },
     { key: "glaze",  label: "Glaze" },

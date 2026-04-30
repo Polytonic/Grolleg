@@ -8,8 +8,7 @@ import {
 } from "../../source/components/locale";
 
 
-/* ── parseLocaleNumber ── */
-
+// parseLocaleNumber
 describe("parseLocaleNumber", () => {
     it("12.5 (US decimal)", () => {
         expect(parseLocaleNumber("12.5")).toBe(12.5);
@@ -103,8 +102,7 @@ describe("parseLocaleNumber — ambiguous comma input", () => {
 });
 
 
-/* ── Region Detection ── */
-
+// Region Detection
 describe("detectDefaultDimensionUnit", () => {
     it("returns a valid dimension unit", () => {
         const unit = detectDefaultDimensionUnit();
@@ -120,8 +118,7 @@ describe("detectDefaultWeightUnit", () => {
 });
 
 
-/* ── formatNumber ── */
-
+// formatNumber
 describe("formatNumber", () => {
     it("formats with two decimal places", () => {
         const result = formatNumber(12.5);
@@ -156,8 +153,7 @@ describe("formatNumber", () => {
 });
 
 
-/* ── decimalFormat ── */
-
+// decimalFormat
 describe("decimalFormat", () => {
     it("formats with two decimal places", () => {
         const result = decimalFormat.format(3.5);

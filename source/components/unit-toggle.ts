@@ -1,8 +1,7 @@
 import m from "mithril";
 
 
-/* ── Unit Toggle ──
-   Inline `mm | cm | in`-style selector that wraps in parens via CSS
+/* Unit Toggle   Inline `mm | cm | in`-style selector that wraps in parens via CSS
    pseudo-elements (`.unit-text-toggle::before/::after` from
    styles/controls.css). Used by any tool that needs a compact unit
    switch sitting inline with a section header. Sizing comes from

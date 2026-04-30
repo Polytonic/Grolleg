@@ -1,11 +1,9 @@
-/* ── Locale Utilities ──
-   Shared locale-aware parsing, region detection, and number formatting.
+/* Locale Utilities   Shared locale-aware parsing, region detection, and number formatting.
    Centralizes locale logic so all tools handle international input and
    display consistently. */
 
 
-/* ── Parsing ── */
-
+// Parsing
 // Normalizes locale number formats before parsing. Detects whether comma
 // is a decimal or thousands separator based on position, then strips
 // grouping separators and normalizes the decimal to a period.
@@ -24,8 +22,7 @@ export const parseLocaleNumber = (value: string): number => {
 };
 
 
-/* ── Region Detection ──
-   Intl.Locale provides a reliable region from any valid BCP 47 tag,
+/* Region Detection   Intl.Locale provides a reliable region from any valid BCP 47 tag,
    unlike prefix matching which misclassifies en-CA as imperial.
    US, Liberia, and Myanmar are the imperial-leaning regions. */
 
@@ -45,8 +42,7 @@ export const detectDefaultWeightUnit = (): "g" | "kg" | "oz" | "lb" =>
     isImperial ? "lb" : "kg";
 
 
-/* ── Number Formatting ── */
-
+// Number Formatting
 export const decimalFormat = new Intl.NumberFormat(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -58,8 +54,7 @@ export const formatNumber = (value: number | null): string =>
     value !== null && Number.isFinite(value) ? decimalFormat.format(value) : "\u2013";
 
 
-/* ── Unit Labels ── */
-
+// Unit Labels
 export const UNIT_VERBOSE: Record<string, string> = {
     mm: "millimeters",
     cm: "centimeters",

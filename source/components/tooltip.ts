@@ -11,8 +11,7 @@ let globalCloseTooltip: (() => void) | null = null;
 let groupIdCounter = 0;
 
 
-/* ── State Registry ── */
-
+// State Registry
 interface TooltipState {
     open: boolean;
     pinned: boolean;
@@ -81,8 +80,7 @@ const cancelClose = (state: TooltipState) => {
 };
 
 
-/* ── Compound Components ── */
-
+// Compound Components
 // State lifecycle and singleton management
 interface TooltipRootAttrs {
     groupId?: string;
@@ -223,8 +221,7 @@ export const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
 };
 
 
-/* ── Convenience Wrapper ── */
-
+// Convenience Wrapper
 // Backward-compatible Tooltip that composes Root + Trigger + Content
 // with the "?" button pattern. Existing call sites use this unchanged.
 interface TooltipAttrs {

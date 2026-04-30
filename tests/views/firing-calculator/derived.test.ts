@@ -6,8 +6,7 @@ import { resetState, setStudio, setPieces, makePiece } from "./helpers";
 beforeEach(() => resetState());
 
 
-/* ── rateUnit ── */
-
+// rateUnit
 describe("rateUnit matches rateUnitFor(basis, dimensionUnit, weightUnit)", () => {
     it("volume/in yields cents per cubic inch", () => {
         setStudio({ basis: "volume", dimensionUnit: "in" });
@@ -26,8 +25,7 @@ describe("rateUnit matches rateUnitFor(basis, dimensionUnit, weightUnit)", () =>
 });
 
 
-/* ── rateStep ── */
-
+// rateStep
 describe("rateStep is 0.1 for cents bases, 0.05 for dollar bases", () => {
     it("volume gets 0.1", () => {
         setStudio({ basis: "volume" });
@@ -46,8 +44,7 @@ describe("rateStep is 0.1 for cents bases, 0.05 for dollar bases", () => {
 });
 
 
-/* ── showRounding ── */
-
+// showRounding
 describe("showRounding is true for volume and footprint, false for weight", () => {
     it("volume shows rounding", () => {
         setStudio({ basis: "volume" });
@@ -66,8 +63,7 @@ describe("showRounding is true for volume and footprint, false for weight", () =
 });
 
 
-/* ── showMinHeight ── */
-
+// showMinHeight
 describe("showMinHeight is true only for volume", () => {
     it("volume shows min height", () => {
         setStudio({ basis: "volume" });
@@ -86,8 +82,7 @@ describe("showMinHeight is true only for volume", () => {
 });
 
 
-/* ── activeUnitSet ── */
-
+// activeUnitSet
 describe("activeUnitSet selects dimension units for volume/footprint, weight units for weight", () => {
     it("volume uses DIMENSION_UNITS", () => {
         setStudio({ basis: "volume" });
@@ -106,8 +101,7 @@ describe("activeUnitSet selects dimension units for volume/footprint, weight uni
 });
 
 
-/* ── activeUnit ── */
-
+// activeUnit
 describe("activeUnit reflects dimensionUnit for volume/footprint, weightUnit for weight", () => {
     it("volume returns the dimension unit", () => {
         setStudio({ basis: "volume", dimensionUnit: "cm" });
@@ -126,8 +120,7 @@ describe("activeUnit reflects dimensionUnit for volume/footprint, weightUnit for
 });
 
 
-/* ── totalQuantityUnit ── */
-
+// totalQuantityUnit
 describe("totalQuantityUnit formats the display-unit suffix", () => {
     it("volume/in yields cubic inches", () => {
         setStudio({ basis: "volume", dimensionUnit: "in" });
@@ -151,8 +144,7 @@ describe("totalQuantityUnit formats the display-unit suffix", () => {
 });
 
 
-/* ── heightBelowMin ── */
-
+// heightBelowMin
 describe("heightBelowMin flags pieces whose H is below studio minHeight", () => {
     it("true when piece H is below minHeight on volume basis", () => {
         setStudio({ basis: "volume", minHeight: 3 });

@@ -3,8 +3,7 @@ import mq from "mithril-query";
 import { ConnectedPill } from "../../source/components/connected-pill";
 
 
-/* ── Default Render ── */
-
+// Default Render
 describe("ConnectedPill default render", () => {
     it("renders two button halves with the given labels", () => {
         const output = mq(ConnectedPill, {
@@ -21,8 +20,7 @@ describe("ConnectedPill default render", () => {
 });
 
 
-/* ── Active State ── */
-
+// Active State
 describe("ConnectedPill active state", () => {
     it("applies .active to the active half only (left active)", () => {
         const output = mq(ConnectedPill, {
@@ -49,8 +47,7 @@ describe("ConnectedPill active state", () => {
 });
 
 
-/* ── Disabled State ── */
-
+// Disabled State
 describe("ConnectedPill disabled state", () => {
     it("applies .disabled to a half when disabled prop is true", () => {
         const output = mq(ConnectedPill, {
@@ -84,8 +81,7 @@ describe("ConnectedPill disabled state", () => {
 });
 
 
-/* ── Aria ── */
-
+// Aria
 describe("ConnectedPill aria attributes", () => {
     it("sets aria-pressed reflecting active prop on each half", () => {
         const output = mq(ConnectedPill, {
@@ -125,8 +121,7 @@ describe("ConnectedPill aria attributes", () => {
 });
 
 
-/* ── Size Variants ── */
-
+// Size Variants
 describe("ConnectedPill size variants", () => {
     it("applies .size-pill by default", () => {
         const output = mq(ConnectedPill, {

@@ -11,8 +11,7 @@ import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 beforeEach(() => resetState());
 
 
-/* ── toPositive() ── */
-
+// toPositive()
 describe("toPositive() coerces input to a positive number or zero", () => {
     it("empty string returns 0", () => expect(toPositive("")).toBe(0));
     it("non-numeric returns 0",  () => expect(toPositive("abc")).toBe(0));
@@ -48,8 +47,7 @@ describe("toPositive() hostile inputs", () => {
 });
 
 
-/* ── expandUnit ── */
-
+// expandUnit
 describe("expandUnit", () => {
     it("maps known abbreviation to verbose name", () => {
         expect(expandUnit("in")).toBe("inches");
@@ -63,8 +61,7 @@ describe("expandUnit", () => {
 });
 
 
-/* ── formatPrice / formatQuantity ── */
-
+// formatPrice / formatQuantity
 describe("formatPrice", () => {
     it("formats zero as a dollar amount", () => {
         expect(formatPrice(0)).toBe(`$${decimalFormat.format(0)}`);
@@ -99,8 +96,7 @@ describe("formatQuantity", () => {
 });
 
 
-/* ── Empty and Disabled-Firing Edge Cases ── */
-
+// Empty and Disabled-Firing Edge Cases
 describe("calculatePrice edge cases", () => {
     it("empty piece returns price 0", () => {
         const result = calculatePrice(makePiece(), studioSnapshot());
@@ -139,8 +135,7 @@ describe("calculatePrice edge cases", () => {
 });
 
 
-/* ── Minimum Height Behavior ── */
-
+// Minimum Height Behavior
 describe("minimum height applies before per-dim ceiling", () => {
     it("1×1×1 with min=2 and dimension-ceil yields quantity 1×1×2 = 2 (floor first, then ceil)", () => {
         const piece = makePiece({ L: "1", W: "1", H: "1" });
@@ -173,8 +168,7 @@ describe("minimum height applies before per-dim ceiling", () => {
 });
 
 
-/* ── Incomplete Dimensions ── */
-
+// Incomplete Dimensions
 describe("incomplete dimensions return zero quantity", () => {
     it("volume with missing H returns 0", () => {
         const piece = makePiece({ L: "5", W: "5", H: "" });
@@ -198,8 +192,7 @@ describe("incomplete dimensions return zero quantity", () => {
 });
 
 
-/* ── Rounding Modes ── */
-
+// Rounding Modes
 describe("rounding modes produce expected quantities", () => {
     const piece = () => makePiece({ L: "3.1", W: "3.1", H: "3.1" });
 
@@ -229,8 +222,7 @@ describe("rounding modes produce expected quantities", () => {
 });
 
 
-/* ── Cents-vs-Dollars Conversion ── */
-
+// Cents-vs-Dollars Conversion
 describe("rate conversion (display vs stored)", () => {
     it("rateIsCents true for volume and footprint, false for weight", () => {
         expect(rateIsCents("volume")).toBe(true);
@@ -279,8 +271,7 @@ describe("rate conversion (display vs stored)", () => {
 });
 
 
-/* ── Bundled Rate Semantics ── */
-
+// Bundled Rate Semantics
 describe("bundled rate effective behavior", () => {
     it("bundled bisque/glaze charge firingRates.bundled ONCE (not once per firing)", () => {
         const piece = makePiece({
@@ -331,8 +322,7 @@ describe("bundled rate effective behavior", () => {
 });
 
 
-/* ── End-to-End Pricing ── */
-
+// End-to-End Pricing
 describe("calculatePrice end-to-end", () => {
     it("4×4×5 mug at default rates, bisque only", () => {
         const piece = makePiece({
@@ -367,8 +357,7 @@ describe("calculatePrice end-to-end", () => {
 });
 
 
-/* ── Constants Sanity ── */
-
+// Constants Sanity
 describe("BASIS_META and FIRING_TYPES sanity", () => {
     it("each basis has labeled defaults for every firing", () => {
         for (const basis of ["volume", "footprint", "weight"] as const) {

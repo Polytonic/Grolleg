@@ -2,8 +2,7 @@ import m from "mithril";
 import "@css/components/connected-pill.css";
 
 
-/* ── Geometry by Size Variant ──
-   Pill matches input row height; chip is the smaller variant for inside
+/* Geometry by Size Variant   Pill matches input row height; chip is the smaller variant for inside
    piece rows. */
 
 const GEOMETRY = {
@@ -18,8 +17,7 @@ const GEOMETRY = {
 const INNER_EDGE_WHEN_BOTH_ACTIVE = "var(--color-accent-inner-edge)";
 
 
-/* ── Attrs ──
-   Two tappable halves inside one rounded shape. When `connected`,
+/* Attrs   Two tappable halves inside one rounded shape. When `connected`,
    halves sit flush with a single outer border (the right half's left
    edge is transparent so the join doesn't double up). When
    disconnected, the inner corners animate from 0 to outerRadius and a

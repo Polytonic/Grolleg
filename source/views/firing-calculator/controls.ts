@@ -37,8 +37,7 @@ const expandRateUnit = (basis: Basis, dimensionUnit: string, weightUnit: string)
 
 
 
-/* ── Row 1: Billing + Rounding ──
-   Billing (volume / footprint / weight) sits at the top. Rounding
+/* Row 1: Billing + Rounding   Billing (volume / footprint / weight) sits at the top. Rounding
    shares the row as a 2-column grid when it applies (volume and
    footprint bases); weight basis collapses to a single column. The
    selects use the bare `.select` class because chaining `.input.select`
@@ -90,8 +89,7 @@ const BillingRow: m.Component<{ derived: Derived }> = {
 };
 
 
-/* ── Row 2: Firings + Minimum Height ──
-   The firings pill row (chain + Bisque|Glaze + Luster) sits on the
+/* Row 2: Firings + Minimum Height   The firings pill row (chain + Bisque|Glaze + Luster) sits on the
    left. Minimum Height pairs to the right when volume basis applies;
    for footprint and weight the firings row takes the full width. */
 
@@ -175,8 +173,7 @@ const FiringsAndHeightRow: m.Component<{ derived: Derived }> = {
 };
 
 
-/* ── Row 3: Firing Rates ──
-   Section-labeled group containing the rate inputs. Slot count is
+/* Row 3: Firing Rates   Section-labeled group containing the rate inputs. Slot count is
    stable for a given bundled state (2 if bundled, 3 if not), so toggling
    an individual firing dims its slot rather than reflowing the row.
    The unit toggle inlines with the section label because units determine
@@ -256,8 +253,7 @@ const collectRateFields = (basis: Basis): RateField[] => {
     return fields;
 };
 
-/* ── Rate Inputs ──
-   Bundled toggle reshapes the row from 2 columns (Bundled, Luster)
+/* Rate Inputs   Bundled toggle reshapes the row from 2 columns (Bundled, Luster)
    to 3 columns (Bisque, Glaze, Luster) and back. FLIP utilities
    from components/flip handle the layout transition; InputWithSuffix's
    pulseKey drives the flash on bisque/glaze/bundled rate inputs
@@ -325,8 +321,7 @@ const FiringRatesSection: m.Component<{ derived: Derived }> = {
 };
 
 
-/* ── Section Export ──
-   No wrapping card. Three rows: billing+rounding, firings+min-height,
+/* Section Export   No wrapping card. Three rows: billing+rounding, firings+min-height,
    firing-rates. */
 
 export const ControlsSection: m.Component<{ derived: Derived }> = {

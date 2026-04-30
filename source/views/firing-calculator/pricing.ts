@@ -2,8 +2,7 @@ import { parseLocaleNumber, decimalFormat } from "../../components/locale";
 import type { Basis, DimensionUnit, WeightUnit, Piece, Studio, PieceResult, Rounding } from "./types";
 
 
-/* ── Pure Helpers ── */
-
+// Pure Helpers
 // Coerces unknown input to a positive number, returning 0 for empty,
 // non-finite, or non-positive values. Treating empty inputs as zero lets
 // quantity/rate calculations short-circuit to a $0 price without throwing.
@@ -76,8 +75,7 @@ export const calculatePrice = (piece: Piece, studio: Studio): PieceResult => {
 };
 
 
-/* ── Cents-vs-Dollars Rate Conversion ──
-   Volume and footprint rates display as cents (matching how potters speak:
+/* Cents-vs-Dollars Rate Conversion   Volume and footprint rates display as cents (matching how potters speak:
    "4 cents per cubic inch"). Weight rates display as dollars ("$2/lb").
    All math operates on stored dollars; conversion happens at the input
    boundary via toDisplayRate / toStoredRate. */
@@ -113,8 +111,7 @@ export const rateUnitFor = (basis: Basis, dimensionUnit: DimensionUnit, weightUn
 export { expandUnit, UNIT_VERBOSE } from "../../components/locale";
 
 
-/* ── Number Formatting ── */
-
+// Number Formatting
 const wholeFormat = new Intl.NumberFormat(undefined, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,

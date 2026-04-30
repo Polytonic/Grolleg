@@ -3,8 +3,7 @@ import mq from "mithril-query";
 import { InputWithSuffix } from "../../source/components/input-with-suffix";
 
 
-/* ── Default Render ── */
-
+// Default Render
 describe("InputWithSuffix default render", () => {
     it("renders an input inside a .input-with-suffix wrapper", () => {
         const output = mq(InputWithSuffix, { suffix: "cm" });
@@ -34,8 +33,7 @@ describe("InputWithSuffix default render", () => {
 });
 
 
-/* ── Modifiers ── */
-
+// Modifiers
 describe("InputWithSuffix modifiers", () => {
     it("applies modifier classes to the input element", () => {
         const output = mq(InputWithSuffix, {
@@ -64,8 +62,7 @@ describe("InputWithSuffix modifiers", () => {
 });
 
 
-/* ── Screen Reader Suffix ── */
-
+// Screen Reader Suffix
 describe("InputWithSuffix suffixSr", () => {
     it("renders an sr-only span when suffixSr is provided", () => {
         const output = mq(InputWithSuffix, {

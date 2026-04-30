@@ -4,8 +4,7 @@ import { formatPrice, formatQuantity } from "./state";
 import type { Derived } from "./derived";
 
 
-/* ── Total Band ──
-   Two-column layout: identity on the left (label, comparison silhouette
+/* Total Band   Two-column layout: identity on the left (label, comparison silhouette
    for two or more pieces, piece-count subtitle), price on the right.
    The orchestrator places a `.divider` immediately above this band so
    the configuration-to-result transition reads visually. */

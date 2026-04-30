@@ -1,5 +1,4 @@
-/* ── Interaction Utilities ──
-   Lightweight progressive enhancements shared across tools. */
+/* Interaction Utilities   Lightweight progressive enhancements shared across tools. */
 
 // iOS Safari silently ignores vibration, so no error handling needed.
 export const haptic = () => { navigator?.vibrate?.(15); };

@@ -8,13 +8,11 @@ export * from "./types";
 export * from "./pricing";
 
 
-/* ── Unit-Aware Defaults ── */
-
+// Unit-Aware Defaults
 const DEFAULT_MIN_HEIGHTS: Record<DimensionUnit, number> = { in: 2, cm: 5, mm: 50 };
 
 
-/* ── State ──
-   Default load is bisque-only with one empty piece. Tapping Glaze
+/* State   Default load is bisque-only with one empty piece. Tapping Glaze
    teaches studio-to-piece propagation; tapping the chain icon teaches
    Bundled. Don't pre-populate with example pieces. */
 
@@ -97,8 +95,7 @@ export const studioSnapshot = (): Studio => ({
 });
 
 
-/* ── Propagation Primitive ──
-   Writing studio firing toggles also writes the new values to every
+/* Propagation Primitive   Writing studio firing toggles also writes the new values to every
    piece's matching chip. Individual toggles and bundled pair-toggles
    both route through this helper for uniform behavior. Bundled
    activation uses a different rule (preserve luster-only pieces) and
@@ -113,8 +110,7 @@ const setStudioFirings = (next: Partial<FiringFlags>) => {
 };
 
 
-/* ── Studio-Level Event Handlers ── */
-
+// Studio-Level Event Handlers
 export const handleBasisChange = (event: Event) => {
     const next = (event.currentTarget as HTMLSelectElement).value as Basis;
     if (next === state.basis) return;
@@ -225,8 +221,7 @@ export const handleBundledRateInput = (event: Event) => {
 };
 
 
-/* ── Piece-Level Event Handlers ── */
-
+// Piece-Level Event Handlers
 const updatePieceById = (id: number, update: (piece: Piece) => Piece) => {
     state.pieces = state.pieces.map((piece) =>
         piece.id === id ? update(piece) : piece,
