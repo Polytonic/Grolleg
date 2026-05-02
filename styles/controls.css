@@ -7,17 +7,17 @@
    16px font floor prevents iOS Safari auto-zoom on focus. */
 .select {
     appearance: none;
-    font-size: 16px;
-    padding: 10px 36px 10px 12px;
-    border-radius: 8px;
+    font-size: 1rem;
+    padding: 0.625rem 2.25rem 0.625rem 0.75rem;
+    border-radius: 0.5rem;
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-text);
     cursor: pointer;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234A4D4F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 16px 12px;
+    background-position: right 0.75rem center;
+    background-size: 1rem 0.75rem;
     transition: background-color 0.12s, border-color 0.12s;
 
     @media (hover: hover) {
@@ -35,16 +35,16 @@
 }
 
 .input {
-    font-size: 16px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    font-size: 1rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
     border: 1px solid var(--color-border);
     background: var(--color-card);
     color: var(--color-text);
     width: 100%;
 
     &.with-suffix {
-        padding-right: 36px;
+        padding-right: 2.25rem;
     }
 
     &.error {
@@ -71,25 +71,25 @@
 
 .input-suffix {
     position: absolute;
-    right: 12px;
+    right: 0.75rem;
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--color-muted);
     pointer-events: none;
     line-height: 1;
 }
 
 .input-error-text {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--color-error-text);
     font-style: italic;
-    margin-top: 4px;
+    margin-top: 0.25rem;
 }
 
 .checkbox {
     accent-color: var(--color-accent);
-    width: 18px;
-    height: 18px;
+    width: 1.125rem;
+    height: 1.125rem;
     cursor: pointer;
     flex-shrink: 0;
 }
@@ -105,16 +105,16 @@
    which keeps pill text from compositing-layer blur during color interpolation. */
 .shape-pills {
     display: flex;
-    gap: 6px;
-    row-gap: 8px;
+    gap: 0.375rem;
+    row-gap: 0.5rem;
     align-items: center;
     flex-wrap: wrap;
 }
 
 .shape-pill {
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 13px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     border: 1px solid var(--color-border);
     background: var(--color-card);
@@ -168,7 +168,7 @@
     margin-left: auto;
     display: flex;
     align-items: center;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--color-muted);
     user-select: none;
 
@@ -177,7 +177,7 @@
 }
 
 .unit-separator {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--color-border);
     user-select: none;
 }
@@ -187,8 +187,8 @@
     border: none;
     cursor: pointer;
     touch-action: manipulation;
-    padding: 8px 6px;
-    font-size: 11px;
+    padding: 0.5rem 0.375rem;
+    font-size: 0.6875rem;
     letter-spacing: 0.06em;
     color: var(--color-muted);
     transition: color 0.12s;
@@ -205,7 +205,7 @@
         font-weight: 700;
         color: var(--color-accent);
         text-decoration: underline;
-        text-underline-offset: 3px;
+        text-underline-offset: 0.1875rem;
     }
 }
 
@@ -214,21 +214,21 @@
 .results-card {
     background: var(--color-card);
     border: 1px solid var(--color-border-subtle);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 16px;
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
     box-shadow: 0 4px 20px var(--color-border-subtle);
 }
 
 .divider {
     border: none;
     border-top: 1px solid var(--color-border);
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
     margin-top: 0;
 }
 
 
-/* 44px min-height meets WCAG 2.5.5 minimum tap target */
+/* 2.75rem (44px) min-height meets WCAG 2.5.5 minimum tap target */
 :is(.select, .input, .shape-pill, .unit-text) {
-    min-height: 44px;
+    min-height: 2.75rem;
 }

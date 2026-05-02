@@ -3,22 +3,22 @@
    with these classes gets consistent styling regardless of context. */
 
 .title {
-    font-size: 28px;
+    font-size: 1.75rem;
     font-weight: 600;
     letter-spacing: -0.02em;
-    margin-bottom: 6px;
+    margin-bottom: 0.375rem;
     line-height: 1.2;
 }
 
 .subtitle {
-    font-size: 14px;
+    font-size: 0.875rem;
     color: var(--color-muted);
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 /* Uppercase section labels for field labels and section headers */
 :is(.label, .section-label) {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -31,33 +31,33 @@
    than the uppercase .label so the input it labels stays the dominant
    visual element in the row. */
 .input-label {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--color-muted);
 }
 
 .hint-text {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--color-muted);
     font-style: italic;
 }
 
 .hint-box {
-    font-size: 14px;
+    font-size: 0.875rem;
     color: var(--color-muted);
     text-align: center;
-    padding: 24px 16px;
-    margin-bottom: 20px;
+    padding: 1.5rem 1rem;
+    margin-bottom: 1.25rem;
     border: 1px dashed var(--color-border);
-    border-radius: 14px;
+    border-radius: 0.875rem;
     font-style: italic;
 }
 
 .disclaimer {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--color-muted);
     text-align: center;
     font-style: italic;
-    margin-top: 4px;
+    margin-top: 0.25rem;
 }
 
 /* Visually hidden but available to assistive tech. Used for landmark

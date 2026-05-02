@@ -79,7 +79,7 @@
            16px font on inputs aligns with 9px padding + 14px font here so
            the visual baseline stays consistent in mixed input/pill rows). */
         &.size-pill {
-            min-height: 44px;
+            min-height: 2.75rem;
         }
 
         /* Chip scale: 12px text in a piece row, ~26px tall. Falls below
