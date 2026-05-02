@@ -44,7 +44,11 @@ m.route(document.body, "/shrinkage", {
     "/:rest...":    titled("Grolleg • Page Not Found", NotFoundView),
 });
 
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && window.location.hostname.startsWith("localhost")) {
+    navigator.serviceWorker.getRegistrations().then((registrations) =>
+        registrations.forEach((registration) => registration.unregister()),
+    );
+} else if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register(
         new URL("service-worker.ts", import.meta.url),
         { type: "module" },
