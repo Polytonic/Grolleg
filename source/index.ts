@@ -1,47 +1,44 @@
 import m from "mithril";
+import { LandingView } from "./views/landing/landing";
 import { ShrinkageCalculatorView } from "./views/shrinkage-calculator/shrinkage-calculator";
 import { FiringCalculatorView } from "./views/firing-calculator/firing-calculator";
 import { NotFoundView } from "./views/exceptions/not-found";
+import { Navigation, closeDrawer } from "./components/navigation";
+import { detectBase } from "./routing";
 
-// HTML5 history mode (no hash). For GitHub Pages project pages the URL
-// includes the repo name as a base path (e.g. polytonic.github.io/Grolleg/);
-// detecting it at runtime keeps Mithril's routes (/shrinkage, /firing)
-// matching against pathname slices that come AFTER the base. Local dev
-// runs at the host root, so the prefix is empty.
-export const detectBase = (hostname: string, pathname: string): string => {
-    if (hostname.endsWith(".github.io")) {
-        const firstSegment = pathname.split("/")[1] ?? "";
-        if (firstSegment) return "/" + firstSegment;
-    }
-    return "";
+// App Shell
+// Wraps a tool component so document.title updates on every route entry
+// and the Navigation renders on every page. The render method keeps the
+// Navigation stable across route transitions (Mithril diffs it rather than
+// remounting).
+
+// .app__content persists across routes, so resetting its scroll position in
+// onmatch (before the new view renders) works because the container itself is
+// never replaced.
+const resetContentScroll = () => {
+    document.querySelector<HTMLElement>(".app__content")?.scrollTo({ top: 0, behavior: "auto" });
 };
 
-// The bare base path redirects to /shrinkage so the URL bar always shows a
-// canonical tool route, never an empty one. Unknown paths fall through to
-// the catch-all NotFoundView.
-const redirectToShrinkage: m.RouteResolver = {
-    onmatch() {
-        m.route.set("/shrinkage", undefined, { replace: true });
-    },
-};
-
-// Wraps a tool component so document.title updates on every route entry,
-// not only on initial mount. A bare component would set the title in
-// `oncreate`, which doesn't re-fire on back/forward navigation between
-// tools (Mithril keeps the same root mounted and just swaps children).
 const titled = (title: string, component: m.Component): m.RouteResolver => ({
     onmatch() {
         document.title = title;
-        return component;
+        closeDrawer(false);
+        resetContentScroll();
+    },
+    render() {
+        return m(".app",
+            m(Navigation),
+            m("main.app__content", m(component)),
+        );
     },
 });
 
 m.route.prefix = detectBase(window.location.hostname, window.location.pathname);
-m.route(document.body, "/shrinkage", {
-    "/":            redirectToShrinkage,
-    "/shrinkage":   titled("Grolleg • Shrinkage Calculator", ShrinkageCalculatorView),
-    "/firing":      titled("Grolleg • Firing Calculator", FiringCalculatorView),
-    "/:rest...":    titled("Grolleg • Page Not Found", NotFoundView),
+m.route(document.body, "/", {
+    "/":              titled("Grolleg", LandingView),
+    "/t/shrinkage":   titled("Grolleg • Shrinkage Calculator", ShrinkageCalculatorView),
+    "/t/firing":      titled("Grolleg • Firing Calculator", FiringCalculatorView),
+    "/:rest...":      titled("Grolleg • Page Not Found", NotFoundView),
 });
 
 if ("serviceWorker" in navigator && window.location.hostname.startsWith("localhost")) {

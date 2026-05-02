@@ -8,15 +8,14 @@
 
 /* Project-Specific Resets on Top of Normalize */
 *, *::before, *::after { margin: 0; padding: 0; }
-html, body { overflow-x: hidden; }
+html, body { overflow: hidden; }
 
 /* Site-Wide Page Styling Shared Across All Tools */
 body {
     color: var(--color-text);
     background: var(--color-bg);
     line-height: 1.4;
-    min-height: 100vh;
-    padding: 32px 16px;
+    min-height: 100dvh;
 }
 
 /* Design tokens, referenced from component CSS via var().
@@ -86,4 +85,31 @@ body {
    Browsers that support corner-shape get squircles automatically. */
 @supports (corner-shape: squircle) {
     * { corner-shape: squircle; }
+}
+
+/* App Shell */
+.app {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1080px);
+    max-width: 1280px;
+    height: 100dvh;
+    margin-left: max(0px, calc((100vw - 1080px) / 2 - 200px));
+}
+
+.app__content {
+    min-width: 0;
+    height: 100dvh;
+    padding: 12dvh 1rem 2rem 2rem;
+    overflow-y: auto;
+}
+
+@media (max-width: 767px) {
+    .app {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: none;
+    }
+
+    .app__content {
+        padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+    }
 }

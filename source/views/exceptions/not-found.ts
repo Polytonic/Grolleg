@@ -12,8 +12,8 @@ export const NotFoundView: m.Component = {
             m("p.subtitle", "The address you opened isn't a tool in this suite."),
             m(m.route.Link, {
                 class: "not-found-view__link",
-                href: "/shrinkage",
-            }, "Go to the Shrinkage Calculator"),
+                href: "/",
+            }, "Go to the home page"),
         ),
     ),
 };
