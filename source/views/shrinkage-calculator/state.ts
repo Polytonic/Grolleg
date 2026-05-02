@@ -28,7 +28,7 @@ export interface ShapeMode {
 
 export interface Stage {
     label: string;
-    dimensions: number[];
+    dimensions: (number | null)[];
     percent: number | null;
     isEndpoint: boolean;
 }

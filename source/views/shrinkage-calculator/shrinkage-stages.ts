@@ -54,10 +54,25 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
 export const StagesCard: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
         const stages: Stage[] = [
-            { label: "Wet",      dimensions: derived.wetDimensions!,     percent: null,                     isEndpoint: true },
-            { label: "Bone Dry", dimensions: derived.boneDryDimensions!, percent: derived.greenwarePercent, isEndpoint: false },
-            { label: "Bisque",   dimensions: derived.bisqueDimensions!,  percent: derived.bisquePercent,    isEndpoint: false },
-            { label: "Fired",    dimensions: derived.finalDimensions!,   percent: derived.firingPercent,    isEndpoint: true },
+            { label: "Wet", dimensions: derived.stageWetDimensions!, percent: null, isEndpoint: true },
+            {
+                label: "Bone Dry",
+                dimensions: derived.boneDryDimensions!,
+                percent: derived.greenwarePercent,
+                isEndpoint: false,
+            },
+            {
+                label: "Bisque",
+                dimensions: derived.bisqueDimensions!,
+                percent: derived.bisquePercent,
+                isEndpoint: false,
+            },
+            {
+                label: "Fired",
+                dimensions: derived.stageFinalDimensions!,
+                percent: derived.firingPercent,
+                isEndpoint: true,
+            },
         ];
         return m(".results-card",
             m(".results-header", "Shrinkage stages"),
@@ -76,13 +91,16 @@ const TimelineStage: m.Component<{ stage: Stage; fields: string[]; isFirst: bool
         ),
         m(`.timeline-card${stage.isEndpoint ? ".endpoint" : ""}`,
             m(".timeline-label", stage.label),
-            fields.map((field, fieldIndex) => m(".timeline-dimension",
-                { key: field },
-                m(`span.timeline-dimension-label${stage.isEndpoint ? ".endpoint" : ""}`, field),
-                m("span.timeline-dimension-value",
-                    `${format(stage.dimensions[fieldIndex])} ${state.unit}`,
-                ),
-            )),
+            fields.map((field, fieldIndex) => {
+                const dimension = stage.dimensions[fieldIndex];
+                return m(".timeline-dimension",
+                    { key: field },
+                    m(`span.timeline-dimension-label${stage.isEndpoint ? ".endpoint" : ""}`, field),
+                    m("span.timeline-dimension-value",
+                        dimension === null ? format(null) : `${format(dimension)} ${state.unit}`,
+                    ),
+                );
+            }),
         ),
     ),
 };

@@ -7,7 +7,7 @@ import type { Derived } from "./derived";
 export const ResultsCard: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
         const showVolume = derived.volumeShrink !== null && derived.shape.id !== "single";
-        return m(".results-card", { role: "status", "aria-live": "polite" },
+        return m(".results-card",
             m(".results-header",
                 `${state.direction === "wet-to-fired" ? "Fired" : "Wet"} dimensions`,
             ),
@@ -18,7 +18,7 @@ export const ResultsCard: m.Component<{ derived: Derived }> = {
             ),
             showVolume && m(".volume-section",
                 m("span.results-header.inline", "Volumetric shrinkage"),
-                m("span.volume-value", `${format(derived.volumeShrink)}%`),
+                m("span.volume-value", { "aria-live": "polite", "aria-atomic": "true" }, `${format(derived.volumeShrink)}%`),
                 m("p.volume-body",
                     "Clay doesn't shrink evenly in all directions. Particle orientation",
                     " from forming causes shrinkage to differ by axis, especially for plates",
@@ -36,7 +36,7 @@ const ResultItem: m.Component<{ derived: Derived; field: string; fieldIndex: num
         return m(".result-item",
             m("span.result-label", field),
             result !== null
-                ? m("span.result-value-row",
+                ? m("span.result-value-row", { "aria-live": "polite", "aria-atomic": "true" },
                     m("span.result-value",
                         format(result),
                         m("span.result-unit", ` ${state.unit}`),
@@ -45,7 +45,7 @@ const ResultItem: m.Component<{ derived: Derived; field: string; fieldIndex: num
                         `(${state.direction === "wet-to-fired" ? "−" : "+"}${format(Math.abs(result - derived.parsedDimensions[fieldIndex]))})`,
                     ),
                 )
-                : m("span.result-value.empty", "—"),
+                : m("span.result-value.empty", { "aria-live": "polite", "aria-atomic": "true" }, "—"),
         );
     },
 };

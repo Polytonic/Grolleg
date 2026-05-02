@@ -81,6 +81,16 @@ describe("ShrinkageCalculatorView", () => {
         expect(output.should.contain("Shrinkage stages"));
     });
 
+    it("timeline appears with stages enabled and a partial multi-dimension shape", () => {
+        state.showStages = true;
+        state.shrinkage = "12";
+        state.dimensions = ["100", ""];
+        const output = mq(ShrinkageCalculatorView);
+        expect(output.should.contain("Shrinkage stages"));
+        expect(output.should.contain("Diameter"));
+        expect(output.should.contain("Height"));
+    });
+
     it("checkbox label reads correctly", () => {
         const output = mq(ShrinkageCalculatorView);
         expect(output.should.contain("Show shrinkage rate by stage"));

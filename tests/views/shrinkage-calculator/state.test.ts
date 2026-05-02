@@ -112,12 +112,16 @@ describe("dimension results", () => {
         expect(derived.firedResults![1]).toBeNull();
     });
 
-    it("partial entry blocks volume and timeline", () => {
+    it("partial entry blocks volume but keeps stage display dimensions", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", ""];
         const derived = computeDerived();
         expect(derived.wetDimensions).toBeNull();
         expect(derived.finalDimensions).toBeNull();
+        expect(derived.stageWetDimensions![0]).not.toBeNull();
+        expect(derived.stageWetDimensions![1]).toBeNull();
+        expect(derived.stageFinalDimensions![0]).not.toBeNull();
+        expect(derived.stageFinalDimensions![1]).toBeNull();
         expect(derived.volumeShrink).toBeNull();
     });
 
@@ -190,9 +194,13 @@ describe("shrinkage stages", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", "200"];
         const derived = computeDerived();
-        expect(derived.boneDryDimensions![0]).toBeLessThan(derived.wetDimensions![0]);
-        expect(derived.bisqueDimensions![0]).toBeLessThan(derived.boneDryDimensions![0]);
-        expect(derived.finalDimensions![0]).toBeLessThan(derived.bisqueDimensions![0]);
+        const wetDiameter = derived.wetDimensions![0];
+        const boneDryDiameter = derived.boneDryDimensions![0]!;
+        const bisqueDiameter = derived.bisqueDimensions![0]!;
+        const firedDiameter = derived.finalDimensions![0];
+        expect(boneDryDiameter).toBeLessThan(wetDiameter);
+        expect(bisqueDiameter).toBeLessThan(boneDryDiameter);
+        expect(firedDiameter).toBeLessThan(bisqueDiameter);
     });
 
     it("three-stage composition matches total shrinkage", () => {
@@ -202,6 +210,19 @@ describe("shrinkage stages", () => {
         state.dimensions = ["100", "200"];
         const derived = computeDerived();
         expect(derived.finalDimensions![0]).toBeCloseTo(derived.wetDimensions![0] * (1 - 12 / 100), 5);
+    });
+
+    it("partial entry computes stage dimensions for entered fields", () => {
+        state.direction = "wet-to-fired";
+        state.showStages = true;
+        state.shrinkage = "12";
+        state.dimensions = ["100", ""];
+        const derived = computeDerived();
+        expect(derived.boneDryDimensions![0]).toBeCloseTo(94, 5);
+        expect(derived.boneDryDimensions![1]).toBeNull();
+        expect(derived.bisqueDimensions![0]).toBeCloseTo(93.295, 5);
+        expect(derived.bisqueDimensions![1]).toBeNull();
+        expect(derived.showStagesCard).toBe(true);
     });
 
     it("warning when stages exceed total", () => {
@@ -220,6 +241,18 @@ describe("shrinkage stages", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", "200"];
         expect(computeDerived().stagesWarning).toBeNull();
+    });
+
+    it("0% firing stage is consistent when greenware and bisque equal total", () => {
+        state.showStages = true;
+        state.shrinkage = "10";
+        state.greenwareShrinkage = "10";
+        state.bisqueShrinkage = "0";
+        state.dimensions = ["100", "200"];
+        const derived = computeDerived();
+        expect(derived.firingPercent).toBeCloseTo(0, 6);
+        expect(derived.stagesWarning).toBeNull();
+        expect(derived.showStagesCard).toBe(true);
     });
 
     it("all null when stages disabled", () => {
