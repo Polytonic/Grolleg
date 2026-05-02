@@ -4,7 +4,6 @@ import { ShrinkageCalculatorView } from "./views/shrinkage-calculator/shrinkage-
 import { FiringCalculatorView } from "./views/firing-calculator/firing-calculator";
 import { NotFoundView } from "./views/exceptions/not-found";
 import { Navigation, closeDrawer } from "./components/navigation";
-import { detectBase } from "./routing";
 
 // App Shell
 // Wraps a tool component so document.title updates on every route entry
@@ -33,7 +32,6 @@ const titled = (title: string, component: m.Component): m.RouteResolver => ({
     },
 });
 
-m.route.prefix = detectBase(window.location.hostname, window.location.pathname);
 m.route(document.body, "/", {
     "/":              titled("Grolleg", LandingView),
     "/t/shrinkage":   titled("Grolleg • Shrinkage Calculator", ShrinkageCalculatorView),
