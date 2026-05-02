@@ -84,8 +84,6 @@ const cancelClose = (state: TooltipState) => {
 // State lifecycle and singleton management
 interface TooltipRootAttrs {
     groupId?: string;
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
 }
 
 export const TooltipRoot: m.ClosureComponent<TooltipRootAttrs> = () => {
