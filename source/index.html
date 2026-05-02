@@ -29,6 +29,8 @@
         //
         // Adapted from rafgraph/spa-github-pages.
         (function (location, history) {
+            if (!location.hostname.endsWith(".github.io")) return;
+
             if (location.search[1] === "/") {
                 var decoded = location.search.slice(1).split("&").map(function (segment) {
                     return segment.replace(/~and~/g, "&");
