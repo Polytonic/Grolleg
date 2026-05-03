@@ -134,7 +134,7 @@ describe("Navigation escape key dismissal", () => {
 
 // Backdrop
 describe("Navigation backdrop", () => {
-    it("only renders the backdrop while the drawer is open", () => {
+    it("renders the backdrop only while open or closing", () => {
         const output = renderAtRoute("/");
         const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
 
@@ -142,9 +142,19 @@ describe("Navigation backdrop", () => {
 
         toggle.click();
         output.redraw();
-        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeDefined();
+        const openBackdrop = output.rootEl.querySelector("button.mobile-nav__backdrop") as HTMLElement;
+        expect(openBackdrop).toBeDefined();
+        expect(openBackdrop.getAttribute("aria-hidden")).toBeNull();
 
         toggle.click();
+        output.redraw();
+        const closingBackdrop = output.rootEl.querySelector("button.mobile-nav__backdrop") as HTMLElement;
+        expect(closingBackdrop).toBeDefined();
+        expect(closingBackdrop.getAttribute("aria-hidden")).toBe("true");
+
+        const transitionEnd = output.rootEl.ownerDocument.createEvent("Event");
+        transitionEnd.initEvent("transitionend", true, true);
+        closingBackdrop.dispatchEvent(transitionEnd);
         output.redraw();
         expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
     });

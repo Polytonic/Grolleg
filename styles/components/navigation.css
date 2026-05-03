@@ -98,7 +98,8 @@
 
 .mobile-nav__backdrop {
     position: fixed;
-    top: 0;
+    /* Backdrop should overlap Safari's viewport edge to avoid a top seam. */
+    top: -1px;
     right: 0;
     bottom: 0;
     left: 0;
@@ -106,7 +107,10 @@
     padding: 0;
     border: 0;
     background: color-mix(in srgb, black 30%, transparent);
+    opacity: 0;
+    pointer-events: none;
     touch-action: manipulation;
+    transition: opacity 0.2s ease-out;
 }
 
 .mobile-nav__card {
@@ -197,6 +201,11 @@
 
 /* Mobile State */
 .mobile-nav.open {
+    .mobile-nav__backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     .mobile-nav__card {
         grid-template-rows: 1fr auto;
     }

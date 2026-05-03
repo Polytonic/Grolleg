@@ -20,9 +20,12 @@ const TOOLS: Tool[] = [
 const DRAWER_ID = "mobile-navigation-drawer";
 const TOGGLE_ID = "mobile-navigation-toggle";
 const FIRST_LINK_ID = "mobile-navigation-first-link";
+const BACKDROP_EXIT_MS = 200;
 
 let drawerOpen = false;
+let backdropRendered = false;
 let listenerRegistered = false;
+let backdropRemovalTimeout: ReturnType<typeof setTimeout> | undefined;
 
 const isActiveTool = (path: string): boolean =>
     m.route.get() === path;
@@ -31,19 +34,56 @@ const syncContentInert = () => {
     globalThis.document?.querySelector(".app__content")?.toggleAttribute("inert", drawerOpen);
 };
 
+const clearBackdropRemovalTimeout = () => {
+    if (!backdropRemovalTimeout) return;
+    clearTimeout(backdropRemovalTimeout);
+    backdropRemovalTimeout = undefined;
+};
+
+const removeBackdrop = () => {
+    clearBackdropRemovalTimeout();
+    backdropRendered = false;
+};
+
+const showBackdrop = () => {
+    clearBackdropRemovalTimeout();
+    backdropRendered = true;
+};
+
+const scheduleBackdropRemoval = () => {
+    clearBackdropRemovalTimeout();
+    backdropRemovalTimeout = setTimeout(() => {
+        backdropRemovalTimeout = undefined;
+        if (drawerOpen) return;
+        backdropRendered = false;
+        m.redraw();
+    }, BACKDROP_EXIT_MS);
+};
+
 export const closeDrawer = (focusToggle: boolean) => {
-    if (!drawerOpen) return;
+    if (!drawerOpen) {
+        removeBackdrop();
+        return;
+    }
     drawerOpen = false;
+    scheduleBackdropRemoval();
     if (focusToggle) focusLater(TOGGLE_ID);
     syncContentInert();
 };
 
 const toggleDrawer = (event: Event) => {
     drawerOpen = !drawerOpen;
+    if (drawerOpen) showBackdrop();
+    else scheduleBackdropRemoval();
     if (!(event as PointerEvent).detail) {
         focusLater(drawerOpen ? FIRST_LINK_ID : TOGGLE_ID);
     }
     syncContentInert();
+};
+
+const handleBackdropTransitionEnd = (event: Event) => {
+    if (event.target !== event.currentTarget || drawerOpen) return;
+    removeBackdrop();
 };
 
 const handleDocumentKeydown = (event: KeyboardEvent) => {
@@ -79,10 +119,14 @@ const desktopSidebar = () =>
 
 const mobileNavigation = () =>
     m(`.mobile-nav${drawerOpen ? ".open" : ""}`,
-        drawerOpen && m("button.mobile-nav__backdrop", {
+        backdropRendered && m("button.mobile-nav__backdrop", {
             type: "button",
             "aria-label": "Close navigation",
+            "aria-hidden": drawerOpen ? undefined : "true",
+            inert: drawerOpen ? undefined : "",
+            tabindex: drawerOpen ? 0 : -1,
             onclick: () => { closeDrawer(true); },
+            ontransitionend: handleBackdropTransitionEnd,
         }),
         m(".mobile-nav__card",
             m("nav.mobile-nav__drawer", {
@@ -123,6 +167,8 @@ export const Navigation: m.Component = {
         }
     },
     onremove() {
+        drawerOpen = false;
+        removeBackdrop();
         if (globalThis.document) {
             document.removeEventListener("keydown", handleDocumentKeydown);
             listenerRegistered = false;
