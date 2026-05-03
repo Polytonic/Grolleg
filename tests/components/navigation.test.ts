@@ -134,6 +134,21 @@ describe("Navigation escape key dismissal", () => {
 
 // Backdrop
 describe("Navigation backdrop", () => {
+    it("only renders the backdrop while the drawer is open", () => {
+        const output = renderAtRoute("/");
+        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+
+        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
+
+        toggle.click();
+        output.redraw();
+        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeDefined();
+
+        toggle.click();
+        output.redraw();
+        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
+    });
+
     it("closes the drawer on backdrop click", () => {
         const output = renderAtRoute("/");
         const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;

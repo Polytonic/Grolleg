@@ -79,12 +79,9 @@ const desktopSidebar = () =>
 
 const mobileNavigation = () =>
     m(`.mobile-nav${drawerOpen ? ".open" : ""}`,
-        m("button.mobile-nav__backdrop", {
+        drawerOpen && m("button.mobile-nav__backdrop", {
             type: "button",
             "aria-label": "Close navigation",
-            "aria-hidden": drawerOpen ? undefined : "true",
-            inert: drawerOpen ? undefined : "",
-            tabindex: drawerOpen ? 0 : -1,
             onclick: () => { closeDrawer(true); },
         }),
         m(".mobile-nav__card",

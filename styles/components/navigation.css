@@ -97,11 +97,8 @@
 }
 
 .mobile-nav__backdrop {
-    /* Mobile Safari should sample page background for browser chrome tint. */
-    --mobile-nav-chrome-guard: max(1px, env(safe-area-inset-top, 0px));
-
     position: fixed;
-    top: var(--mobile-nav-chrome-guard);
+    top: 0;
     right: 0;
     bottom: 0;
     left: 0;
@@ -109,21 +106,7 @@
     padding: 0;
     border: 0;
     background: color-mix(in srgb, black 30%, transparent);
-    opacity: 0;
-    pointer-events: none;
     touch-action: manipulation;
-    transition: opacity 0.2s ease-out;
-
-    &::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        right: 0;
-        left: 0;
-        height: var(--mobile-nav-chrome-guard);
-        background: var(--color-bg);
-        pointer-events: none;
-    }
 }
 
 .mobile-nav__card {
@@ -214,11 +197,6 @@
 
 /* Mobile State */
 .mobile-nav.open {
-    .mobile-nav__backdrop {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
     .mobile-nav__card {
         grid-template-rows: 1fr auto;
     }
