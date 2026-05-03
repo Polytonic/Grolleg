@@ -32,6 +32,7 @@ const titled = (title: string, component: m.Component): m.RouteResolver => ({
     },
 });
 
+m.route.prefix = "";
 m.route(document.body, "/", {
     "/":              titled("Grolleg", LandingView),
     "/t/shrinkage":   titled("Grolleg • Shrinkage Calculator", ShrinkageCalculatorView),
