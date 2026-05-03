@@ -97,8 +97,11 @@
 }
 
 .mobile-nav__backdrop {
+    /* Mobile Safari should sample page background for browser chrome tint. */
+    --mobile-nav-chrome-guard: max(1px, env(safe-area-inset-top, 0px));
+
     position: fixed;
-    top: env(safe-area-inset-top, 0px);
+    top: var(--mobile-nav-chrome-guard);
     right: 0;
     bottom: 0;
     left: 0;
@@ -117,7 +120,7 @@
         top: 0;
         right: 0;
         left: 0;
-        height: env(safe-area-inset-top, 0px);
+        height: var(--mobile-nav-chrome-guard);
         background: var(--color-bg);
         pointer-events: none;
     }
