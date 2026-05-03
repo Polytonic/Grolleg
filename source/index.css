@@ -7,7 +7,7 @@
 @import "../styles/controls.css";
 
 /* Project-Specific Resets on Top of Normalize */
-*, *::before, *::after { margin: 0; padding: 0; }
+*, *::before, *::after { margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { overflow: hidden; }
 
 /* Site-Wide Page Styling Shared Across All Tools */

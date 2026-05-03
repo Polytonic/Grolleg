@@ -59,7 +59,7 @@ const toolLink = (tool: Tool, className: string, id?: string) => {
         class: `${className}${active ? " active" : ""}`,
         href: tool.path,
         "aria-current": active ? "page" : undefined,
-        onclick: () => { drawerOpen = false; },
+        onclick: () => { closeDrawer(false); },
     }, tool.label);
 };
 
@@ -97,7 +97,7 @@ const mobileNavigation = () =>
                     class: `mobile-nav__brand${m.route.get() === "/" ? " active" : ""}`,
                     href: "/",
                     "aria-current": m.route.get() === "/" ? "page" : undefined,
-                    onclick: () => { drawerOpen = false; },
+                    onclick: () => { closeDrawer(false); },
                 }, "Grolleg"),
                 TOOLS.map((tool) =>
                     toolLink(tool, "navigation-link mobile-nav__link"),
