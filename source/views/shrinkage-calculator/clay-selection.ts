@@ -59,6 +59,7 @@ export const ShrinkageField: m.Component<{ derived: Derived }> = {
             max: "99",
             placeholder: "e.g. 12.5",
             value: state.shrinkage,
+            "aria-required": "true",
             "aria-invalid": derived.shrinkageInvalid && "true",
             "aria-describedby": derived.shrinkageInvalid && "shrinkage-rate-error",
             oninput: handleShrinkageInput,

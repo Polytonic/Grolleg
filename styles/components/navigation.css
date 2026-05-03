@@ -110,6 +110,17 @@
     pointer-events: none;
     touch-action: manipulation;
     transition: opacity 0.2s ease-out;
+
+    &::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: env(safe-area-inset-top, 0px);
+        background: var(--color-bg);
+        pointer-events: none;
+    }
 }
 
 .mobile-nav__card {

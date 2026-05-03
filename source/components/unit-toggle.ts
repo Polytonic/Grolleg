@@ -1,12 +1,9 @@
 import m from "mithril";
 
 
-/* Unit Toggle   Inline `mm | cm | in`-style selector that wraps in parens via CSS
-   pseudo-elements (`.unit-text-toggle::before/::after` from
-   styles/controls.css). Used by any tool that needs a compact unit
-   switch sitting inline with a section header. Sizing comes from
-   the shared `.unit-text` class. This component only owns the DOM
-   shape and the iteration. */
+/* Unit Toggle   Inline `mm | cm | in`-style selector. Parens are DOM spans with
+   aria-hidden so screen readers skip the decorative punctuation.
+   Sizing comes from the shared `.unit-text` class. */
 
 interface UnitToggleAttrs {
     units: readonly string[];
@@ -36,6 +33,10 @@ export const UnitToggle: m.Component<UnitToggleAttrs> = {
                 unit,
             ));
         });
-        return m("span.unit-text-toggle", children);
+        return m("span.unit-text-toggle",
+            m("span", { "aria-hidden": "true" }, "("),
+            children,
+            m("span", { "aria-hidden": "true" }, ")"),
+        );
     },
 };

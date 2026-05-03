@@ -162,8 +162,7 @@
 }
 
 
-/* Unit Toggle
-   Parens rendered via CSS pseudo-elements. Separators are DOM spans. */
+/* Unit Toggle */
 .unit-text-toggle {
     margin-left: auto;
     display: flex;
@@ -172,8 +171,6 @@
     color: var(--color-muted);
     user-select: none;
 
-    &::before { content: "("; content: "(" / ""; }
-    &::after  { content: ")"; content: ")" / ""; }
 }
 
 .unit-separator {
