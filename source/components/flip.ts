@@ -15,7 +15,11 @@ const reducedMotionQuery =
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
 
+const LAYOUT_DURATION_MS = 250;
+const LEAVE_DURATION_MS = 200;
+
 const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
+let flipAnimationId = 0;
 
 
 // Snapshot Phase
@@ -55,8 +59,22 @@ export const flipPlay = (dom: Element, snapshot: Map<string, DOMRect> | null): v
         child.style.transition = "none";
         child.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
         requestAnimationFrame(() => {
-            child.style.transition = "transform 0.25s ease-out";
+            const animationId = String(++flipAnimationId);
+            child.dataset.flipAnimation = animationId;
+            child.style.transition = `transform ${LAYOUT_DURATION_MS / 1000}s ease-out`;
             child.style.transform = "";
+            let cleanupTimeout: ReturnType<typeof setTimeout> | undefined;
+            const cleanup = (event?: TransitionEvent) => {
+                if (event && (event.target !== child || event.propertyName !== "transform")) return;
+                child.removeEventListener("transitionend", cleanup);
+                if (cleanupTimeout) clearTimeout(cleanupTimeout);
+                if (child.dataset.flipAnimation !== animationId) return;
+                delete child.dataset.flipAnimation;
+                child.style.transition = "";
+                child.style.transform = "";
+            };
+            child.addEventListener("transitionend", cleanup);
+            cleanupTimeout = setTimeout(() => cleanup(), LAYOUT_DURATION_MS + 50);
         });
     }
 };
@@ -75,18 +93,21 @@ export const flipLeave = (vnode: m.VnodeDOM): Promise<void> | undefined => {
     const rect = element.getBoundingClientRect();
     const parentRect = parent.getBoundingClientRect();
     element.dataset.flipping = "leaving";
+    element.toggleAttribute("inert", true);
+    element.setAttribute("aria-hidden", "true");
     element.style.position = "absolute";
     element.style.left = `${rect.left - parentRect.left}px`;
     element.style.top = `${rect.top - parentRect.top}px`;
     element.style.width = `${rect.width}px`;
-    element.style.transition = "opacity 0.2s ease-out";
+    element.style.pointerEvents = "none";
+    element.style.transition = `opacity ${LEAVE_DURATION_MS / 1000}s ease-out`;
     return new Promise<void>((resolve) => {
         requestAnimationFrame(() => {
             element.style.opacity = "0";
             // Fallback timeout absorbs frame jitter and tab-throttling
             // on background tabs.
             element.addEventListener("transitionend", () => resolve(), { once: true });
-            setTimeout(resolve, 250);
+            setTimeout(resolve, LEAVE_DURATION_MS + 50);
         });
     });
 };

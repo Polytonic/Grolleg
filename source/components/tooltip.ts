@@ -158,12 +158,38 @@ interface TooltipContentAttrs {
 const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
     let portalDiv: HTMLElement | null = null;
     let latestChildren: m.Children = null;
+    let scrollElement: Element | null = null;
+    let dismissForViewportChange: (() => void) | null = null;
+
+    const mountViewportListeners = (groupId: string) => {
+        if (typeof window === "undefined") return;
+        dismissForViewportChange = () => {
+            const state = stateRegistry.get(groupId);
+            if (!state?.open) return;
+            state.close();
+            m.redraw();
+        };
+        window.addEventListener("resize", dismissForViewportChange);
+        window.visualViewport?.addEventListener("resize", dismissForViewportChange);
+        scrollElement = typeof document === "undefined" ? null : document.querySelector(".app__content");
+        scrollElement?.addEventListener("scroll", dismissForViewportChange, { passive: true });
+    };
+
+    const unmountViewportListeners = () => {
+        if (!dismissForViewportChange || typeof window === "undefined") return;
+        window.removeEventListener("resize", dismissForViewportChange);
+        window.visualViewport?.removeEventListener("resize", dismissForViewportChange);
+        scrollElement?.removeEventListener("scroll", dismissForViewportChange);
+        scrollElement = null;
+        dismissForViewportChange = null;
+    };
 
     const mountPortal = (groupId: string) => {
         if (portalDiv || typeof document === "undefined") return;
         portalDiv = document.createElement("div");
         portalDiv.className = "tooltip-portal";
         document.body.appendChild(portalDiv);
+        mountViewportListeners(groupId);
 
         const tooltipState = stateRegistry.get(groupId);
         if (tooltipState) tooltipState.portalElement = portalDiv;
@@ -199,6 +225,7 @@ const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
     };
 
     const unmountPortal = (groupId: string) => {
+        unmountViewportListeners();
         const state = stateRegistry.get(groupId);
         if (state) state.portalElement = null;
         if (portalDiv) {

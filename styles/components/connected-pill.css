@@ -26,15 +26,15 @@
         line-height: 1.2;
         box-sizing: border-box;
         transition:
-            border-top-left-radius 0.2s ease-out,
-            border-bottom-left-radius 0.2s ease-out,
-            border-top-right-radius 0.2s ease-out,
-            border-bottom-right-radius 0.2s ease-out,
-            border-color 0.2s ease-out,
-            margin-right 0.2s ease-out,
-            background 0.12s,
-            color 0.12s,
-            opacity 0.12s;
+            border-top-left-radius var(--motion-duration-panel) var(--motion-ease-out),
+            border-bottom-left-radius var(--motion-duration-panel) var(--motion-ease-out),
+            border-top-right-radius var(--motion-duration-panel) var(--motion-ease-out),
+            border-bottom-right-radius var(--motion-duration-panel) var(--motion-ease-out),
+            border-color var(--motion-duration-panel) var(--motion-ease-out),
+            margin-right var(--motion-duration-panel) var(--motion-ease-out),
+            background var(--motion-duration-feedback),
+            color var(--motion-duration-feedback),
+            opacity var(--motion-duration-feedback);
 
         &.active {
             --cp-border: var(--color-accent);
@@ -93,6 +93,9 @@
 /* Reduced-Motion: Drop the Radius/Margin Morph but Keep Color Transitions */
 @media (prefers-reduced-motion: reduce) {
     .connected-pill .connected-pill__half {
-        transition: background 0.12s, color 0.12s, opacity 0.12s;
+        transition:
+            background var(--motion-duration-feedback),
+            color var(--motion-duration-feedback),
+            opacity var(--motion-duration-feedback);
     }
 }

@@ -254,4 +254,3 @@ export const PiecesSection: m.Component<{ derived: Derived }> = {
         );
     },
 };
-

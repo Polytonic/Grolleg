@@ -18,7 +18,9 @@
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1rem 0.75rem;
-    transition: background-color 0.12s, border-color 0.12s;
+    transition:
+        background-color var(--motion-duration-feedback),
+        border-color var(--motion-duration-feedback);
 
     @media (hover: hover) {
         &:hover {
@@ -121,7 +123,10 @@
     color: var(--color-muted);
     cursor: pointer;
     touch-action: manipulation;
-    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+    transition:
+        background-color var(--motion-duration-feedback),
+        border-color var(--motion-duration-feedback),
+        color var(--motion-duration-feedback);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -180,17 +185,35 @@
 }
 
 .unit-text {
+    position: relative;
     background: none;
     border: none;
     cursor: pointer;
     touch-action: manipulation;
     padding: 0.5rem 0.375rem;
     font-size: 0.6875rem;
+    font-weight: 600;
     letter-spacing: 0.06em;
     color: var(--color-muted);
-    transition: color 0.12s;
+    transition: color var(--motion-duration-feedback);
     display: flex;
     align-items: center;
+
+    &::after {
+        content: "";
+        position: absolute;
+        right: 0.375rem;
+        bottom: 0.375rem;
+        left: 0.375rem;
+        height: 1px;
+        background: currentColor;
+        opacity: 0;
+        transform: scaleX(0);
+        transform-origin: center;
+        transition:
+            opacity var(--motion-duration-feedback),
+            transform var(--motion-duration-reveal) var(--motion-ease-out);
+    }
 
     @media (hover: hover) {
         &:hover { color: var(--color-accent); }
@@ -199,10 +222,18 @@
     &:active { color: var(--color-accent-dark); transition: none; }
 
     &.active {
-        font-weight: 700;
         color: var(--color-accent);
-        text-decoration: underline;
-        text-underline-offset: 0.1875rem;
+
+        &::after {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .unit-text::after {
+        transition: none;
     }
 }
 
@@ -215,6 +246,12 @@
     padding: 1.25rem;
     margin-bottom: 1rem;
     box-shadow: 0 4px 20px var(--color-border-subtle);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .results-card {
+        animation: grolleg-reveal-up var(--motion-duration-reveal) var(--motion-ease-enter);
+    }
 }
 
 .divider {

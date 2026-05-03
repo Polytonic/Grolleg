@@ -123,6 +123,11 @@
     }
 
     @media (prefers-reduced-motion: no-preference) {
+        .stage-inputs,
+        .stage-warning {
+            animation: grolleg-reveal-up var(--motion-duration-reveal) var(--motion-ease-enter);
+        }
+
         .input.pulsing {
             animation: shrinkage-calc-pulse 0.4s ease-out;
         }

@@ -159,6 +159,30 @@ describe("Navigation backdrop", () => {
         expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
     });
 
+    it("keeps the closing backdrop until its opacity transition ends", () => {
+        const output = renderAtRoute("/");
+        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+        toggle.click();
+        output.redraw();
+        toggle.click();
+        output.redraw();
+
+        const closingBackdrop = output.rootEl.querySelector("button.mobile-nav__backdrop") as HTMLElement;
+        const colorTransitionEnd = output.rootEl.ownerDocument.createEvent("Event");
+        colorTransitionEnd.initEvent("transitionend", true, true);
+        Object.defineProperty(colorTransitionEnd, "propertyName", { value: "background-color" });
+        closingBackdrop.dispatchEvent(colorTransitionEnd);
+        output.redraw();
+        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeDefined();
+
+        const opacityTransitionEnd = output.rootEl.ownerDocument.createEvent("Event");
+        opacityTransitionEnd.initEvent("transitionend", true, true);
+        Object.defineProperty(opacityTransitionEnd, "propertyName", { value: "opacity" });
+        closingBackdrop.dispatchEvent(opacityTransitionEnd);
+        output.redraw();
+        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
+    });
+
     it("closes the drawer on backdrop click", () => {
         const output = renderAtRoute("/");
         const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;

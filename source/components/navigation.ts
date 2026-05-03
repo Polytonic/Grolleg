@@ -30,6 +30,10 @@ let backdropRemovalTimeout: ReturnType<typeof setTimeout> | undefined;
 const isActiveTool = (path: string): boolean =>
     m.route.get() === path;
 
+const prefersReducedMotion = (): boolean =>
+    typeof window !== "undefined" &&
+    !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 const syncContentInert = () => {
     globalThis.document?.querySelector(".app__content")?.toggleAttribute("inert", drawerOpen);
 };
@@ -52,6 +56,10 @@ const showBackdrop = () => {
 
 const scheduleBackdropRemoval = () => {
     clearBackdropRemovalTimeout();
+    if (prefersReducedMotion()) {
+        backdropRendered = false;
+        return;
+    }
     backdropRemovalTimeout = setTimeout(() => {
         backdropRemovalTimeout = undefined;
         if (drawerOpen) return;
@@ -83,6 +91,8 @@ const toggleDrawer = (event: Event) => {
 
 const handleBackdropTransitionEnd = (event: Event) => {
     if (event.target !== event.currentTarget || drawerOpen) return;
+    const propertyName = (event as TransitionEvent).propertyName;
+    if (propertyName && propertyName !== "opacity") return;
     removeBackdrop();
 };
 
