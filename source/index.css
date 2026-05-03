@@ -110,6 +110,6 @@ body {
     }
 
     .app__content {
-        padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+        padding: 2rem 1rem calc(6rem + env(safe-area-inset-bottom, 0px));
     }
 }

@@ -2,7 +2,6 @@ import m from "mithril";
 import "@css/components/navigation.css";
 import { menuIcon, xIcon } from "./icons";
 import { focusLater } from "./interaction";
-import { prefersReducedMotion } from "./flip";
 
 
 // Navigation
@@ -52,11 +51,6 @@ const handleDocumentKeydown = (event: KeyboardEvent) => {
     m.redraw();
 };
 
-const scrollContentToTop = () => {
-    const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
-    document.querySelector<HTMLElement>(".app__content")?.scrollTo({ top: 0, behavior });
-    closeDrawer(true);
-};
 
 const toolLink = (tool: Tool, className: string, id?: string) => {
     const active = isActiveTool(tool.path);
@@ -91,36 +85,34 @@ const mobileNavigation = () =>
             tabindex: drawerOpen ? 0 : -1,
             onclick: () => { closeDrawer(true); },
         }),
-        m("nav.mobile-nav__drawer", {
-            id: DRAWER_ID,
-            "aria-label": "Site navigation",
-            "aria-hidden": drawerOpen ? undefined : "true",
-            inert: drawerOpen ? undefined : "",
-        },
-            m(m.route.Link, {
-                id: FIRST_LINK_ID,
-                class: `mobile-nav__brand${m.route.get() === "/" ? " active" : ""}`,
-                href: "/",
-                "aria-current": m.route.get() === "/" ? "page" : undefined,
-                onclick: () => { drawerOpen = false; },
-            }, "Grolleg"),
-            TOOLS.map((tool) =>
-                toolLink(tool, "navigation-link mobile-nav__link"),
+        m(".mobile-nav__card",
+            m("nav.mobile-nav__drawer", {
+                id: DRAWER_ID,
+                "aria-label": "Site navigation",
+                "aria-hidden": drawerOpen ? undefined : "true",
+                inert: drawerOpen ? undefined : "",
+            },
+                m(m.route.Link, {
+                    id: FIRST_LINK_ID,
+                    class: `mobile-nav__brand${m.route.get() === "/" ? " active" : ""}`,
+                    href: "/",
+                    "aria-current": m.route.get() === "/" ? "page" : undefined,
+                    onclick: () => { drawerOpen = false; },
+                }, "Grolleg"),
+                TOOLS.map((tool) =>
+                    toolLink(tool, "navigation-link mobile-nav__link"),
+                ),
             ),
-            m("button.mobile-nav__back-to-top", {
-                type: "button",
-                onclick: scrollContentToTop,
-            }, "Back to top"),
-        ),
-        m(".mobile-nav__bar",
-            m("button.mobile-nav__toggle", {
-                id: TOGGLE_ID,
-                type: "button",
-                "aria-label": drawerOpen ? "Close navigation" : "Open navigation",
-                "aria-expanded": drawerOpen ? "true" : "false",
-                "aria-controls": DRAWER_ID,
-                onclick: toggleDrawer,
-            }, drawerOpen ? xIcon(22) : menuIcon(22)),
+            m(".mobile-nav__bar",
+                m("button.mobile-nav__toggle", {
+                    id: TOGGLE_ID,
+                    type: "button",
+                    "aria-label": drawerOpen ? "Close navigation" : "Open navigation",
+                    "aria-expanded": drawerOpen ? "true" : "false",
+                    "aria-controls": DRAWER_ID,
+                    onclick: toggleDrawer,
+                }, drawerOpen ? xIcon(22) : menuIcon(22)),
+            ),
         ),
     );
 

@@ -146,20 +146,3 @@ describe("Navigation backdrop", () => {
         expect(toggle.getAttribute("aria-expanded")).toBe("false");
     });
 });
-
-
-// Back to Top
-describe("Navigation back to top", () => {
-    it("closes the drawer when back-to-top is clicked", () => {
-        const output = renderAtRoute("/");
-        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
-        toggle.click();
-        output.redraw();
-        expect(toggle.getAttribute("aria-expanded")).toBe("true");
-
-        const backToTop = output.rootEl.querySelector("button.mobile-nav__back-to-top") as HTMLElement;
-        backToTop.click();
-        output.redraw();
-        expect(toggle.getAttribute("aria-expanded")).toBe("false");
-    });
-});
