@@ -61,8 +61,8 @@ const BasisField: m.Component = {
 
 const RoundingField: m.Component = {
     view: () => m(".field-group",
-        m("label.label", { for: "rounding-select" },
-            m("span", "Rounding"),
+        m("span.label",
+            m("label", { for: "rounding-select" }, "Rounding"),
             m(Tooltip, {
                 label: "rounding",
                 text: 'How dimensions are rounded before billing. For a 4.2 × 5.7 × 3.1 piece (74.2 in³ exact): Per Dimension rounds up L, W, H independently to 5 × 6 × 4 = 120 in³, matching the measuring-box convention. Total rounds up the final volume to 75 in³. Nearest Whole rounds without preference to 74 in³. Don\'t Round uses exact decimals.',
@@ -142,8 +142,8 @@ const FiringsField: m.Component = {
 
 const MinHeightField: m.Component = {
     view: () => m(".field-group",
-        m("label.label", { for: "min-height-input" },
-            m("span", "Minimum Height"),
+        m("span.label",
+            m("label", { for: "min-height-input" }, "Minimum Height"),
             m(Tooltip, {
                 label: "minimum height",
                 text: "Some studios bill short pieces at a minimum height to reflect the kiln-shelf interval consumed. A piece below the minimum is charged as if it were that tall. Set to 0 to disable.",

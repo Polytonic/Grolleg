@@ -86,7 +86,7 @@ interface TooltipRootAttrs {
     groupId?: string;
 }
 
-export const TooltipRoot: m.ClosureComponent<TooltipRootAttrs> = () => {
+const TooltipRoot: m.ClosureComponent<TooltipRootAttrs> = () => {
     let groupId: string;
 
     return {
@@ -116,7 +116,7 @@ interface TooltipTriggerAttrs {
 // Touch devices fire mouseenter → click in sequence, causing open-then-close.
 const hasHover = typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches;
 
-export const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
+const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
     return {
         view: (vnode) => {
             const state = stateRegistry.get(vnode.attrs.groupId);
@@ -155,7 +155,7 @@ interface TooltipContentAttrs {
     groupId: string;
 }
 
-export const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
+const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
     let portalDiv: HTMLElement | null = null;
     let latestChildren: m.Children = null;
 

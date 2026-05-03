@@ -5,7 +5,7 @@ import {
     toPositive, formatPrice, formatQuantity,
     expandUnit, BASIS_META, FIRING_TYPES,
 } from "../../../source/views/firing-calculator/state";
-import { decimalFormat } from "../../../source/components/locale";
+
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
 beforeEach(() => resetState());
@@ -64,34 +64,29 @@ describe("expandUnit", () => {
 // formatPrice / formatQuantity
 describe("formatPrice", () => {
     it("formats zero as a dollar amount", () => {
-        expect(formatPrice(0)).toBe(`$${decimalFormat.format(0)}`);
+        expect(formatPrice(0)).toBe("$0.00");
     });
 
     it("formats a positive value as a dollar amount", () => {
-        expect(formatPrice(3.2)).toBe(`$${decimalFormat.format(3.2)}`);
+        expect(formatPrice(3.2)).toBe("$3.20");
     });
 
     it("formats a large value as a dollar amount", () => {
-        expect(formatPrice(1234.56)).toBe(`$${decimalFormat.format(1234.56)}`);
+        expect(formatPrice(1234.56)).toBe("$1,234.56");
     });
 });
 
 describe("formatQuantity", () => {
     it("weight basis formats with two decimals", () => {
-        const result = formatQuantity(1.5, "weight");
-        expect(result).toContain("1");
-        expect(result).toContain("50");
+        expect(formatQuantity(1.5, "weight")).toBe("1.50");
     });
 
     it("volume basis formats as whole number", () => {
-        const result = formatQuantity(80, "volume");
-        expect(result).toContain("80");
-        expect(result).not.toContain(".");
+        expect(formatQuantity(80, "volume")).toBe("80");
     });
 
     it("footprint basis formats as whole number", () => {
-        const result = formatQuantity(16, "footprint");
-        expect(result).toContain("16");
+        expect(formatQuantity(16, "footprint")).toBe("16");
     });
 });
 

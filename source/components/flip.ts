@@ -15,7 +15,7 @@ const reducedMotionQuery =
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
         : null;
 
-export const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
+const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
 
 
 // Snapshot Phase

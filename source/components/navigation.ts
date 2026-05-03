@@ -38,9 +38,11 @@ export const closeDrawer = (focusToggle: boolean) => {
     syncContentInert();
 };
 
-const toggleDrawer = () => {
+const toggleDrawer = (event: Event) => {
     drawerOpen = !drawerOpen;
-    focusLater(drawerOpen ? FIRST_LINK_ID : TOGGLE_ID);
+    if (!(event as PointerEvent).detail) {
+        focusLater(drawerOpen ? FIRST_LINK_ID : TOGGLE_ID);
+    }
     syncContentInert();
 };
 

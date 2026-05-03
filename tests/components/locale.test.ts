@@ -62,6 +62,10 @@ describe("parseLocaleNumber", () => {
         expect(parseLocaleNumber("12.")).toBe(12);
     });
 
+    it("1.234 (dot-only) is ambiguous — parser treats dot as decimal, not thousands", () => {
+        expect(parseLocaleNumber("1.234")).toBe(1.234);
+    });
+
     it("non-numeric text returns NaN", () => {
         expect(parseLocaleNumber("abc")).toBeNaN();
     });
@@ -121,9 +125,7 @@ describe("detectDefaultWeightUnit", () => {
 // formatNumber
 describe("formatNumber", () => {
     it("formats with two decimal places", () => {
-        const result = formatNumber(12.5);
-        expect(result).toContain("12");
-        expect(result).toContain("50");
+        expect(formatNumber(12.5)).toBe("12.50");
     });
 
     it("null returns en dash", () => {
@@ -143,12 +145,11 @@ describe("formatNumber", () => {
     });
 
     it("zero formats with decimals", () => {
-        expect(formatNumber(0)).toContain("0");
+        expect(formatNumber(0)).toBe("0.00");
     });
 
-    it("negative zero formats as zero", () => {
-        const result = formatNumber(-0);
-        expect(result).toContain("0");
+    it("negative zero preserves sign (IEEE 754)", () => {
+        expect(formatNumber(-0)).toBe("-0.00");
     });
 });
 

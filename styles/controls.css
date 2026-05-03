@@ -172,8 +172,8 @@
     color: var(--color-muted);
     user-select: none;
 
-    &::before { content: "(" / ""; }
-    &::after  { content: ")" / ""; }
+    &::before { content: "("; content: "(" / ""; }
+    &::after  { content: ")"; content: ")" / ""; }
 }
 
 .unit-separator {
