@@ -103,6 +103,22 @@ const handleDocumentKeydown = (event: KeyboardEvent) => {
     m.redraw();
 };
 
+const targetElement = (target: EventTarget | null): Element | null => {
+    if (!target) return null;
+    if (typeof (target as Element).closest === "function") return target as Element;
+    return (target as { parentElement?: Element | null }).parentElement ?? null;
+};
+
+const isInteractiveTarget = (target: EventTarget | null): boolean =>
+    !!targetElement(target)?.closest("button, a");
+
+const openDrawerFromCard = (event: Event) => {
+    if (drawerOpen || isInteractiveTarget(event.target)) return;
+    drawerOpen = true;
+    showBackdrop();
+    syncContentInert();
+};
+
 
 const toolLink = (tool: Tool, className: string, id?: string) => {
     const active = isActiveTool(tool.path);
@@ -138,7 +154,17 @@ const mobileNavigation = () =>
             onclick: () => { closeDrawer(true); },
             ontransitionend: handleBackdropTransitionEnd,
         }),
-        m(".mobile-nav__card",
+        m(".mobile-nav__card", { onclick: openDrawerFromCard },
+            m(".mobile-nav__bar",
+                m("button.mobile-nav__toggle", {
+                    id: TOGGLE_ID,
+                    type: "button",
+                    "aria-label": drawerOpen ? "Close navigation" : "Open navigation",
+                    "aria-expanded": drawerOpen ? "true" : "false",
+                    "aria-controls": DRAWER_ID,
+                    onclick: toggleDrawer,
+                }, drawerOpen ? xIcon(22) : menuIcon(22)),
+            ),
             m("nav.mobile-nav__drawer", {
                 id: DRAWER_ID,
                 "aria-label": "Site navigation",
@@ -155,16 +181,6 @@ const mobileNavigation = () =>
                 TOOLS.map((tool) =>
                     toolLink(tool, "navigation-link mobile-nav__link"),
                 ),
-            ),
-            m(".mobile-nav__bar",
-                m("button.mobile-nav__toggle", {
-                    id: TOGGLE_ID,
-                    type: "button",
-                    "aria-label": drawerOpen ? "Close navigation" : "Open navigation",
-                    "aria-expanded": drawerOpen ? "true" : "false",
-                    "aria-controls": DRAWER_ID,
-                    onclick: toggleDrawer,
-                }, drawerOpen ? xIcon(22) : menuIcon(22)),
             ),
         ),
     );

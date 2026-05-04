@@ -98,6 +98,17 @@ describe("Navigation mobile toggle", () => {
         output.redraw();
         expect(button.getAttribute("aria-expanded")).toBe("false");
     });
+
+    it("opens from a closed card shell click", () => {
+        const output = renderAtRoute("/");
+        const card = output.rootEl.querySelector(".mobile-nav__card") as HTMLElement;
+        const button = output.rootEl.querySelector("button.mobile-nav__toggle")!;
+        expect(button.getAttribute("aria-expanded")).toBe("false");
+
+        card.click();
+        output.redraw();
+        expect(button.getAttribute("aria-expanded")).toBe("true");
+    });
 });
 
 
