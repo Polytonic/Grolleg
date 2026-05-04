@@ -131,4 +131,8 @@ body {
     .app__content {
         padding: 2rem 1rem calc(6rem + env(safe-area-inset-bottom, 0px));
     }
+
+    .app__content :is(.landing, .shrinkage-calculator, .firing-calculator) .container {
+        margin-inline: auto;
+    }
 }
