@@ -40,10 +40,12 @@ m.route(document.body, "/", {
     "/:rest...":      titled("Grolleg • Page Not Found", NotFoundView),
 });
 
-if ("serviceWorker" in navigator && window.location.hostname.startsWith("localhost")) {
-    navigator.serviceWorker.getRegistrations().then((registrations) =>
-        registrations.forEach((registration) => registration.unregister()),
-    );
+if (process.env.NODE_ENV === "development") {
+    if ("serviceWorker" in navigator && window.location.hostname.startsWith("localhost")) {
+        navigator.serviceWorker.getRegistrations().then((registrations) =>
+            registrations.forEach((registration) => registration.unregister()),
+        );
+    }
 } else if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register(
         new URL("service-worker.ts", import.meta.url),
