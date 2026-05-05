@@ -101,19 +101,6 @@
         margin-bottom: 0.5rem;
     }
 
-    /* When the unit toggle inlines with a section header, push it to
-       the right edge and drop the toggle's standalone 44px tap-target
-       floor. The grouped inline buttons fall under WCAG 2.5.8 (Compact,
-       AAA), the same exception used for the piece-row chips. */
-    .section-label .unit-text-toggle {
-        margin-left: auto;
-    }
-    .section-label .unit-text {
-        min-height: 0;
-        padding: 0.25rem 0.375rem;
-    }
-
-
     /* Numeric Input       Wrapper, suffix, and base input styles live in controls.css. The
        firing calculator narrows the font to mono and widens the
        suffix-side padding because its units ("¢/in³", "$/lb") need
