@@ -17,6 +17,7 @@ const listeners = new Map<string, Set<EventListener>>();
 
 const stubDocument = {
     querySelector: () => null,
+    getElementById: () => null,
     addEventListener(type: string, handler: EventListener) {
         if (!listeners.has(type)) listeners.set(type, new Set());
         listeners.get(type)!.add(handler);
@@ -116,6 +117,30 @@ describe("Navigation mobile toggle", () => {
         card.click();
         output.redraw();
         expect(button.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("does not focus the first link after a card shell pointer click", async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const focusLookups: string[] = [];
+        const originalGetElementById = document.getElementById.bind(document);
+        document.getElementById = ((id: string) => {
+            focusLookups.push(id);
+            return { focus: () => undefined } as unknown as HTMLElement;
+        }) as Document["getElementById"];
+
+        try {
+            const output = renderAtRoute("/");
+            const card = output.rootEl.querySelector(".mobile-nav__card") as HTMLElement;
+
+            card.click();
+            output.redraw();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(focusLookups).not.toContain("mobile-navigation-first-link");
+        } finally {
+            document.getElementById = originalGetElementById;
+        }
     });
 });
 
