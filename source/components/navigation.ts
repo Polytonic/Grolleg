@@ -5,7 +5,7 @@ import { focusLater } from "./interaction";
 
 
 // Navigation
-// Fixed desktop sidebar and collapsible mobile drawer.
+// Fixed desktop tool rail and collapsible mobile tray.
 
 interface Tool {
     path: string;
@@ -13,8 +13,8 @@ interface Tool {
 }
 
 const TOOLS: Tool[] = [
-    { path: "/t/shrinkage", label: "Shrinkage" },
-    { path: "/t/firing",    label: "Firing" },
+    { path: "/t/shrinkage", label: "Shrinkage Calculator" },
+    { path: "/t/firing",    label: "Firing Cost Calculator" },
 ];
 
 const DRAWER_ID = "mobile-navigation-drawer";
@@ -29,6 +29,11 @@ let backdropRemovalTimeout: ReturnType<typeof setTimeout> | undefined;
 
 const isActiveTool = (path: string): boolean =>
     m.route.get() === path;
+
+const activeDestinationLabel = (): string => {
+    if (m.route.get() === "/") return "Home";
+    return TOOLS.find((tool) => isActiveTool(tool.path))?.label ?? "Tools";
+};
 
 const prefersReducedMotion = (): boolean =>
     typeof window !== "undefined" &&
@@ -133,13 +138,17 @@ const toolLink = (tool: Tool, className: string, id?: string) => {
 
 const desktopSidebar = () =>
     m("nav.sidebar", { "aria-label": "Site navigation" },
-        m(m.route.Link, {
-            class: "sidebar__brand",
-            href: "/",
-            "aria-current": m.route.get() === "/" ? "page" : undefined,
-        }, "Grolleg"),
-        m(".sidebar__tools",
-            TOOLS.map((tool) => toolLink(tool, "navigation-link sidebar__link")),
+        m(".sidebar__identity",
+            m(m.route.Link, {
+                class: "sidebar__brand",
+                href: "/",
+                "aria-current": m.route.get() === "/" ? "page" : undefined,
+            }, "Grolleg"),
+        ),
+        m(".sidebar__section",
+            m(".sidebar__tools",
+                TOOLS.map((tool) => toolLink(tool, "navigation-link sidebar__link")),
+            ),
         ),
     );
 
@@ -156,6 +165,10 @@ const mobileNavigation = () =>
         }),
         m(".mobile-nav__card", { onclick: openDrawerFromCard },
             m(".mobile-nav__bar",
+                m(".mobile-nav__summary",
+                    m(".mobile-nav__kicker", "Grolleg"),
+                    m(".mobile-nav__current", activeDestinationLabel()),
+                ),
                 m("button.mobile-nav__toggle", {
                     id: TOGGLE_ID,
                     type: "button",
@@ -177,7 +190,7 @@ const mobileNavigation = () =>
                     href: "/",
                     "aria-current": m.route.get() === "/" ? "page" : undefined,
                     onclick: () => { closeDrawer(false); },
-                }, "Grolleg"),
+                }, "Home"),
                 TOOLS.map((tool) =>
                     toolLink(tool, "navigation-link mobile-nav__link"),
                 ),

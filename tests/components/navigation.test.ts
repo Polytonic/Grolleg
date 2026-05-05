@@ -8,9 +8,8 @@ import { Navigation, closeDrawer } from "../../source/components/navigation";
 
 const originalGet = m.route.get;
 
-// The navigation component references the global document in three places:
-// syncContentInert (querySelector), scrollContentToTop (querySelector), and
-// oncreate/onremove (addEventListener/removeEventListener for Escape key).
+// The navigation component references the global document for content inertness
+// and oncreate/onremove keydown listeners.
 // Bun's test runtime does not provide a global document, so we stub the
 // minimum surface. The stub supports event listener registration so that
 // oncreate's keydown listener works and Escape dispatch can be tested.
@@ -65,6 +64,10 @@ describe("Navigation links", () => {
         expect(output.rootEl.querySelectorAll(".sidebar__brand").length).toBe(1);
         expect(output.rootEl.querySelectorAll(".mobile-nav__brand").length).toBe(1);
         expect(output.rootEl.querySelectorAll(".navigation-link").length).toBe(4);
+        expect(output.rootEl.textContent).not.toContain("Studio tools");
+        expect(output.rootEl.querySelector(".sidebar__section-label")).toBeUndefined();
+        expect(output.rootEl.querySelectorAll(".navigation-link")[0]?.textContent).toBe("Shrinkage Calculator");
+        expect(output.rootEl.querySelectorAll(".navigation-link")[1]?.textContent).toBe("Firing Cost Calculator");
     });
 });
 
@@ -77,8 +80,13 @@ describe("Navigation active state", () => {
         expect(activeLinks.length).toBe(2);
         activeLinks.forEach((link) => {
             expect(link.getAttribute("aria-current")).toBe("page");
-            expect(link.textContent).toBe("Firing");
+            expect(link.textContent).toBe("Firing Cost Calculator");
         });
+    });
+
+    it("summarizes the current mobile destination", () => {
+        const output = renderAtRoute("/t/shrinkage");
+        expect(output.rootEl.querySelector(".mobile-nav__current")?.textContent).toBe("Shrinkage Calculator");
     });
 });
 
