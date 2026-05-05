@@ -41,10 +41,15 @@ m.route(document.body, "/", {
 });
 
 if (process.env.NODE_ENV === "development") {
-    if ("serviceWorker" in navigator && window.location.hostname.startsWith("localhost")) {
+    if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistrations().then((registrations) =>
             registrations.forEach((registration) => registration.unregister()),
         );
+    }
+    if (module.hot) {
+        module.hot.accept(() => {
+            m.redraw();
+        });
     }
 } else if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register(

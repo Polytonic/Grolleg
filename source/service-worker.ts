@@ -34,6 +34,8 @@ const indexUrl = new URL("index.html", swScope).pathname;
 
 addEventListener("fetch", (event: FetchEvent) => {
     const request = event.request;
+    const url = new URL(request.url);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return;
     if (request.mode === "navigate") {
         event.respondWith(
             caches.match(indexUrl)
