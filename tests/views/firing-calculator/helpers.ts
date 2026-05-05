@@ -1,6 +1,6 @@
-import { state, cloneInitialState } from "../../../source/views/firing-calculator/state";
 import type { Piece, FiringFlags, FiringRates, Basis, DimensionUnit, WeightUnit, Rounding }
-    from "../../../source/views/firing-calculator/state";
+    from "../../../source/views/firing-calculator/types";
+import { state, cloneInitialState } from "../../../source/views/firing-calculator/state";
 export { mockInputEvent } from "../../helpers";
 
 let pieceCounter = 100;

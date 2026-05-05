@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach } from "bun:test";
+import { BASIS_META } from "../../../source/views/firing-calculator/types";
+import { toStoredRate } from "../../../source/views/firing-calculator/pricing";
 import {
     state, toggleFiring, toggleBundled,
     togglePieceFiring, togglePiecePair,
     addPiece, removePiece, updatePiece,
     handleBasisChange, handleDimensionUnitChange, handleWeightUnitChange,
     handleFiringRateInput, handleBundledRateInput,
-    toStoredRate, BASIS_META,
 } from "../../../source/views/firing-calculator/state";
 import { resetState, makePiece, setStudio, setPieces, mockInputEvent } from "./helpers";
 
@@ -81,9 +82,8 @@ describe("bundled pair-toggle propagates both bisque and glaze", () => {
 });
 
 
-/* Rule 3: Bundled Activation OR-Migrates Pieces   The single most-debated decision in the prototype's iteration. The panel
-   reversed an initial unified-overwrite consensus when the luster-only piece
-   was raised. */
+/* Rule 3: Bundled Activation OR-Migrates Pieces   Bundled activation OR-migrates pieces that already participate in bisque
+   or glaze. Luster-only and no-firing pieces are left untouched. */
 
 describe("bundled activation OR-migrates pieces", () => {
     it("piece with bisque OR glaze on gets both forced on", () => {

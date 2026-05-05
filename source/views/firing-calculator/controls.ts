@@ -6,14 +6,16 @@ import { chainLinkIcon } from "../../components/icons";
 import { InputWithSuffix } from "../../components/input-with-suffix";
 import { TogglePill } from "../../components/toggle-pill";
 import { UnitToggle } from "../../components/unit-toggle";
+import { expandUnit, UNIT_VERBOSE } from "../../components/locale";
+import { BASIS_META, ROUNDING_OPTIONS } from "./types";
+import type { Basis, DimensionUnit, WeightUnit } from "./types";
+import { toDisplayRate, toPositive } from "./pricing";
 import {
-    state, BASIS_META, ROUNDING_OPTIONS, toDisplayRate, toPositive,
-    expandUnit, UNIT_VERBOSE,
+    state,
     handleBasisChange, handleRoundingChange, handleMinHeightInput,
     handleFiringRateInput, handleBundledRateInput,
     toggleFiring, toggleBundled,
 } from "./state";
-import type { Basis } from "./state";
 import type { Derived } from "./derived";
 
 
@@ -27,7 +29,7 @@ const singularize = (word: string): string => {
     return word.endsWith("s") ? word.slice(0, -1) : word;
 };
 
-const expandRateUnit = (basis: Basis, dimensionUnit: string, weightUnit: string): string => {
+const expandRateUnit = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: WeightUnit): string => {
     if (basis === "volume")    return `cents per cubic ${singularize(expandUnit(dimensionUnit))}`;
     if (basis === "footprint") return `cents per square ${singularize(expandUnit(dimensionUnit))}`;
     return `dollars per ${singularize(expandUnit(weightUnit))}`;

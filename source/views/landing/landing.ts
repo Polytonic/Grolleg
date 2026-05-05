@@ -1,5 +1,4 @@
 import m from "mithril";
-import "@css/views/landing.css";
 
 
 export const LandingView: m.Component = {

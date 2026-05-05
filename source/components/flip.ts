@@ -1,4 +1,5 @@
 import type m from "mithril";
+import { prefersReducedMotion } from "./interaction";
 
 
 /* FLIP Animation Utilities   Provides First-Last-Invert-Play layout transitions for children
@@ -10,15 +11,8 @@ import type m from "mithril";
    Honors prefers-reduced-motion: all animation logic is skipped
    under that media query. */
 
-const reducedMotionQuery =
-    typeof window !== "undefined" && window.matchMedia
-        ? window.matchMedia("(prefers-reduced-motion: reduce)")
-        : null;
-
 const LAYOUT_DURATION_MS = 250;
 const LEAVE_DURATION_MS = 200;
-
-const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
 let flipAnimationId = 0;
 
 

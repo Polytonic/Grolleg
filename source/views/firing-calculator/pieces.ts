@@ -4,12 +4,13 @@ import { xIcon, plusIcon } from "../../components/icons";
 import { InputWithSuffix } from "../../components/input-with-suffix";
 import { TogglePill } from "../../components/toggle-pill";
 import { Silhouette } from "./comparison";
+import { expandUnit } from "../../components/locale";
+import type { Piece } from "./types";
+import { formatPrice, formatQuantity } from "./pricing";
 import {
     state, addPiece, removePiece, updatePiece,
-    togglePieceFiring, togglePiecePair, expandUnit,
-    formatPrice, formatQuantity,
+    togglePieceFiring, togglePiecePair,
 } from "./state";
-import type { Piece } from "./state";
 import type { Derived, PieceComputed } from "./derived";
 
 

@@ -23,7 +23,7 @@ const INNER_EDGE_WHEN_BOTH_ACTIVE = "var(--color-accent-inner-edge)";
    disconnected, the inner corners animate from 0 to outerRadius and a
    margin opens between them. */
 
-export interface ConnectedPillAttrs {
+interface ConnectedPillAttrs {
     connected: boolean;
     aActive: boolean;
     bActive: boolean;

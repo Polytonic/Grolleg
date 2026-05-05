@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach } from "bun:test";
+import { expandUnit } from "../../../source/components/locale";
+import { BASIS_META, FIRING_TYPES } from "../../../source/views/firing-calculator/types";
 import {
-    state, calculatePrice, computeQuantity, studioSnapshot,
+    calculatePrice, computeQuantity,
     toDisplayRate, toStoredRate, rateUnitFor, rateIsCents,
     toPositive, formatPrice, formatQuantity,
-    expandUnit, BASIS_META, FIRING_TYPES,
-} from "../../../source/views/firing-calculator/state";
+} from "../../../source/views/firing-calculator/pricing";
+import { state, studioSnapshot } from "../../../source/views/firing-calculator/state";
 
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
@@ -15,7 +17,7 @@ beforeEach(() => resetState());
 describe("toPositive() coerces input to a positive number or zero", () => {
     it("empty string returns 0", () => expect(toPositive("")).toBe(0));
     it("non-numeric returns 0",  () => expect(toPositive("abc")).toBe(0));
-    it("undefined returns 0",    () => expect(toPositive(undefined)).toBe(0));
+    it("undefined returns 0",    () => expect(toPositive(undefined as unknown as string)).toBe(0));
     it("zero returns 0",         () => expect(toPositive(0)).toBe(0));
     it("negative returns 0",     () => expect(toPositive(-5)).toBe(0));
     it("positive number passes", () => expect(toPositive(3.14)).toBe(3.14));

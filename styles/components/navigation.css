@@ -24,7 +24,6 @@
     color: var(--color-accent);
     font-size: 1.5rem;
     font-weight: 700;
-    letter-spacing: 0;
     line-height: 1;
     text-decoration: none;
     touch-action: manipulation;
@@ -355,7 +354,6 @@
     .mobile-nav__drawer,
     .mobile-nav__bar,
     .mobile-nav__toggle,
-    .mobile-nav__summary,
     .mobile-nav__brand,
 
     .navigation-link,

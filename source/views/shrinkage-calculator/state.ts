@@ -1,5 +1,5 @@
 import { haptic, focusLater } from "../../components/interaction";
-import { detectDefaultDimensionUnit, formatNumber } from "../../components/locale";
+import { detectDefaultDimensionUnit } from "../../components/locale";
 
 
 // Types
@@ -83,8 +83,6 @@ export const applyRate = (dimension: number, percent: number): number =>
 export const reverseRate = (dimension: number, percent: number): number =>
     dimension / (1 - percent / 100);
 
-export const format = formatNumber;
-
 export const calculateVolume = (dimensions: number[], shapeId: ShapeMode["id"]): number | null => {
     if (shapeId === "rectangle" && dimensions.length >= 3) return dimensions[0] * dimensions[1] * dimensions[2];
     if (shapeId === "cylinder" && dimensions.length >= 2) return Math.PI * (dimensions[0] / 2) ** 2 * dimensions[1];
@@ -123,7 +121,7 @@ interface StateShape {
 }
 
 // Shared initial values so tests can reset to the same defaults
-export const INITIAL_STATE: StateShape = {
+const INITIAL_STATE: StateShape = {
     direction: "fired-to-wet",
     shapeIndex: 1,
     presetIndex: 1,
@@ -214,7 +212,9 @@ export const handleUnitChange = (nextUnit: Unit) => {
 };
 
 export const handleDimensionInput = (fieldIndex: number, event: Event) => {
-    state.dimensions[fieldIndex] = (event.currentTarget as HTMLInputElement).value;
+    state.dimensions = state.dimensions.map((v, i) =>
+        i === fieldIndex ? (event.currentTarget as HTMLInputElement).value : v,
+    );
 };
 
 // Enter on a dimension input advances to the next field, or blurs on the last.

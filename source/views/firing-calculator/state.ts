@@ -1,11 +1,16 @@
 import { parseLocaleNumber, detectDefaultDimensionUnit, detectDefaultWeightUnit } from "../../components/locale";
 import { focusLater } from "../../components/interaction";
-import { BASIS_META } from "./types";
+import { BASIS_META, ROUNDING_OPTIONS } from "./types";
 import type { Basis, DimensionUnit, WeightUnit, FiringKey, Rounding, FiringFlags, FiringRates, Piece, Studio } from "./types";
 import { toPositive, toStoredRate } from "./pricing";
 
-export * from "./types";
-export * from "./pricing";
+
+// Type Guards
+const BASES = new Set<string>(Object.keys(BASIS_META));
+const isBasis = (value: string): value is Basis => BASES.has(value);
+
+const ROUNDINGS = new Set<string>(ROUNDING_OPTIONS.map((option) => option.key));
+const isRounding = (value: string): value is Rounding => ROUNDINGS.has(value);
 
 
 // Unit-Aware Defaults
@@ -39,7 +44,7 @@ interface StateShape {
     firingRatesByBasis: Record<Basis, FiringRates>;
 }
 
-export const INITIAL_STATE: StateShape = {
+const INITIAL_STATE: StateShape = {
     basis: "volume",
     dimensionUnit: detectDefaultDimensionUnit(),
     weightUnit: detectDefaultWeightUnit(),
@@ -112,7 +117,8 @@ const setStudioFirings = (next: Partial<FiringFlags>) => {
 
 // Studio-Level Event Handlers
 export const handleBasisChange = (event: Event) => {
-    const next = (event.currentTarget as HTMLSelectElement).value as Basis;
+    const next = (event.currentTarget as HTMLSelectElement).value;
+    if (!isBasis(next)) return;
     if (next === state.basis) return;
     // Save the active basis' rates into the per-basis cache so a return
     // to this basis later restores the user's edits instead of reseeding
@@ -135,7 +141,9 @@ export const handleWeightUnitChange = (next: WeightUnit) => {
 };
 
 export const handleRoundingChange = (event: Event) => {
-    state.rounding = (event.currentTarget as HTMLSelectElement).value as Rounding;
+    const value = (event.currentTarget as HTMLSelectElement).value;
+    if (!isRounding(value)) return;
+    state.rounding = value;
 };
 
 // Realistic kiln-shelf intervals are 1 to 4 inches. The cap rejects

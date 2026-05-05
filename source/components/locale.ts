@@ -55,7 +55,7 @@ export const formatNumber = (value: number | null): string =>
 
 
 // Unit Labels
-export const UNIT_VERBOSE: Record<string, string> = {
+export const UNIT_VERBOSE = {
     mm: "millimeters",
     cm: "centimeters",
     in: "inches",
@@ -63,7 +63,7 @@ export const UNIT_VERBOSE: Record<string, string> = {
     kg: "kilograms",
     oz: "ounces",
     lb: "pounds",
-};
+} as const;
 
 export const expandUnit = (unit: string): string =>
-    UNIT_VERBOSE[unit] ?? unit;
+    (UNIT_VERBOSE as Record<string, string>)[unit] ?? unit;

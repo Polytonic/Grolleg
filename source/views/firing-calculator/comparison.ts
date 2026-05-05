@@ -1,10 +1,11 @@
 import m from "mithril";
+import type { DimensionUnit } from "./types";
 
 
 // Types
-export type ComparisonBucket = "cubeish" | "narrow" | "flat";
+type ComparisonBucket = "cubeish" | "narrow" | "flat";
 
-export type SilhouetteKey =
+type SilhouetteKey =
     | "golfBall" | "apple" | "softball" | "mug" | "grapefruit"
     | "cantaloupe" | "basketball" | "microwave" | "cat" | "fridge"
     | "pen" | "candle" | "sodaCan" | "wineBottle" | "rollingPin"
@@ -58,7 +59,7 @@ export const COMPARISONS: Record<ComparisonBucket, ComparisonEntry[]> = {
 
 /* Conversion   Lookup tables are in inches; convert user dimensions before lookup. */
 
-export const INCHES_PER_UNIT: Record<"mm" | "cm" | "in", number> = {
+export const INCHES_PER_UNIT: Record<DimensionUnit, number> = {
     in: 1,
     cm: 1 / 2.54,
     mm: 1 / 25.4,

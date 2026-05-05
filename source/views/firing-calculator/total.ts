@@ -1,6 +1,6 @@
 import m from "mithril";
 import { Silhouette } from "./comparison";
-import { formatPrice, formatQuantity } from "./state";
+import { formatPrice, formatQuantity } from "./pricing";
 import type { Derived } from "./derived";
 
 
@@ -20,15 +20,15 @@ export const TotalBand: m.Component<{ derived: Derived }> = {
         // The aggregate comparison is suppressed for a single piece because
         // the per-piece row already shows the same silhouette, and "All
         // together" reads oddly when there's nothing to combine.
-        const showAggregateComparison = aggregate.comparison && pieceCount > 1;
+        const comparison = pieceCount > 1 ? aggregate.comparison : null;
 
         return m("section.total-band", { "aria-labelledby": "total-band__heading" },
             m(".total-band__identity",
                 m("h2.total-band__label#total-band__heading", "Total"),
-                showAggregateComparison && m(".total-band__comparison",
-                    m(Silhouette, { type: aggregate.comparison!.silhouette, size: 26 }),
+                comparison && m(".total-band__comparison",
+                    m(Silhouette, { type: comparison.silhouette, size: 26 }),
                     m("span.total-band__comparison-label",
-                        `All together ≈ ${aggregate.comparison!.name}`),
+                        `All together ≈ ${comparison.name}`),
                 ),
                 m(".total-band__subtitle", subtitle),
             ),

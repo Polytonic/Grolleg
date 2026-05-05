@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from "bun:test";
+import { toDisplayRate } from "../../../source/views/firing-calculator/pricing";
 import {
     state,
     handleMinHeightInput, handleBasisChange,
     handleFiringRateInput, handleBundledRateInput,
     handleRoundingChange,
-    toDisplayRate,
 } from "../../../source/views/firing-calculator/state";
 import { resetState, mockInputEvent } from "./helpers";
 

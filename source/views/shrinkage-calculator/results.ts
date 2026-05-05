@@ -1,5 +1,6 @@
 import m from "mithril";
-import { state, format } from "./state";
+import { formatNumber } from "../../components/locale";
+import { state } from "./state";
 import type { Derived } from "./derived";
 
 
@@ -18,7 +19,7 @@ export const ResultsCard: m.Component<{ derived: Derived }> = {
             ),
             showVolume && m(".volume-section",
                 m("span.results-header.inline", "Volumetric shrinkage"),
-                m("span.volume-value", { "aria-live": "polite", "aria-atomic": "true" }, `${format(derived.volumeShrink)}%`),
+                m("span.volume-value", { "aria-live": "polite", "aria-atomic": "true" }, `${formatNumber(derived.volumeShrink)}%`),
                 m("p.volume-body",
                     "Clay doesn't shrink evenly in all directions. Particle orientation",
                     " from forming causes shrinkage to differ by axis, especially for plates",
@@ -32,17 +33,18 @@ export const ResultsCard: m.Component<{ derived: Derived }> = {
 // Single dimension row: value with unit, and delta from the entered dimension
 const ResultItem: m.Component<{ derived: Derived; field: string; fieldIndex: number }> = {
     view: ({ attrs: { derived, field, fieldIndex } }) => {
-        const result = derived.firedResults![fieldIndex];
+        if (!derived.firedResults) return null;
+        const result = derived.firedResults[fieldIndex];
         return m(".result-item",
             m("span.result-label", field),
             result !== null
                 ? m("span.result-value-row", { "aria-live": "polite", "aria-atomic": "true" },
                     m("span.result-value",
-                        format(result),
+                        formatNumber(result),
                         m("span.result-unit", ` ${state.unit}`),
                     ),
                     m("span.result-delta",
-                        `(${state.direction === "wet-to-fired" ? "−" : "+"}${format(Math.abs(result - derived.parsedDimensions[fieldIndex]))})`,
+                        `(${state.direction === "wet-to-fired" ? "−" : "+"}${formatNumber(Math.abs(result - derived.parsedDimensions[fieldIndex]))})`,
                     ),
                 )
                 : m("span.result-value.empty", { "aria-live": "polite", "aria-atomic": "true" }, "—"),

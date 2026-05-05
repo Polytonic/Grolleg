@@ -1,6 +1,7 @@
 import m from "mithril";
 import { InputWithSuffix } from "../../components/input-with-suffix";
-import { state, format, handleGreenwareInput, handleBisqueInput } from "./state";
+import { formatNumber } from "../../components/locale";
+import { state, handleGreenwareInput, handleBisqueInput } from "./state";
 import type { Stage } from "./state";
 import type { Derived } from "./derived";
 
@@ -36,7 +37,7 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
             m(".input-with-suffix",
                 m(".derived-value",
                     { "aria-label": "Fired shrinkage percentage", role: "status", "aria-live": "polite" },
-                    format(derived.firingPercent),
+                    formatNumber(derived.firingPercent),
                 ),
                 derived.firingPercent !== null && m("span.input-suffix", "%"),
             ),
@@ -53,23 +54,25 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
 // Vertical timeline showing dimensions at each stage: Wet → Bone Dry → Bisque → Fired
 export const StagesCard: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
+        if (!derived.stageWetDimensions || !derived.boneDryDimensions
+            || !derived.bisqueDimensions || !derived.stageFinalDimensions) return null;
         const stages: Stage[] = [
-            { label: "Wet", dimensions: derived.stageWetDimensions!, percent: null, isEndpoint: true },
+            { label: "Wet", dimensions: derived.stageWetDimensions, percent: null, isEndpoint: true },
             {
                 label: "Bone Dry",
-                dimensions: derived.boneDryDimensions!,
+                dimensions: derived.boneDryDimensions,
                 percent: derived.greenwarePercent,
                 isEndpoint: false,
             },
             {
                 label: "Bisque",
-                dimensions: derived.bisqueDimensions!,
+                dimensions: derived.bisqueDimensions,
                 percent: derived.bisquePercent,
                 isEndpoint: false,
             },
             {
                 label: "Fired",
-                dimensions: derived.stageFinalDimensions!,
+                dimensions: derived.stageFinalDimensions,
                 percent: derived.firingPercent,
                 isEndpoint: true,
             },
@@ -87,7 +90,7 @@ export const StagesCard: m.Component<{ derived: Derived }> = {
 const TimelineStage: m.Component<{ stage: Stage; fields: string[]; isFirst: boolean }> = {
     view: ({ attrs: { stage, fields, isFirst } }) => m(".timeline-stage",
         !isFirst && m(".timeline-arrow",
-            m("span.arrow-percent", `−${format(stage.percent)}%`),
+            m("span.arrow-percent", `−${formatNumber(stage.percent)}%`),
         ),
         m(`.timeline-card${stage.isEndpoint ? ".endpoint" : ""}`,
             m(".timeline-label", stage.label),
@@ -97,7 +100,7 @@ const TimelineStage: m.Component<{ stage: Stage; fields: string[]; isFirst: bool
                     { key: field },
                     m(`span.timeline-dimension-label${stage.isEndpoint ? ".endpoint" : ""}`, field),
                     m("span.timeline-dimension-value",
-                        dimension === null ? format(null) : `${format(dimension)} ${state.unit}`,
+                        dimension === null ? formatNumber(null) : `${formatNumber(dimension)} ${state.unit}`,
                     ),
                 );
             }),

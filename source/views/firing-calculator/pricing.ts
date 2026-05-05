@@ -7,7 +7,7 @@ import type { Basis, DimensionUnit, WeightUnit, Piece, Studio, PieceResult, Roun
 // non-finite, or non-positive values. Treating empty inputs as zero lets
 // quantity/rate calculations short-circuit to a $0 price without throwing.
 // Strings use parseLocaleNumber for locale-aware decimal handling.
-export const toPositive = (value: unknown): number => {
+export const toPositive = (value: string | number): number => {
     const parsed = typeof value === "string" ? parseLocaleNumber(value) : Number(value);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 };
@@ -90,7 +90,7 @@ export const toDisplayRate = (stored: number, basis: Basis): number =>
 // scientific-notation values (`1e10` would otherwise produce a
 // hundred-billion-dollar bill on a 10×10×10 piece) and absurd typos
 // without restricting realistic studio rates (typical max ~50¢/in³).
-export const MAX_DISPLAY_RATE = 1000;
+const MAX_DISPLAY_RATE = 1000;
 
 export const toStoredRate = (display: number | string, basis: Basis): number => {
     const value = typeof display === "string" ? parseLocaleNumber(display) : display;
@@ -107,9 +107,6 @@ export const rateUnitFor = (basis: Basis, dimensionUnit: DimensionUnit, weightUn
     return _exhaustive;
 };
 
-// Re-export from locale so existing consumers of pricing.ts don't break.
-export { expandUnit, UNIT_VERBOSE } from "../../components/locale";
-
 
 // Number Formatting
 const wholeFormat = new Intl.NumberFormat(undefined, {
@@ -122,5 +119,5 @@ export const formatPrice = (value: number): string =>
 
 // Weight basis prints two decimals (small numbers like 1.25 lb);
 // volume and footprint print whole numbers (large numbers like 240 in³).
-export const formatQuantity = (value: number, basis: string): string =>
+export const formatQuantity = (value: number, basis: Basis): string =>
     basis === "weight" ? decimalFormat.format(value) : wholeFormat.format(value);

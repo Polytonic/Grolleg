@@ -1,7 +1,7 @@
 import m from "mithril";
 import "@css/components/navigation.css";
 import { menuIcon, xIcon } from "./icons";
-import { focusLater } from "./interaction";
+import { focusLater, prefersReducedMotion } from "./interaction";
 
 
 // Navigation
@@ -34,10 +34,6 @@ const activeDestinationLabel = (): string => {
     if (m.route.get() === "/") return "Home";
     return TOOLS.find((tool) => isActiveTool(tool.path))?.label ?? "Tools";
 };
-
-const prefersReducedMotion = (): boolean =>
-    typeof window !== "undefined" &&
-    !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 const syncContentInert = () => {
     globalThis.document?.querySelector(".app__content")?.toggleAttribute("inert", drawerOpen);
@@ -192,7 +188,7 @@ const mobileNavigation = () =>
                     onclick: () => { closeDrawer(false); },
                 }, "Home"),
                 TOOLS.map((tool) =>
-                    toolLink(tool, "navigation-link mobile-nav__link"),
+                    toolLink(tool, "navigation-link"),
                 ),
             ),
         ),

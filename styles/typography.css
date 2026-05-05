@@ -25,6 +25,10 @@
     color: var(--color-muted);
 }
 
+.section-label {
+    margin-bottom: 0.5rem;
+}
+
 /* Sentence-case 13px label for sub-text input labels within a multi-input
    row (e.g. Length / Width / Height under a single Dimensions section, or
    Bisque / Glaze / Luster Rate under a single Firings section). Quieter
