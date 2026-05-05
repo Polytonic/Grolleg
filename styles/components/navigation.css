@@ -267,7 +267,7 @@
     height: 2.75rem;
     border: 1px solid var(--color-border-subtle);
     border-radius: 0.75rem;
-    background: color-mix(in srgb, var(--color-card) 86%, var(--color-accent));
+    background: var(--color-card);
     color: var(--color-accent);
     position: relative;
     z-index: 1;
@@ -278,16 +278,19 @@
     justify-content: center;
     transition:
         background-color var(--motion-duration-feedback),
+        border-color var(--motion-duration-feedback),
         color var(--motion-duration-feedback);
 
     @media (hover: hover) {
         &:hover {
-            background: color-mix(in srgb, var(--color-card) 78%, var(--color-accent));
+            border-color: color-mix(in srgb, var(--color-border-subtle) 55%, var(--color-accent));
+            background: color-mix(in srgb, var(--color-accent) 15%, var(--color-card));
         }
     }
 
     &:active {
-        background: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+        border-color: color-mix(in srgb, var(--color-border-subtle) 45%, var(--color-accent));
+        background: color-mix(in srgb, var(--color-accent) 30%, var(--color-card));
         transition: none;
     }
 }
@@ -300,14 +303,12 @@
 
     @media (hover: hover) and (pointer: fine) {
         .mobile-nav__card:hover .mobile-nav__bar,
-        .mobile-nav__card:hover .mobile-nav__toggle,
         .mobile-nav__card:hover .mobile-nav__drawer {
             background: color-mix(in srgb, var(--color-accent) 15%, var(--color-card));
         }
     }
 
     .mobile-nav__card:active .mobile-nav__bar,
-    .mobile-nav__card:active .mobile-nav__toggle,
     .mobile-nav__card:active .mobile-nav__drawer {
         background: color-mix(in srgb, var(--color-accent) 30%, var(--color-card));
         transition: none;
@@ -326,6 +327,25 @@
 
     .mobile-nav__drawer {
         pointer-events: auto;
+    }
+
+    .mobile-nav__toggle {
+        border-color: color-mix(in srgb, var(--color-border-subtle) 40%, var(--color-accent));
+        background: var(--color-card);
+        color: var(--color-accent);
+    }
+
+    @media (hover: hover) {
+        .mobile-nav__toggle:hover {
+            border-color: color-mix(in srgb, var(--color-border-subtle) 25%, var(--color-accent));
+            background: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+        }
+    }
+
+    .mobile-nav__toggle:active {
+        border-color: var(--color-accent);
+        background: color-mix(in srgb, var(--color-card) 55%, var(--color-accent));
+        transition: none;
     }
 }
 
