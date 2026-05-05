@@ -329,21 +329,23 @@
     }
 
     .mobile-nav__toggle {
-        border-color: color-mix(in srgb, var(--color-border-subtle) 40%, var(--color-accent));
+        border-color: var(--color-border-subtle);
         background: var(--color-card);
-        color: var(--color-accent);
+        color: var(--color-muted);
     }
 
     @media (hover: hover) {
         .mobile-nav__toggle:hover {
-            border-color: color-mix(in srgb, var(--color-border-subtle) 25%, var(--color-accent));
-            background: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+            border-color: color-mix(in srgb, var(--color-border-subtle) 55%, var(--color-border-dark));
+            background: color-mix(in srgb, var(--color-card) 85%, var(--color-surface));
+            color: var(--color-text);
         }
     }
 
     .mobile-nav__toggle:active {
-        border-color: var(--color-accent);
-        background: color-mix(in srgb, var(--color-card) 55%, var(--color-accent));
+        border-color: var(--color-border-dark);
+        background: color-mix(in srgb, var(--color-card) 70%, var(--color-surface));
+        color: var(--color-text);
         transition: none;
     }
 }
