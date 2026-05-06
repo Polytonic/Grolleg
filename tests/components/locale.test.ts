@@ -69,6 +69,18 @@ describe("parseLocaleNumber", () => {
     it("non-numeric text returns NaN", () => {
         expect(parseLocaleNumber("abc")).toBeNaN();
     });
+
+    it("trailing non-numeric text returns NaN", () => {
+        expect(parseLocaleNumber("12abc")).toBeNaN();
+    });
+
+    it("trailing unit text returns NaN", () => {
+        expect(parseLocaleNumber("12.5cm")).toBeNaN();
+    });
+
+    it("scientific notation parses as the expanded number", () => {
+        expect(parseLocaleNumber("1e5")).toBe(100000);
+    });
 });
 
 describe("parseLocaleNumber — ambiguous comma input", () => {
@@ -86,6 +98,22 @@ describe("parseLocaleNumber — ambiguous comma input", () => {
 
     it("100,000 → thousands (3 digits after comma)", () => {
         expect(parseLocaleNumber("100,000")).toBe(100000);
+    });
+
+    it("0,035 → European decimal (zero integer part cannot be thousands)", () => {
+        expect(parseLocaleNumber("0,035")).toBe(0.035);
+    });
+
+    it("-0,035 → European decimal (negative zero integer part)", () => {
+        expect(parseLocaleNumber("-0,035")).toBe(-0.035);
+    });
+
+    it("00,035 → European decimal (leading-zero integer part)", () => {
+        expect(parseLocaleNumber("00,035")).toBe(0.035);
+    });
+
+    it(",035 → European decimal (no integer part)", () => {
+        expect(parseLocaleNumber(",035")).toBe(0.035);
     });
 
     it("1,23 → European decimal (2 digits after comma)", () => {

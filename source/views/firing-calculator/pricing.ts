@@ -69,9 +69,8 @@ export const calculatePrice = (piece: Piece, studio: Studio): PieceResult => {
     if (studio.firingToggles.luster && piece.firings.luster) {
         rate += toPositive(studio.firingRates.luster);
     }
-    const raw = quantity * rate;
-    const price = quantity > 0 && rate > 0 ? raw : 0;
-    return { quantity, rate, raw, price };
+    const price = quantity * rate;
+    return { quantity, rate, price };
 };
 
 

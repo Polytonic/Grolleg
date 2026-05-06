@@ -25,25 +25,6 @@ describe("rateUnit matches rateUnitFor(basis, dimensionUnit, weightUnit)", () =>
 });
 
 
-// rateStep
-describe("rateStep is 0.1 for cents bases, 0.05 for dollar bases", () => {
-    it("volume gets 0.1", () => {
-        setStudio({ basis: "volume" });
-        expect(computeDerived().rateStep).toBe(0.1);
-    });
-
-    it("footprint gets 0.1", () => {
-        setStudio({ basis: "footprint" });
-        expect(computeDerived().rateStep).toBe(0.1);
-    });
-
-    it("weight gets 0.05", () => {
-        setStudio({ basis: "weight" });
-        expect(computeDerived().rateStep).toBe(0.05);
-    });
-});
-
-
 // showRounding
 describe("showRounding is true for volume and footprint, false for weight", () => {
     it("volume shows rounding", () => {

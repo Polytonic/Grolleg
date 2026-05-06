@@ -1,8 +1,6 @@
 import { parseLocaleNumber } from "../../components/locale";
-import {
-    state, SHAPE_MODES,
-    applyRate, reverseRate, calculateVolume, deriveFiringPercent,
-} from "./state";
+import { applyRate, reverseRate, calculateVolume, deriveFiringPercent } from "./math";
+import { state, SHAPE_MODES } from "./state";
 import type { ShapeMode } from "./state";
 
 

@@ -9,7 +9,7 @@ import type { Derived } from "./derived";
 // Greenware, bisque, and derived firing percentage inputs with stage hints
 const STAGE_FIELDS = [
     { id: "greenware-percent", label: "Greenware", hint: "Wet → Bone Dry",    placeholder: "e.g. 6",    stateKey: "greenwareShrinkage" as const, handler: handleGreenwareInput },
-    { id: "bisque-percent",    label: "Bisque",    hint: "Bone Dry → Bisque", placeholder: "e.g. 0.75", stateKey: "bisqueShrinkage" as const,    handler: handleBisqueInput },
+    { id: "bisque-percent",    label: "Bisque",    hint: "Bone Dry → Bisque", placeholder: "e.g. 1",    stateKey: "bisqueShrinkage" as const,    handler: handleBisqueInput },
 ];
 
 export const StageInputs: m.Component<{ derived: Derived }> = {
@@ -19,10 +19,8 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
             m(InputWithSuffix, {
                 suffix: "%",
                 id: field.id,
-                type: "number",
+                type: "text",
                 inputmode: "decimal",
-                step: "0.1",
-                min: "0",
                 placeholder: field.placeholder,
                 value: state[field.stateKey],
                 oninput: field.handler,

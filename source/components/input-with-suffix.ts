@@ -1,4 +1,5 @@
 import m from "mithril";
+import { parseLocaleNumber } from "./locale";
 
 
 /* Input With Suffix   Number input with an absolutely-positioned unit string at the right
@@ -58,23 +59,21 @@ export const InputWithSuffix: m.Component<InputWithSuffixAttrs, InputWithSuffixS
             ? "." + attrs.modifiers.join(".")
             : "";
 
+        const hasExplicitState = attrs.modifiers?.includes("warn") || attrs.modifiers?.includes("error");
+        let parseInvalid = false;
+        if (!hasExplicitState && attrs.inputmode === "decimal") {
+            const value = attrs.value;
+            if (typeof value === "string" && value !== "" && !Number.isFinite(parseLocaleNumber(value))) {
+                parseInvalid = true;
+            }
+        }
+
         const inputProps: Record<string, unknown> = { ...inputAttrs };
         if (state.suffixSrId) {
-            // Compose with caller-supplied aria-describedby if present.
             const existing = inputProps["aria-describedby"];
             inputProps["aria-describedby"] = existing
                 ? `${existing} ${state.suffixSrId}`
                 : state.suffixSrId;
-        }
-        // Trackpad scroll over a focused number input would otherwise
-        // change the value (browser default for type="number"), making
-        // the page feel stuck. Blur on wheel hands the wheel back to
-        // the page so it scrolls instead.
-        if (inputProps.type === "number") {
-            inputProps.onwheel = (event: WheelEvent) => {
-                const target = event.currentTarget as HTMLInputElement;
-                if (document.activeElement === target) target.blur();
-            };
         }
         if (attrs.pulseKey !== undefined) {
             const pulseKey = attrs.pulseKey;
@@ -91,6 +90,11 @@ export const InputWithSuffix: m.Component<InputWithSuffixAttrs, InputWithSuffixS
                 if (pulseKey === 0) return;
                 replayPulse(vnode.dom as HTMLElement);
             };
+        }
+
+        if (parseInvalid) {
+            inputProps["aria-invalid"] = "true";
+            inputProps.class = "warn";
         }
 
         return m(".input-with-suffix",

@@ -3,7 +3,7 @@ import { ConnectedPill } from "../../components/connected-pill";
 import { xIcon, plusIcon } from "../../components/icons";
 import { InputWithSuffix } from "../../components/input-with-suffix";
 import { TogglePill } from "../../components/toggle-pill";
-import { Silhouette } from "./comparison";
+import { Silhouette } from "./silhouettes";
 import { expandUnit } from "../../components/locale";
 import type { Piece } from "./types";
 import { formatPrice, formatQuantity } from "./pricing";
@@ -82,11 +82,9 @@ const Dimensions: m.Component<DimensionsAttrs> = {
                         suffixSr: expandUnit(studio.weightUnit),
                         modifiers: ["numeric"],
                         id: `piece-${piece.id}-weight`,
-                        type: "number",
+                        type: "text",
                         inputmode: "decimal",
                         enterkeyhint: "done",
-                        step: "0.1",
-                        min: "0",
                         placeholder: "—",
                         value: piece.weight,
                         oninput: (event: Event) => updatePiece(piece.id, {
@@ -111,11 +109,9 @@ const Dimensions: m.Component<DimensionsAttrs> = {
                     suffixSr: expandUnit(studio.dimensionUnit),
                     modifiers: column.warn ? ["numeric", "warn"] : ["numeric"],
                     id: `piece-${piece.id}-${column.key}`,
-                    type: "number",
+                    type: "text",
                     inputmode: "decimal",
                     enterkeyhint: "done",
-                    step: "0.1",
-                    min: "0",
                     placeholder: "—",
                     title: column.warn
                         ? `Billed at ${studio.minHeight} ${studio.dimensionUnit} (minimum height)`

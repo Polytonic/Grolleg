@@ -7,18 +7,31 @@
 // Normalizes locale number formats before parsing. Detects whether comma
 // is a decimal or thousands separator based on position, then strips
 // grouping separators and normalizes the decimal to a period.
+const LOCALE_NUMBER_PATTERN = /^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$/i;
+
+const parseNormalizedNumber = (value: string): number =>
+    LOCALE_NUMBER_PATTERN.test(value) ? Number(value) : NaN;
+
 export const parseLocaleNumber = (value: string): number => {
     const trimmed = value.trim();
+    if (trimmed === "") return NaN;
     const lastComma = trimmed.lastIndexOf(",");
     const lastDot = trimmed.lastIndexOf(".");
+    let normalized: string;
     if (lastComma > lastDot) {
         const digitsAfterLastComma = trimmed.length - lastComma - 1;
         if (lastDot === -1 && digitsAfterLastComma === 3) {
-            return parseFloat(trimmed.replaceAll(",", ""));
+            const integerPart = trimmed.substring(0, lastComma).replace(/^[+-]/, "");
+            if (!/^0*$/.test(integerPart)) {
+                normalized = trimmed.replaceAll(",", "");
+                return parseNormalizedNumber(normalized);
+            }
         }
-        return parseFloat(trimmed.replaceAll(".", "").replace(",", "."));
+        normalized = trimmed.replaceAll(".", "").replace(",", ".");
+        return parseNormalizedNumber(normalized);
     }
-    return parseFloat(trimmed.replaceAll(",", ""));
+    normalized = trimmed.replaceAll(",", "");
+    return parseNormalizedNumber(normalized);
 };
 
 

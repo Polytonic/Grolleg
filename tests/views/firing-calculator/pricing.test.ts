@@ -35,8 +35,12 @@ describe("toPositive() hostile inputs", () => {
         expect(toPositive("$12.50")).toBe(0);
     });
 
-    it("trailing non-numeric suffix parses the leading digits", () => {
-        expect(toPositive("12abc")).toBe(12);
+    it("trailing non-numeric suffix returns 0", () => {
+        expect(toPositive("12abc")).toBe(0);
+    });
+
+    it("trailing unit suffix returns 0", () => {
+        expect(toPositive("12.5cm")).toBe(0);
     });
 
     it("spelled-out number returns 0", () => {

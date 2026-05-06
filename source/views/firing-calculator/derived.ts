@@ -4,7 +4,7 @@ import {
 import type { ComparisonEntry } from "./comparison";
 import { DIMENSION_UNITS, WEIGHT_UNITS } from "./types";
 import type { Basis, DimensionUnit, WeightUnit, Piece, Studio, PieceResult } from "./types";
-import { toPositive, calculatePrice, rateIsCents, rateUnitFor } from "./pricing";
+import { toPositive, calculatePrice, rateUnitFor } from "./pricing";
 import { state, studioSnapshot, handleDimensionUnitChange, handleWeightUnitChange } from "./state";
 
 
@@ -30,7 +30,6 @@ export interface Derived {
         comparison: ComparisonEntry | null;
     };
     rateUnit: string;
-    rateStep: number;
     showRounding: boolean;
     showMinHeight: boolean;
     activeUnitSet: readonly DimensionUnit[] | readonly WeightUnit[];
@@ -113,7 +112,6 @@ export const computeDerived = (): Derived => {
         pieces,
         aggregate: computeAggregate(pieces, studio),
         rateUnit: rateUnitFor(studio.basis, studio.dimensionUnit, studio.weightUnit),
-        rateStep: rateIsCents(studio.basis) ? 0.1 : 0.05,
         showRounding: studio.basis === "volume" || studio.basis === "footprint",
         showMinHeight: studio.basis === "volume",
         activeUnitSet: studio.basis === "weight" ? WEIGHT_UNITS : DIMENSION_UNITS,

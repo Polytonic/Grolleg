@@ -150,10 +150,17 @@ export const handleRoundingChange = (event: Event) => {
 // pasted exponents and fat-fingered values that would otherwise scale
 // every billed quantity to nonsense.
 const MIN_HEIGHT_MAX = 100;
+const parsedDecimalDraft = (raw: string): number | null => {
+    if (raw.trim() === "") return 0;
+    const value = parseLocaleNumber(raw);
+    return Number.isFinite(value) ? value : null;
+};
+
 export const handleMinHeightInput = (event: Event) => {
     const raw = (event.currentTarget as HTMLInputElement).value;
-    const value = parseLocaleNumber(raw);
-    if (!Number.isFinite(value) || value < 0) {
+    const value = parsedDecimalDraft(raw);
+    if (value === null) return;
+    if (value < 0) {
         state.minHeight = 0;
         return;
     }
@@ -196,11 +203,10 @@ export const toggleBundled = () => {
     if (!ratesAtDefaults && state.firingRates.bundled === meta.defaults.bundled) {
         const bisqueRate = toPositive(state.firingRates.bisque);
         const glazeRate = toPositive(state.firingRates.glaze);
+        const sum = bisqueRate + glazeRate;
         state.firingRates = {
             ...state.firingRates,
-            bundled: bisqueRate > 0 ? bisqueRate
-                : glazeRate > 0 ? glazeRate
-                : meta.defaults.bundled,
+            bundled: sum > 0 ? sum : meta.defaults.bundled,
         };
     }
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
@@ -217,13 +223,17 @@ export const toggleBundled = () => {
 };
 
 export const handleFiringRateInput = (key: FiringKey, event: Event) => {
-    const value = (event.currentTarget as HTMLInputElement).value;
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    const value = parsedDecimalDraft(raw);
+    if (value === null) return;
     state.firingRates = { ...state.firingRates, [key]: toStoredRate(value, state.basis) };
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
 };
 
 export const handleBundledRateInput = (event: Event) => {
-    const value = (event.currentTarget as HTMLInputElement).value;
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    const value = parsedDecimalDraft(raw);
+    if (value === null) return;
     state.firingRates = { ...state.firingRates, bundled: toStoredRate(value, state.basis) };
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
 };

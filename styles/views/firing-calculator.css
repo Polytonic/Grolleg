@@ -262,17 +262,6 @@
             animation: firing-calc-rate-pulse 0.55s ease-out;
         }
     }
-    /* Hide the native number-input spinners when disabled. The arrows
-       can't be activated anyway (input is disabled), so they're pure
-       visual noise. The ::-webkit-*-spin-button pseudo-elements have
-       no standard equivalent, so the project's no-vendor-prefixes rule
-       carves out an exception here. */
-    .rate-inputs .field-group.disabled .input::-webkit-inner-spin-button,
-    .rate-inputs .field-group.disabled .input::-webkit-outer-spin-button {
-        appearance: none;
-        margin: 0;
-    }
-
     /* Hint shown beneath the rate inputs when every slot is disabled. */
     .ghost-hint {
         font-size: 0.75rem;
@@ -705,4 +694,11 @@
 @keyframes firing-calc-rate-pulse {
     0%   { background-color: color-mix(in srgb, var(--color-accent) 22%, white); }
     100% { background-color: var(--color-card); }
+}
+
+/* Warn state takes priority: the warn background carries more information
+   than the pulse animation, so suppress the pulse when both classes are
+   present. The warn border remains the primary signal. */
+.input.warn.pulsing {
+    animation: none;
 }

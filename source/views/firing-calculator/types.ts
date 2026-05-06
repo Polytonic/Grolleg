@@ -37,7 +37,6 @@ export interface Studio {
 export interface PieceResult {
     quantity: number;
     rate: number;
-    raw: number;
     price: number;
 }
 

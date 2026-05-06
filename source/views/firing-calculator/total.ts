@@ -1,5 +1,5 @@
 import m from "mithril";
-import { Silhouette } from "./comparison";
+import { Silhouette } from "./silhouettes";
 import { formatPrice, formatQuantity } from "./pricing";
 import type { Derived } from "./derived";
 

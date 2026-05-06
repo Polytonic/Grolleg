@@ -134,10 +134,19 @@ describe("bundled activation OR-migrates pieces", () => {
         expect(state.bundlePulseKey).toBe(before + 2);
     });
 
-    it("bundled activation seeds firingRates.bundled from first non-zero individual rate", () => {
+    it("bundled activation seeds firingRates.bundled from sum of bisque and glaze rates", () => {
         setStudio({
             bundled: false,
             firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10, bundled: BASIS_META.volume.defaults.bundled },
+        });
+        toggleBundled();
+        expect(state.firingRates.bundled).toBeCloseTo(0.11);
+    });
+
+    it("bundled activation seeds to bisque-only sum when glaze rate is zero", () => {
+        setStudio({
+            bundled: false,
+            firingRates: { bisque: 0.05, glaze: 0, luster: 0.10, bundled: BASIS_META.volume.defaults.bundled },
         });
         toggleBundled();
         expect(state.firingRates.bundled).toBeCloseTo(0.05);

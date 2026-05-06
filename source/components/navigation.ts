@@ -104,14 +104,8 @@ const handleDocumentKeydown = (event: KeyboardEvent) => {
     m.redraw();
 };
 
-const targetElement = (target: EventTarget | null): Element | null => {
-    if (!target) return null;
-    if (typeof (target as Element).closest === "function") return target as Element;
-    return (target as { parentElement?: Element | null }).parentElement ?? null;
-};
-
 const isInteractiveTarget = (target: EventTarget | null): boolean =>
-    !!targetElement(target)?.closest("button, a");
+    !!(target as Element | null)?.closest?.("button, a");
 
 const openDrawerFromCard = (event: Event) => {
     if (drawerOpen || isInteractiveTarget(event.target)) return;
@@ -149,7 +143,7 @@ const desktopSidebar = () =>
     );
 
 const mobileNavigation = () =>
-    m(`.mobile-nav${drawerOpen ? ".open" : ""}`,
+    m(".mobile-nav", { class: drawerOpen ? "open" : "" },
         backdropRendered && m("button.mobile-nav__backdrop", {
             type: "button",
             "aria-label": "Close navigation",

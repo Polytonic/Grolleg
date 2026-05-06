@@ -84,7 +84,7 @@ const RoundingField: m.Component = {
 
 const BillingRow: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) =>
-        m(`.billing-row${derived.showRounding ? ".paired" : ""}`,
+        m(".billing-row", { class: derived.showRounding ? "paired" : "" },
             m(BasisField),
             derived.showRounding && m(RoundingField),
         ),
@@ -156,10 +156,8 @@ const MinHeightField: m.Component = {
             suffixSr: expandUnit(state.dimensionUnit),
             modifiers: ["numeric"],
             id: "min-height-input",
-            type: "number",
+            type: "text",
             inputmode: "decimal",
-            step: "0.5",
-            min: "0",
             value: state.minHeight,
             oninput: handleMinHeightInput,
         }),
@@ -168,7 +166,7 @@ const MinHeightField: m.Component = {
 
 const FiringsAndHeightRow: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) =>
-        m(`.firings-row-wrap${derived.showMinHeight ? ".paired" : ""}`,
+        m(".firings-row-wrap", { class: derived.showMinHeight ? "paired" : "" },
             m(FiringsField),
             derived.showMinHeight && m(MinHeightField),
         ),
@@ -201,8 +199,8 @@ interface RateField {
 //   3.25               → "3.25"
 //   8                  → "8"
 //   NaN                → "0"
-// .toFixed(2) is intentional: rate inputs are type="number" and need
-// a plain decimal string, not a locale-formatted one with group separators.
+// .toFixed(2) is intentional: input value attrs need a plain decimal
+// string, not a locale-formatted one with group separators.
 const formatRateNumber = (value: number): string =>
     Number(toPositive(value).toFixed(2)).toString();
 
@@ -276,8 +274,9 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
         vnode.state.snapshot = null;
     },
     view: ({ attrs: { derived, fields } }) =>
-        m(`.rate-inputs.columns-${fields.length}`,
-            fields.map((field) => m(`.field-group${field.disabled ? ".disabled" : ""}`, {
+        m(".rate-inputs", { class: `columns-${fields.length}` },
+            fields.map((field) => m(".field-group", {
+                class: field.disabled ? "disabled" : "",
                 key: field.key,
                 "data-flip-key": field.key,
                 onbeforeremove: flipLeave,
@@ -289,10 +288,8 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
                     modifiers: ["numeric"],
                     pulseKey: field.key === "luster" ? undefined : state.bundlePulseKey,
                     id: `rate-${field.key}`,
-                    type: "number",
+                    type: "text",
                     inputmode: "decimal",
-                    step: derived.rateStep,
-                    min: "0",
                     placeholder: field.placeholder,
                     value: field.value,
                     oninput: field.onInput,

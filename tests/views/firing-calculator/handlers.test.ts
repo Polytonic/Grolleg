@@ -30,10 +30,16 @@ describe("handleMinHeightInput", () => {
         expect(state.minHeight).toBe(0);
     });
 
-    it("clamps non-numeric input to 0", () => {
+    it("leaves previous value for non-numeric input", () => {
         state.minHeight = 5;
         handleMinHeightInput(mockInputEvent("abc"));
-        expect(state.minHeight).toBe(0);
+        expect(state.minHeight).toBe(5);
+    });
+
+    it("leaves previous value for trailing junk input", () => {
+        state.minHeight = 5;
+        handleMinHeightInput(mockInputEvent("12cm"));
+        expect(state.minHeight).toBe(5);
     });
 
     it("caps astronomical pasted exponents at the upper bound", () => {
@@ -86,10 +92,18 @@ describe("handleFiringRateInput", () => {
         expect(state.firingRates.luster).toBeCloseTo(3.5);
     });
 
-    it("non-numeric input stores as 0", () => {
+    it("non-numeric input leaves the previous rate unchanged", () => {
         state.basis = "volume";
+        state.firingRates.bisque = 0.04;
         handleFiringRateInput("bisque", mockInputEvent("not a number"));
-        expect(state.firingRates.bisque).toBe(0);
+        expect(state.firingRates.bisque).toBe(0.04);
+    });
+
+    it("trailing junk input leaves the previous rate unchanged", () => {
+        state.basis = "volume";
+        state.firingRates.bisque = 0.04;
+        handleFiringRateInput("bisque", mockInputEvent("12abc"));
+        expect(state.firingRates.bisque).toBe(0.04);
     });
 
     it("clamps negatives to 0 (input min='0' is validation, not coercion)", () => {
@@ -114,6 +128,13 @@ describe("handleBundledRateInput", () => {
         handleBundledRateInput(mockInputEvent("6"));
         expect(state.firingRates.bundled).toBeCloseTo(0.06);
         expect(toDisplayRate(state.firingRates.bundled, "volume")).toBeCloseTo(6);
+    });
+
+    it("trailing junk input leaves the previous bundled rate unchanged", () => {
+        state.basis = "volume";
+        state.firingRates.bundled = 0.06;
+        handleBundledRateInput(mockInputEvent("12abc"));
+        expect(state.firingRates.bundled).toBe(0.06);
     });
 });
 

@@ -4,7 +4,7 @@ import {
     reverseRate,
     calculateVolume,
     deriveFiringPercent,
-} from "../../../source/views/shrinkage-calculator/state";
+} from "../../../source/views/shrinkage-calculator/math";
 
 
 // Shrinkage Application and Reversal
