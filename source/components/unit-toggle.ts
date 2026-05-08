@@ -1,19 +1,20 @@
 import m from "mithril";
 
 
-/* Unit Toggle   Inline `mm | cm | in`-style selector. Parens are DOM spans with
-   aria-hidden so screen readers skip the decorative punctuation.
-   Sizing comes from the shared `.unit-text` class. */
+// Unit Toggle
+// Separators and parentheses are decorative. Unit buttons use aria-pressed because
+// this compact selector does not own radio-group keyboard behavior.
 
 interface UnitToggleAttrs {
     units: readonly string[];
     active: string;
     onSelect: (unit: string) => void;
     ariaLabels?: Record<string, string>;
+    ariaLabel?: string;
 }
 
 export const UnitToggle: m.Component<UnitToggleAttrs> = {
-    view: ({ attrs: { units, active, onSelect, ariaLabels } }) => {
+    view: ({ attrs: { units, active, onSelect, ariaLabels, ariaLabel } }) => {
         const children: m.Children[] = [];
         units.forEach((unit, index) => {
             if (index > 0) {
@@ -24,8 +25,8 @@ export const UnitToggle: m.Component<UnitToggleAttrs> = {
                 {
                     key: unit,
                     type: "button",
-                    // ARIA wants string "true"/"false", not Mithril's
-                    // raw-boolean attribute presence form.
+                    // ARIA state values should stay strings because Mithril
+                    // serializes raw booleans as HTML boolean attributes.
                     "aria-pressed": isActive ? "true" : "false",
                     "aria-label": ariaLabels?.[unit] ?? unit,
                     onclick: () => onSelect(unit),
@@ -34,6 +35,7 @@ export const UnitToggle: m.Component<UnitToggleAttrs> = {
             ));
         });
         return m("span.unit-text-toggle",
+            { role: "group", "aria-label": ariaLabel },
             m("span", { "aria-hidden": "true" }, "("),
             children,
             m("span", { "aria-hidden": "true" }, ")"),

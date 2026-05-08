@@ -311,6 +311,7 @@ const FiringRatesSection: m.Component<{ derived: Derived }> = {
                     active: derived.activeUnit,
                     onSelect: derived.setActiveUnit,
                     ariaLabels: UNIT_VERBOSE,
+                    ariaLabel: "Rate unit",
                 }),
             ),
             m(RateInputs, { derived, fields }),

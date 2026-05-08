@@ -72,6 +72,19 @@ describe("UnitToggle active state", () => {
             button.textContent === "mm")!;
         expect(mmButton.getAttribute("aria-pressed")).toBe("false");
     });
+
+    it("does not expose radio semantics without radio keyboard behavior", () => {
+        const output = mq(UnitToggle, {
+            units: ["mm", "cm", "in"],
+            active: "cm",
+            onSelect: () => {},
+        });
+
+        const toggle = output.rootEl.querySelector(".unit-text-toggle")!;
+        expect(toggle.getAttribute("role")).toBe("group");
+        expect(toggle.querySelector("[role='radio']")).toBeUndefined();
+        expect(toggle.querySelector("[aria-checked]")).toBeUndefined();
+    });
 });
 
 

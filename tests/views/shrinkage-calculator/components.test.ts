@@ -203,9 +203,11 @@ describe("ClayControls", () => {
         expect(output.should.have(".shape-pill.active"));
     });
 
-    it("shape pills have aria-pressed", () => {
+    it("shape pills use pressed button semantics", () => {
         const output = mq(ClayControls, { derived: computeDerived() });
-        expect(output.should.have("[aria-pressed]"));
+        expect(output.should.have(".shape-pill[aria-pressed]"));
+        expect(output.should.not.have("[role='radio']"));
+        expect(output.should.not.have("[role='radiogroup']"));
     });
 
     it("direction pills have aria-label", () => {

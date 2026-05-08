@@ -28,6 +28,7 @@ export const ClayControls: m.Component<{ derived: Derived }> = {
                 active: state.unit,
                 onSelect: (unit) => handleUnitChange(unit as Unit),
                 ariaLabels: UNIT_VERBOSE,
+                ariaLabel: "Dimension unit",
             }),
         ),
         m(".dimensions-row",
@@ -41,7 +42,8 @@ export const ClayControls: m.Component<{ derived: Derived }> = {
     ),
 };
 
-// Pill toggle for Linear / Cylinder / Rectangle
+// Shape and direction buttons should remain plain pressed toggles because the
+// shared pill primitive does not own radio-group keyboard behavior.
 const ShapeSection: m.Component = {
     view: () => m("div",
         m(".section-label",
@@ -51,7 +53,7 @@ const ShapeSection: m.Component = {
                 text: "Choose the shape closest to your piece. Cylinder for round forms such as mugs, bowls, and vases. Rectangle for tiles, slabs, and boxes. Linear for a single length such as a test bar or tile edge.",
             }),
         ),
-        m(".shape-pills",
+        m(".shape-pills", { role: "group", "aria-label": "Shape" },
             SHAPE_MODES.map((shapeMode, index) =>
                 m(TogglePill, {
                     key: shapeMode.id,
@@ -64,7 +66,6 @@ const ShapeSection: m.Component = {
     ),
 };
 
-// Pill toggle for Fired→Wet / Wet→Fired conversion direction
 const DIRECTION_OPTIONS: [Direction, string, string][] = [
     ["fired-to-wet", "Fired → Wet", "Fired to wet"],
     ["wet-to-fired", "Wet → Fired", "Wet to fired"],
@@ -79,7 +80,7 @@ const DirectionSection: m.Component = {
                 text: "Controls which way the conversion runs. Fired to Wet shows the wet size you need to throw to reach a given fired dimension. Wet to Fired shows how much a piece at a given wet size will shrink after firing.",
             }),
         ),
-        m(".shape-pills",
+        m(".shape-pills", { role: "group", "aria-label": "Direction" },
             DIRECTION_OPTIONS.map(([value, label, ariaLabel]) =>
                 m(TogglePill, {
                     key: value,

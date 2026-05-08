@@ -1,9 +1,9 @@
 import m from "mithril";
 
 
-/* Toggle Pill Atom   Reusable toggle button with active/disabled states and ARIA
-   attributes. Callers supply a className that determines the visual
-   variant (shape-pill, pill, chip). */
+// Toggle Pill Atom
+// Exclusive groups should still use pressed button semantics until this
+// primitive owns radio-group keyboard behavior.
 
 interface TogglePillAttrs {
     className: string;
