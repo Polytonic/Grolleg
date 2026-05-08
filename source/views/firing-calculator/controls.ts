@@ -286,7 +286,7 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
                     suffix: derived.rateUnit,
                     suffixSr: expandRateUnit(derived.studio.basis, derived.studio.dimensionUnit, derived.studio.weightUnit),
                     modifiers: ["numeric"],
-                    pulseKey: field.key === "luster" ? undefined : state.bundlePulseKey,
+                    pulseKey: field.key === "luster" || field.disabled ? undefined : state.bundlePulseKey,
                     id: `rate-${field.key}`,
                     type: "text",
                     inputmode: "decimal",
