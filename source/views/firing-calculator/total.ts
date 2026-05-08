@@ -4,12 +4,10 @@ import { formatPrice, formatQuantity } from "./pricing";
 import type { Derived } from "./derived";
 
 
-/* Total Band   Two-column layout: identity on the left (label, comparison silhouette
-   for two or more pieces, piece-count subtitle), price on the right.
-   The orchestrator places a `.divider` immediately above this band so
-   the configuration-to-result transition reads visually. */
+/* Cost Summary   Two-column layout: identity on the left (label, comparison silhouette
+   for two or more pieces, piece-count subtitle), price on the right. */
 
-export const TotalBand: m.Component<{ derived: Derived }> = {
+export const CostSummary: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
         const { aggregate, studio, pieces, totalQuantityUnit } = derived;
         const pieceCount = pieces.length;
@@ -22,21 +20,21 @@ export const TotalBand: m.Component<{ derived: Derived }> = {
         // together" reads oddly when there's nothing to combine.
         const comparison = pieceCount > 1 ? aggregate.comparison : null;
 
-        return m("section.total-band", { "aria-labelledby": "total-band__heading" },
-            m(".total-band__identity",
-                m("h2.total-band__label#total-band__heading", "Total"),
-                comparison && m(".total-band__comparison",
+        return m("section.cost-summary", { "aria-labelledby": "cost-summary__heading" },
+            m(".cost-summary__identity",
+                m("h2.cost-summary__label#cost-summary__heading", "Total"),
+                comparison && m(".cost-summary__comparison",
                     m(Silhouette, { type: comparison.silhouette, size: 26 }),
-                    m("span.total-band__comparison-label",
+                    m("span.cost-summary__comparison-label",
                         `All together ≈ ${comparison.name}`),
                 ),
-                m(".total-band__subtitle", subtitle),
+                m(".cost-summary__subtitle", subtitle),
             ),
             // role/aria-live announces the new total when it actually
             // changes. aria-atomic was dropped because Mithril's auto-
             // redraw fires on every keystroke, and atomic re-announcement
             // of the entire region on every redraw was extremely chatty.
-            m(".total-band__amount",
+            m(".cost-summary__amount",
                 { role: "status", "aria-live": "polite", "aria-label": "Total price" },
                 formatPrice(aggregate.total)),
         );

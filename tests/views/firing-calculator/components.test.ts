@@ -5,7 +5,7 @@ import { computeDerived } from "../../../source/views/firing-calculator/derived"
 import { FiringCalculatorView } from "../../../source/views/firing-calculator/firing-calculator";
 import { ControlsSection } from "../../../source/views/firing-calculator/controls";
 import { PiecesSection } from "../../../source/views/firing-calculator/pieces";
-import { TotalBand } from "../../../source/views/firing-calculator/total";
+import { CostSummary } from "../../../source/views/firing-calculator/total";
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
 beforeEach(() => resetState());
@@ -19,8 +19,8 @@ describe("FiringCalculatorView orchestrator", () => {
         expect(output.should.contain("Estimate firing costs"));
     });
 
-    it("renders the controls, pieces, and divider on a single-piece default load (no total band)", () => {
-        // Default load is one piece, so the Total band is suppressed
+    it("renders the controls, pieces, and divider on a single-piece default load (no cost summary)", () => {
+        // Default load is one piece, so the cost summary is suppressed
         // (a single-piece run already shows its price inside the piece
         // card).
         const output = mq(FiringCalculatorView);
@@ -28,13 +28,13 @@ describe("FiringCalculatorView orchestrator", () => {
         expect(output.should.have(".controls-section"));
         expect(output.should.have(".pieces-section"));
         expect(output.should.have(".divider"));
-        expect(output.should.not.have(".total-band"));
+        expect(output.should.not.have(".cost-summary"));
     });
 
-    it("shows the total band once a second piece is added", () => {
+    it("shows the cost summary once a second piece is added", () => {
         setPieces([makePiece({ id: 1 }), makePiece({ id: 2 })]);
         const output = mq(FiringCalculatorView);
-        expect(output.should.have(".total-band"));
+        expect(output.should.have(".cost-summary"));
     });
 
     it("renders the disclaimer when a piece has a non-zero price", () => {
@@ -310,25 +310,25 @@ describe("PiecesSection", () => {
 });
 
 
-// TotalBand
-describe("TotalBand", () => {
+// CostSummary
+describe("CostSummary", () => {
     it("renders the TOTAL label and a $0.00 default amount when no piece dimensions are entered", () => {
         // Default load has bisque toggled on with the studio rate
         // pre-filled (3.5c/in³) but no piece dimensions, so the total
         // is $0.00.
-        const output = mq(TotalBand, { derived: computeDerived() });
+        const output = mq(CostSummary, { derived: computeDerived() });
         expect(output.should.contain("Total"));
         expect(output.should.contain("$0.00"));
     });
 
     it('shows "1 piece" with the singular for one piece', () => {
-        const output = mq(TotalBand, { derived: computeDerived() });
+        const output = mq(CostSummary, { derived: computeDerived() });
         expect(output.should.contain("1 piece"));
     });
 
     it('shows "N pieces" with the plural for multiple pieces', () => {
         setPieces([makePiece({ id: 1 }), makePiece({ id: 2 }), makePiece({ id: 3 })]);
-        const output = mq(TotalBand, { derived: computeDerived() });
+        const output = mq(CostSummary, { derived: computeDerived() });
         expect(output.should.contain("3 pieces"));
     });
 
@@ -340,15 +340,15 @@ describe("TotalBand", () => {
             makePiece({ id: 1, L: "4", W: "4", H: "5" }),
             makePiece({ id: 2, L: "3", W: "3", H: "3" }),
         ]);
-        const output = mq(TotalBand, { derived: computeDerived() });
-        expect(output.should.have(".total-band__comparison"));
+        const output = mq(CostSummary, { derived: computeDerived() });
+        expect(output.should.have(".cost-summary__comparison"));
         expect(output.should.contain("All together"));
     });
 
     it("suppresses the aggregate comparison for a single piece", () => {
         setPieces([makePiece({ L: "4", W: "4", H: "5" })]);
-        const output = mq(TotalBand, { derived: computeDerived() });
-        expect(output.should.not.have(".total-band__comparison"));
+        const output = mq(CostSummary, { derived: computeDerived() });
+        expect(output.should.not.have(".cost-summary__comparison"));
     });
 
     it("renders a non-zero total when pieces price out", () => {
@@ -359,7 +359,7 @@ describe("TotalBand", () => {
             L: "4", W: "4", H: "5",
             firings: { bisque: true, glaze: false, luster: false },
         })]);
-        const output = mq(TotalBand, { derived: computeDerived() });
+        const output = mq(CostSummary, { derived: computeDerived() });
         // 80 in³ × $0.04 = $3.20
         expect(output.should.contain("$3.20"));
     });

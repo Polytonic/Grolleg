@@ -583,15 +583,11 @@
     }
 
 
-    /* Total Band       Sits directly on the page background after the .divider that the
-       orchestrator places between Pieces and Total. The divider does the
-       work of separating the result from the configuration; the band
-       itself has no border or framing. */
-    /* Card-styled to match shrinkage's results-card vocabulary. Only
-       renders in multi-piece mode (orchestrator gates on
+    /* Cost Summary       Card-styled to match shrinkage's results-card vocabulary.
+       Only renders in multi-piece mode (orchestrator gates on
        pieces.length > 1) since a single-piece run already shows its
        price inside its own card. */
-    .total-band {
+    .cost-summary {
         background: var(--color-card);
         border: 1px solid var(--color-border-subtle);
         border-radius: 0.875rem;
@@ -604,7 +600,7 @@
         align-items: end;
     }
 
-    .total-band__identity {
+    .cost-summary__identity {
         display: flex;
         flex-direction: column;
         gap: 0.375rem;
@@ -613,7 +609,7 @@
 
     /* The Total heading reuses the .results-header treatment from
        shrinkage's typographic vocabulary: uppercase 11px accent color. */
-    .total-band__label {
+    .cost-summary__label {
         font-size: 0.6875rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -623,7 +619,7 @@
         line-height: 1.2;
     }
 
-    .total-band__comparison {
+    .cost-summary__comparison {
         display: flex;
         align-items: center;
         gap: 0.625rem;
@@ -631,7 +627,7 @@
         min-width: 0;
     }
 
-    .total-band__comparison-label {
+    .cost-summary__comparison-label {
         font-family: var(--font-sans);
         font-size: 0.875rem;
         color: var(--color-muted);
@@ -641,13 +637,13 @@
         min-width: 0;
     }
 
-    .total-band__subtitle {
+    .cost-summary__subtitle {
         font-family: var(--font-mono);
         font-size: 0.75rem;
         color: var(--color-muted);
     }
 
-    .total-band__amount {
+    .cost-summary__amount {
         font-family: var(--font-mono);
         font-size: 2.25rem;
         font-weight: 600;
@@ -685,7 +681,7 @@
 
 
 @media (prefers-reduced-motion: no-preference) {
-    .firing-calculator :is(.piece-row__warning, .total-band) {
+    .firing-calculator :is(.piece-row__warning, .cost-summary) {
         animation: grolleg-reveal-up var(--motion-duration-reveal) var(--motion-ease-enter);
     }
 }
