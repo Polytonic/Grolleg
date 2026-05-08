@@ -40,6 +40,18 @@ const syncContentInert = () => {
     globalThis.document?.querySelector(".app__content")?.toggleAttribute("inert", drawerOpen);
 };
 
+const syncDrawerAccessibility = (drawerElement?: Element | null) => {
+    if (!drawerElement) return;
+    const drawerClosed = !drawerOpen;
+    (drawerElement as HTMLElement).inert = drawerClosed;
+    drawerElement.toggleAttribute("inert", drawerClosed);
+    drawerElement.toggleAttribute("aria-hidden", drawerClosed);
+};
+
+const syncDrawerAccessibilityFromDocument = () => {
+    syncDrawerAccessibility(globalThis.document?.getElementById(DRAWER_ID));
+};
+
 const clearBackdropRemovalTimeout = () => {
     if (!backdropRemovalTimeout) return;
     clearTimeout(backdropRemovalTimeout);
@@ -78,6 +90,7 @@ export const closeDrawer = (focusToggle: boolean) => {
     drawerOpen = false;
     scheduleBackdropRemoval();
     if (focusToggle) focusLater(TOGGLE_ID);
+    syncDrawerAccessibilityFromDocument();
     syncContentInert();
 };
 
@@ -91,6 +104,7 @@ const toggleDrawer = (event: Event) => {
     if (!(event as PointerEvent).detail) {
         focusLater(drawerOpen ? FIRST_LINK_ID : TOGGLE_ID);
     }
+    syncDrawerAccessibilityFromDocument();
     syncContentInert();
 };
 
@@ -116,6 +130,7 @@ const openDrawerFromCard = (event: Event) => {
     closePreferencesPopovers(false);
     drawerOpen = true;
     showBackdrop();
+    syncDrawerAccessibilityFromDocument();
     syncContentInert();
 };
 
@@ -181,7 +196,9 @@ const mobileNavigation = () =>
                 id: DRAWER_ID,
                 "aria-label": "Site navigation",
                 "aria-hidden": drawerOpen ? undefined : "true",
-                inert: drawerOpen ? undefined : "",
+                inert: !drawerOpen,
+                oncreate: ({ dom }: m.VnodeDOM) => { syncDrawerAccessibility(dom as HTMLElement); },
+                onupdate: ({ dom }: m.VnodeDOM) => { syncDrawerAccessibility(dom as HTMLElement); },
             },
                 m(m.route.Link, {
                     id: FIRST_LINK_ID,

@@ -4,6 +4,7 @@ import { ShrinkageCalculatorView } from "./views/shrinkage-calculator/shrinkage-
 import { FiringCalculatorView } from "./views/firing-calculator/firing-calculator";
 import { NotFoundView } from "./views/exceptions/not-found";
 import { Navigation, closeDrawer } from "./components/navigation";
+import { closePreferencesPopovers } from "./components/preferences-popover";
 import { initializeTheme } from "./theme";
 
 // App Shell
@@ -19,16 +20,27 @@ const resetContentScroll = () => {
     document.querySelector<HTMLElement>(".app__content")?.scrollTo({ top: 0, behavior: "auto" });
 };
 
+const MAIN_CONTENT_ID = "main-content";
+
+const focusMainContent = () => {
+    document.getElementById(MAIN_CONTENT_ID)?.focus({ preventScroll: true });
+};
+
 const titled = (title: string, component: m.Component): m.RouteResolver => ({
     onmatch() {
         document.title = title;
         closeDrawer(false);
+        closePreferencesPopovers(false);
         resetContentScroll();
     },
     render() {
         return m(".app",
+            m("a.skip-link", {
+                href: `#${MAIN_CONTENT_ID}`,
+                onclick: focusMainContent,
+            }, "Skip to content"),
             m(Navigation),
-            m("main.app__content", m(component)),
+            m(`main#${MAIN_CONTENT_ID}.app__content`, { tabindex: -1 }, m(component)),
         );
     },
 });

@@ -36,6 +36,8 @@ const renderAtRoute = (path: string) => {
     return mq(Navigation);
 };
 
+const flushFocus = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 beforeEach(() => {
     globalThis.document = stubDocument;
     initializeTheme({});
@@ -117,6 +119,40 @@ describe("Navigation preferences", () => {
         expect(preferencesTrigger.getAttribute("aria-expanded")).toBe("true");
     });
 
+    it("moves focus into mobile preferences after closing an open drawer", async () => {
+        const output = renderAtRoute("/");
+        const focusedIds: string[] = [];
+        const originalGetElementById = document.getElementById.bind(document);
+        document.getElementById = ((id: string) => {
+            const element = output.rootEl.querySelector<HTMLElement>(`#${id}`);
+            if (id === "mobile-navigation-drawer") return element;
+            if (!element || element.closest("[hidden], [aria-hidden='true']")) return null;
+            return { focus: () => { focusedIds.push(id); } } as unknown as HTMLElement;
+        }) as Document["getElementById"];
+
+        try {
+            const preferencesTrigger = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover__trigger") as HTMLElement;
+            const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+
+            toggle.click();
+            output.redraw();
+            await flushFocus();
+            expect(focusedIds[focusedIds.length - 1]).toBe("mobile-navigation-first-link");
+
+            preferencesTrigger.click();
+            await flushFocus();
+            output.redraw();
+            await flushFocus();
+
+            expect(toggle.getAttribute("aria-expanded")).toBe("false");
+            expect(preferencesTrigger.getAttribute("aria-expanded")).toBe("true");
+            expect(focusedIds[focusedIds.length - 1].startsWith("preferences-popover-")).toBe(true);
+            expect(focusedIds[focusedIds.length - 1].endsWith("-theme-system")).toBe(true);
+        } finally {
+            document.getElementById = originalGetElementById;
+        }
+    });
+
     it("closes mobile preferences before opening the mobile drawer", () => {
         const output = renderAtRoute("/");
         const preferencesTrigger = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover__trigger") as HTMLElement;
@@ -185,6 +221,26 @@ describe("Navigation mobile toggle", () => {
         expect(button.getAttribute("aria-expanded")).toBe("false");
     });
 
+    it("marks the closed mobile drawer hidden and inert until it opens", () => {
+        const output = renderAtRoute("/");
+        const button = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+        const closedDrawer = output.rootEl.querySelector("nav.mobile-nav__drawer") as HTMLElement;
+
+        expect(button.getAttribute("aria-expanded")).toBe("false");
+        expect(closedDrawer.getAttribute("aria-hidden")).toBe("true");
+        expect(closedDrawer.hasAttribute("inert")).toBe(true);
+        expect((closedDrawer as HTMLElement & { inert?: boolean }).inert).toBe(true);
+
+        button.click();
+        output.redraw();
+        const openDrawer = output.rootEl.querySelector("nav.mobile-nav__drawer") as HTMLElement;
+
+        expect(button.getAttribute("aria-expanded")).toBe("true");
+        expect(openDrawer.hasAttribute("aria-hidden")).toBe(false);
+        expect(openDrawer.hasAttribute("inert")).toBe(false);
+        expect((openDrawer as HTMLElement & { inert?: boolean }).inert).toBe(false);
+    });
+
     it("opens from a closed card shell click", () => {
         const output = renderAtRoute("/");
         const card = output.rootEl.querySelector(".mobile-nav__card") as HTMLElement;
@@ -197,11 +253,12 @@ describe("Navigation mobile toggle", () => {
     });
 
     it("does not focus the first link after a card shell pointer click", async () => {
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await flushFocus();
 
         const focusLookups: string[] = [];
         const originalGetElementById = document.getElementById.bind(document);
         document.getElementById = ((id: string) => {
+            if (id === "mobile-navigation-drawer") return null;
             focusLookups.push(id);
             return { focus: () => undefined } as unknown as HTMLElement;
         }) as Document["getElementById"];
@@ -212,7 +269,7 @@ describe("Navigation mobile toggle", () => {
 
             card.click();
             output.redraw();
-            await new Promise((resolve) => setTimeout(resolve, 0));
+            await flushFocus();
 
             expect(focusLookups).not.toContain("mobile-navigation-first-link");
         } finally {
