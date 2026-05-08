@@ -18,54 +18,104 @@ body {
     min-height: 100dvh;
 }
 
-/* Design tokens, referenced from component CSS via var().
-   Base colors define the palette. Tints and shades are derived via
-   color-mix() so the system stays consistent when bases change. */
+/* Design Tokens
+   Base anchors define the palette. Downstream tokens alias anchors or derive
+   from them with color-mix() so component values do not drift. */
 :root {
-    /* Base colors */
-    --color-accent:          #386B8C;
-    --color-text:            #2A2D2E;
-    --color-error:           #c53030;
-    --color-warning:         #7a5a00;
+    /* Base Palette Anchors */
+    --palette-bellbottom-blue:     #386B8C;
+    --palette-perspective-ink:     #2A2D2E;
+    --palette-perspective-muted:   #4A4D4F;
+    --palette-paper-bg:            #E8E9E1;
+    --palette-paper:               #FFFFFF;
+    --palette-paper-doll:          #CBCDCA;
+    --palette-shadow:              #000000;
+    --palette-error:               #c53030;
+    --palette-error-on-dark:       #F3A3A3;
+    --palette-warning:             #7a5a00;
+    --palette-warning-on-dark:     #F1D27A;
+    --palette-warn:                #B8860B;
 
-    /* Neutral surfaces */
-    --color-bg:              #E8E9E1;
-    --color-card:            #FFFFFF;
-    --color-surface:         #CBCDCA;
-    --color-border:          #CBCDCA;
-    --color-border-dark:     #9FA19D;
-    --color-border-subtle:   color-mix(in srgb, black 6%, transparent);
+    /* Semantic Bases */
+    --color-accent:          var(--palette-bellbottom-blue);
+    --color-text:            var(--palette-perspective-ink);
+    --color-error:           var(--palette-error);
+    --color-warning:         var(--palette-warning);
+
+    /* Neutral Surfaces */
+    --color-bg:              var(--palette-paper-bg);
+    --color-card:            var(--palette-paper);
+    --color-surface:         var(--palette-paper-doll);
+    --color-border:          var(--color-surface);
+    --color-border-dark:     color-mix(in srgb, var(--palette-perspective-muted) 70%, var(--color-surface));
+    --color-border-subtle:   color-mix(in srgb, var(--palette-shadow) 6%, transparent);
+    --color-border-functional:  color-mix(in srgb, var(--palette-perspective-muted) 58%, var(--color-surface));
+    --color-shadow:          var(--color-border-subtle);
+    --select-chevron-image:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234A4D4F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
 
     /* Text */
-    --color-muted:           #4A4D4F;
-    /* Accent tints and shades
-       Interactive convention: hover mixes 15% toward light, press mixes 15%
-       toward dark (or 30% for inactive elements toward accent). Apply the
-       same ratios to any interactive element's base color. */
-    --color-accent-text:     #FFFFFF;
+    --color-muted:           var(--palette-perspective-muted);
+
+    /* Control States
+       Boundaries should stay job-specific. Dividers frame layout, fields
+       identify editable areas, and button borders stay quiet until interaction. */
+    --color-control-bg:            var(--color-card);
+    --color-control-text:          var(--color-text);
+    --color-button-text:           color-mix(in srgb, var(--color-muted) 88%, var(--color-accent));
+    --color-field-border:          var(--color-button-border);
+    --color-button-border:         var(--color-border);
+    --color-control-hover-bg:      color-mix(in srgb, var(--color-control-bg) 85%, var(--color-accent));
+    --color-control-hover-border:  var(--color-border-dark);
+    --color-control-press-bg:      color-mix(in srgb, var(--color-control-bg) 70%, var(--color-accent));
+    --color-control-press-border:  var(--color-border-dark);
+    --color-action-bg:             var(--color-accent);
+    --color-action-text:           var(--palette-paper);
+    --color-action-border:         var(--color-accent);
+    --color-action-hover-bg:       color-mix(in srgb, var(--color-action-bg) 90%, var(--palette-paper));
+    --color-action-press-bg:       color-mix(in srgb, var(--color-action-bg) 85%, var(--palette-shadow));
+    --color-disabled-bg:           var(--color-surface);
+    --color-disabled-border:       var(--color-disabled-bg);
+    --color-disabled-text:         var(--color-muted);
+    --color-emphasis-text:         var(--color-accent);
+    --color-focus-ring:            var(--color-accent);
+    --color-focus-gap:             var(--color-card);
+
+    /* List Option States */
+    --color-list-option-bg:                 transparent;
+    --color-list-option-text:               var(--color-muted);
+    --color-list-option-hover-bg:           color-mix(in srgb, var(--color-action-bg) 6%, transparent);
+    --color-list-option-hover-text:         var(--color-control-text);
+    --color-list-option-press-bg:           color-mix(in srgb, var(--color-action-bg) 10%, transparent);
+    --color-list-option-press-text:         var(--color-control-text);
+    --color-list-option-active-bg:          var(--color-action-bg);
+    --color-list-option-active-text:        var(--color-action-text);
+    --color-list-option-active-hover-bg:    var(--color-action-hover-bg);
+    --color-list-option-active-press-bg:    var(--color-action-press-bg);
+
+    /* Accent Utilities */
+    --color-accent-text:     var(--color-action-text);
     --color-accent-soft:     color-mix(in srgb, var(--color-accent) 12%, transparent);
-    --color-accent-dark:     color-mix(in srgb, var(--color-accent) 85%, black);
-    --color-tooltip-bg:      color-mix(in srgb, var(--color-accent) 60%, black);
+    --color-accent-pulse-start: color-mix(in srgb, var(--color-accent) 22%, var(--palette-paper));
+    --color-tooltip-bg:      color-mix(in srgb, var(--color-accent) 60%, var(--palette-shadow));
+    --color-tooltip-text:    var(--color-accent-text);
 
-    /* Semantic: error */
+    /* Semantic Error */
     --color-error-text:      var(--color-error);
-    --color-error-bg:        color-mix(in srgb, var(--color-error) 5%, white);
+    --color-error-bg:        color-mix(in srgb, var(--color-error) 5%, var(--palette-paper));
 
-    /* Semantic: warning */
+    /* Semantic Warning */
     --color-warning-text:    var(--color-warning);
-    --color-warning-bg:      color-mix(in srgb, var(--color-warning) 15%, white);
+    --color-warning-bg:      color-mix(in srgb, var(--color-warning) 15%, var(--palette-paper));
 
-    /* Semantic: warn (saturated amber for input borders and inline note boxes,
-       distinct from --color-warning which serves softer warning text) */
-    --color-warn-border:     #B8860B;
-    --color-warn-bg:         color-mix(in srgb, var(--color-warn-border) 8%, white);
+    /* Saturated Warning */
+    --color-warn-border:     var(--palette-warn);
+    --color-warn-bg:         color-mix(in srgb, var(--color-warn-border) 7%, var(--palette-paper));
 
-    /* Endpoint label text (white, slightly transparent for contrast on accent) */
-    --color-accent-text-muted: color-mix(in srgb, white 85%, transparent);
+    /* Accent Fill Text */
+    --color-accent-text-muted: color-mix(in srgb, var(--palette-paper) 85%, transparent);
 
-    /* Translucent white for inner-edge dividers on accent fills (verified
-       3:1 contrast against accent for WCAG 1.4.11 non-text minimum) */
-    --color-accent-inner-edge: color-mix(in srgb, white 60%, transparent);
+    /* Accent Fill Edge */
+    --color-accent-inner-edge: color-mix(in srgb, var(--palette-paper) 60%, transparent);
 
     /* Typography */
     --font-sans: system-ui, sans-serif;
@@ -78,6 +128,84 @@ body {
     --motion-duration-panel: 0.2s;
     --motion-ease-out: ease-out;
     --motion-ease-enter: cubic-bezier(0.2, 0, 0, 1);
+
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    /* Dark Neutral Anchors */
+    --dark-neutral-bg:       #1E211D;
+    --dark-neutral-card:     #292D28;
+    --dark-neutral-surface:  #3A4039;
+
+    /* Semantic Bases */
+    --color-accent:          var(--palette-bellbottom-blue);
+    --color-text:            color-mix(in srgb, var(--palette-paper-bg) 83%, var(--palette-paper));
+    --color-error:           var(--palette-error-on-dark);
+    --color-warning:         var(--palette-warning-on-dark);
+
+    /* Neutral Surfaces */
+    --color-bg:              var(--dark-neutral-bg);
+    --color-card:            var(--dark-neutral-card);
+    --color-surface:         var(--dark-neutral-surface);
+    --color-border:          color-mix(in srgb, var(--color-surface) 82%, var(--palette-paper-bg));
+    --color-border-dark:     color-mix(in srgb, var(--color-surface) 50%, var(--palette-paper-bg));
+    --color-border-subtle:   color-mix(in srgb, var(--color-border) 24%, transparent);
+    --color-border-functional:  color-mix(in srgb, var(--color-border) 65%, var(--color-border-dark));
+    --color-shadow:          color-mix(in srgb, var(--palette-shadow) 34%, transparent);
+    --select-chevron-image:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23BEC5B9' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+
+    /* Text */
+    --color-muted:           color-mix(in srgb, var(--palette-paper-bg) 77%, var(--color-surface));
+
+    /* Control States
+       Dark borders should read as structure, not bright outlines. Hover and
+       focus states carry the stronger affordance. */
+    --color-control-bg:            var(--color-surface);
+    --color-control-text:          var(--color-text);
+    --color-button-text:           var(--color-control-text);
+    --color-field-border:          var(--color-border-functional);
+    --color-button-border:         var(--color-border);
+    --color-control-hover-bg:      color-mix(in srgb, var(--color-control-bg) 92%, var(--color-accent));
+    --color-control-hover-border:  color-mix(in srgb, var(--color-border) 82%, var(--color-border-dark));
+    --color-control-press-bg:      color-mix(in srgb, var(--color-control-bg) 80%, var(--color-accent));
+    --color-control-press-border:  color-mix(in srgb, var(--color-border) 70%, var(--color-border-dark));
+    --color-action-bg:             var(--color-accent);
+    --color-action-text:           var(--palette-paper);
+    --color-action-border:         var(--color-accent);
+    --color-action-hover-bg:       color-mix(in srgb, var(--color-action-bg) 95%, var(--palette-paper));
+    --color-action-press-bg:       color-mix(in srgb, var(--color-action-bg) 85%, var(--color-bg));
+    --color-disabled-bg:           color-mix(in srgb, var(--color-card) 86%, var(--color-surface));
+    --color-disabled-border:       var(--color-disabled-bg);
+    --color-disabled-text:         color-mix(in srgb, var(--color-muted) 82%, var(--color-disabled-bg));
+    --color-emphasis-text:         color-mix(in srgb, var(--color-accent) 62%, var(--palette-paper));
+    --color-focus-ring:            color-mix(in srgb, var(--color-accent) 55%, var(--palette-paper));
+    --color-focus-gap:             color-mix(in srgb, var(--color-focus-ring) 60%, var(--color-card));
+
+    /* Accent Utilities */
+    --color-accent-text:     var(--color-action-text);
+    --color-accent-soft:     color-mix(in srgb, var(--color-accent) 18%, transparent);
+    --color-accent-pulse-start: color-mix(in srgb, var(--color-accent) 24%, var(--color-card));
+    --color-tooltip-bg:      color-mix(in srgb, var(--color-accent) 35%, var(--palette-shadow));
+    --color-tooltip-text:    var(--color-text);
+
+    /* Semantic Error */
+    --color-error-text:      var(--color-error);
+    --color-error-bg:        color-mix(in srgb, var(--color-error) 21%, var(--palette-shadow));
+
+    /* Semantic Warning */
+    --color-warning-text:    var(--color-warning);
+    --color-warning-bg:      color-mix(in srgb, var(--color-warning) 22%, var(--palette-shadow));
+
+    /* Saturated Warning */
+    --color-warn-border:     var(--color-warning);
+    --color-warn-bg:         var(--color-warning-bg);
+
+    /* Accent Fill Text and Edge */
+    --color-accent-text-muted:  color-mix(in srgb, var(--color-accent-text) 85%, var(--color-accent));
+    --color-accent-inner-edge:  color-mix(in srgb, var(--color-accent-text) 70%, transparent);
+
+    color-scheme: dark;
 }
 
 /* Focus Ring
@@ -85,8 +213,49 @@ body {
    targets get matching ring shapes. */
 *:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--color-card), 0 0 0 4px var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-focus-gap), 0 0 0 4px var(--color-focus-ring);
     border-radius: inherit;
+}
+
+/* Skip Link */
+.skip-link {
+    position: absolute;
+    inset-block-start: 0.75rem;
+    inset-inline-start: 0.75rem;
+    z-index: 10001;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--color-action-bg);
+    color: var(--color-action-text);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transform: translateY(calc(-100% - 1rem));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .skip-link {
+        transition: transform var(--motion-duration-panel) var(--motion-ease-enter);
+    }
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    transform: translateY(0);
+}
+
+@media (hover: hover) {
+    .skip-link:hover {
+        background: var(--color-action-hover-bg);
+    }
+}
+
+.skip-link:active {
+    background: var(--color-action-press-bg);
+    transition: none;
 }
 
 /* Squircle Progressive Enhancement

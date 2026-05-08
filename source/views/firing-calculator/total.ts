@@ -4,8 +4,8 @@ import { formatPrice, formatQuantity } from "./pricing";
 import type { Derived } from "./derived";
 
 
-/* Cost Summary   Two-column layout: identity on the left (label, comparison silhouette
-   for two or more pieces, piece-count subtitle), price on the right. */
+// Cost Summary
+// The result card should keep identity and comparison copy separate from the total.
 
 export const CostSummary: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {

@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#386B8C" />
     <title>Grolleg</title>
+    <!-- First-paint theme values should mirror source/theme.ts before CSS loads. -->
+    <script>
+        (() => {
+            const storageKey = "grolleg.theme";
+            const lightThemeColor = "#386B8C";
+            const darkThemeColor = "#1E211D";
+            let preference = "system";
+
+            try {
+                const storedPreference = localStorage.getItem(storageKey);
+                if (storedPreference === "light" || storedPreference === "dark") {
+                    preference = storedPreference;
+                }
+            } catch {
+                // Blocked storage should leave the first paint on System.
+            }
+
+            const resolvedTheme = preference === "system"
+                ? (globalThis.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light")
+                : preference;
+
+            document.documentElement.dataset.theme = resolvedTheme;
+            document.documentElement.style.colorScheme = resolvedTheme;
+            document.querySelector('meta[name="theme-color"]')
+                ?.setAttribute("content", resolvedTheme === "dark" ? darkThemeColor : lightThemeColor);
+        })();
+    </script>
     <link href="index.css" rel="stylesheet" />
     <link rel="manifest" href="manifest.json" />
 

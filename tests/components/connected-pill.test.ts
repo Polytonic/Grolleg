@@ -44,6 +44,19 @@ describe("ConnectedPill active state", () => {
         const matches = output.rootEl.querySelectorAll(".connected-pill__half.active");
         expect(matches.length).toBe(2);
     });
+
+    it("keeps active state from changing the inline font weight", () => {
+        const output = mq(ConnectedPill, {
+            connected: true,
+            aActive: true, bActive: false,
+            aLabel: "Bisque", bLabel: "Glaze",
+            onToggleA: () => {}, onToggleB: () => {},
+        });
+        const halves = output.rootEl.querySelectorAll(".connected-pill__half");
+        const fontWeights = Array.from(halves, half => (half as HTMLElement).style.fontWeight);
+
+        expect(fontWeights).toEqual(["400", "400"]);
+    });
 });
 
 
@@ -71,7 +84,7 @@ describe("ConnectedPill disabled state", () => {
             onToggleA: () => { aCalls += 1; },
             onToggleB: () => { bCalls += 1; },
         });
-        // Click both halves; only the enabled one should fire.
+        // Only the enabled half should fire.
         const halves = output.rootEl.querySelectorAll(".connected-pill__half");
         (halves[0] as HTMLElement).click();
         (halves[1] as HTMLElement).click();

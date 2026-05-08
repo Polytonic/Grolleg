@@ -1,24 +1,15 @@
 /* Connected Pill
-   Two-half pill primitive with morph animation between connected and
-   separated states. Used in the firing calculator for the bisque/glaze
-   pair toggle; reusable for any future pair-toggle relationship.
-
-   Color state cascades through CSS custom properties (--cp-border,
-   --cp-bg, --cp-color) so inline border-color references using var()
-   pick up hover and press tints automatically. The component sets
-   per-edge border colors inline because the inner-divider semantics
-   (transparent on the right half's left edge when connected, white-60%
-   on the left half's right edge when both halves are active) depend on
-   prop combinations that can't be expressed as a single class. */
+   State tokens flow into inline per-edge borders because the joined halves
+   need transparent and inner-edge borders that selectors cannot express. */
 
 .connected-pill {
     display: inline-flex;
     align-items: stretch;
 
     .connected-pill__half {
-        --cp-border: var(--color-border);
-        --cp-bg:     var(--color-card);
-        --cp-color:  var(--color-text);
+        --cp-border: var(--color-button-border);
+        --cp-bg:     var(--color-control-bg);
+        --cp-color:  var(--color-button-text);
 
         font-family: var(--font-sans);
         cursor: pointer;
@@ -37,60 +28,48 @@
             opacity var(--motion-duration-feedback);
 
         &.active {
-            --cp-border: var(--color-accent);
-            --cp-bg:     var(--color-accent);
-            --cp-color:  var(--color-accent-text);
+            --cp-border: var(--color-action-border);
+            --cp-bg:     var(--color-action-bg);
+            --cp-color:  var(--color-action-text);
         }
 
-        /* Borderless grey: border matches fill so the half reads as a
-           flat grey card, matching the disabled chip and rate-input
-           treatments. */
         &.disabled {
             cursor: not-allowed;
-            --cp-border: var(--color-surface);
-            --cp-bg:     var(--color-surface);
-            --cp-color:  var(--color-muted);
+            --cp-border: var(--color-disabled-border);
+            --cp-bg:     var(--color-disabled-bg);
+            --cp-color:  var(--color-disabled-text);
         }
 
-        /* Inactive: tint toward accent on hover, deeper tint on press */
         @media (hover: hover) {
             &:not(.disabled):not(.active):hover {
-                --cp-border: var(--color-accent);
-                --cp-bg:     color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
-                --cp-color:  var(--color-text);
+                --cp-border: var(--color-control-hover-border);
+                --cp-bg:     var(--color-control-hover-bg);
+                --cp-color:  var(--color-control-text);
             }
             &.active:not(.disabled):hover {
-                --cp-bg: color-mix(in srgb, var(--color-accent) 85%, white);
+                --cp-bg: var(--color-action-hover-bg);
             }
         }
 
         &:not(.disabled):not(.active):active {
-            --cp-border: var(--color-accent);
-            --cp-bg:     color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
-            --cp-color:  var(--color-text);
+            --cp-border: var(--color-control-press-border);
+            --cp-bg:     var(--color-control-press-bg);
+            --cp-color:  var(--color-control-text);
             transition: none;
         }
         &.active:not(.disabled):active {
-            --cp-bg: color-mix(in srgb, var(--color-accent) 85%, black);
+            --cp-bg: var(--color-action-press-bg);
             transition: none;
         }
 
-        /* Pill scale: matches the input row height (10px vertical padding +
-           16px font on inputs aligns with 9px padding + 14px font here so
-           the visual baseline stays consistent in mixed input/pill rows). */
+        /* Pill Scale */
         &.size-pill {
             min-height: 2.75rem;
         }
-
-        /* Chip scale: 12px text in a piece row, ~26px tall. Falls below
-           WCAG 2.5.5's 44px target. The chip pair functions as an
-           inline grouped control per WCAG 2.5.8 (Compact, AAA) where
-           24px is acceptable. Sizing comes from the chip padding and
-           font; no min-height. */
     }
 }
 
-/* Reduced-Motion: Drop the Radius/Margin Morph but Keep Color Transitions */
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
     .connected-pill .connected-pill__half {
         transition:

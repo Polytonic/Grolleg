@@ -2,26 +2,20 @@ import m from "mithril";
 import "@css/components/connected-pill.css";
 
 
-/* Geometry by Size Variant   Pill matches input row height; chip is the smaller variant for inside
-   piece rows. */
+// Geometry by Size Variant
+// Pill aligns with input rows. Chip stays compact inside piece rows.
 
 const GEOMETRY = {
     pill: { padding: "9px 14px", fontSize: 14, outerRadius: 10, gap: 6 },
-    chip: { padding: "5px 11px", fontSize: 12, outerRadius: 6,  gap: 6 },
+    chip: { padding: "5px 11px", fontSize: 12, outerRadius: 6, gap: 6 },
 };
 
-// Inner divider when both halves are active and connected. Translucent
-// white reads against the accent fill at 3:1 (WCAG 1.4.11 non-text
-// minimum). The token lives in source/index.css so dark-mode theming
-// can retarget it.
+// The active inner divider should keep the connected pair readable as
+// one shape while still meeting the 3:1 non-text contrast minimum.
 const INNER_EDGE_WHEN_BOTH_ACTIVE = "var(--color-accent-inner-edge)";
 
 
-/* Attrs   Two tappable halves inside one rounded shape. When `connected`,
-   halves sit flush with a single outer border (the right half's left
-   edge is transparent so the join doesn't double up). When
-   disconnected, the inner corners animate from 0 to outerRadius and a
-   margin opens between them. */
+// Component Contract
 
 interface ConnectedPillAttrs {
     connected: boolean;
@@ -55,19 +49,15 @@ export const ConnectedPill: m.Component<ConnectedPillAttrs> = {
         const splitGap = attrs.connected ? 0 : geometry.gap;
         const bothActiveConnected = attrs.connected && attrs.aActive && attrs.bActive;
 
-        // Per-edge border colors. Top and bottom always use --cp-border
-        // (a CSS custom property the stylesheet drives across base,
-        // hover, and press states). Inner edges have special-case
-        // overrides so the connected pair reads as one shape.
-        const edge = (isLeft: boolean): { left: string; right: string } => ({
-            left: !isLeft && attrs.connected ? "transparent" : "var(--cp-border)",
-            right: isLeft && attrs.connected
-                ? (bothActiveConnected ? INNER_EDGE_WHEN_BOTH_ACTIVE : "var(--cp-border)")
-                : "var(--cp-border)",
-        });
+        // Inline borders should keep each edge at one physical pixel while
+        // connected halves animate between separated and joined geometry.
+        const halfStyle = (isLeft: boolean): Record<string, string> => {
+            const normalBorder = "var(--cp-border)";
+            const leftBorder = !isLeft && attrs.connected ? "transparent" : normalBorder;
+            const rightBorder = isLeft && attrs.connected
+                ? (bothActiveConnected ? INNER_EDGE_WHEN_BOTH_ACTIVE : normalBorder)
+                : normalBorder;
 
-        const halfStyle = (isLeft: boolean, active: boolean): Record<string, string> => {
-            const { left, right } = edge(isLeft);
             return {
                 padding: geometry.padding,
                 fontSize: `${geometry.fontSize}px`,
@@ -75,14 +65,14 @@ export const ConnectedPill: m.Component<ConnectedPillAttrs> = {
                 color: "var(--cp-color)",
                 borderTop:    "1px solid var(--cp-border)",
                 borderBottom: "1px solid var(--cp-border)",
-                borderLeft:   `1px solid ${left}`,
-                borderRight:  `1px solid ${right}`,
+                borderLeft:   `1px solid ${leftBorder}`,
+                borderRight:  `1px solid ${rightBorder}`,
                 borderTopLeftRadius:     `${isLeft ? geometry.outerRadius : innerRadius}px`,
                 borderBottomLeftRadius:  `${isLeft ? geometry.outerRadius : innerRadius}px`,
                 borderTopRightRadius:    `${isLeft ? innerRadius : geometry.outerRadius}px`,
                 borderBottomRightRadius: `${isLeft ? innerRadius : geometry.outerRadius}px`,
                 marginRight: isLeft ? `${splitGap}px` : "0px",
-                fontWeight: active ? "600" : "400",
+                fontWeight: "400",
             };
         };
 
@@ -90,15 +80,14 @@ export const ConnectedPill: m.Component<ConnectedPillAttrs> = {
             m(`button.connected-pill__half.size-${size}${half.active ? ".active" : ""}${half.disabled ? ".disabled" : ""}`,
                 {
                     type: "button",
-                    // ARIA expects string "true"/"false". Mithril treats
-                    // raw booleans as HTML5 boolean-attribute presence,
-                    // which screen readers ignore for these properties.
+                    // ARIA state values should stay strings because Mithril
+                    // serializes raw booleans as HTML boolean attributes.
                     "aria-pressed": half.active ? "true" : "false",
                     "aria-disabled": half.disabled ? "true" : undefined,
                     "aria-label": half.ariaLabel,
                     disabled: half.disabled,
                     onclick: half.disabled ? undefined : half.onToggle,
-                    style: halfStyle(half.isLeft, half.active),
+                    style: halfStyle(half.isLeft),
                 },
                 half.label,
             );

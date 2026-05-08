@@ -2,6 +2,7 @@ import m from "mithril";
 import "@css/components/navigation.css";
 import { menuIcon, xIcon } from "./icons";
 import { focusLater, prefersReducedMotion } from "./interaction";
+import { PreferencesPopover, closePreferencesPopovers } from "./preferences-popover";
 
 
 // Navigation
@@ -81,7 +82,10 @@ export const closeDrawer = (focusToggle: boolean) => {
 };
 
 const toggleDrawer = (event: Event) => {
-    drawerOpen = !drawerOpen;
+    const opening = !drawerOpen;
+    if (opening) closePreferencesPopovers(false);
+
+    drawerOpen = opening;
     if (drawerOpen) showBackdrop();
     else scheduleBackdropRemoval();
     if (!(event as PointerEvent).detail) {
@@ -109,6 +113,7 @@ const isInteractiveTarget = (target: EventTarget | null): boolean =>
 
 const openDrawerFromCard = (event: Event) => {
     if (drawerOpen || isInteractiveTarget(event.target)) return;
+    closePreferencesPopovers(false);
     drawerOpen = true;
     showBackdrop();
     syncContentInert();
@@ -140,16 +145,15 @@ const desktopSidebar = () =>
                 TOOLS.map((tool) => toolLink(tool, "navigation-link sidebar__link")),
             ),
         ),
+        m(".sidebar__footer",
+            m(PreferencesPopover, { placement: "desktop" }),
+        ),
     );
 
 const mobileNavigation = () =>
     m(".mobile-nav", { class: drawerOpen ? "open" : "" },
-        backdropRendered && m("button.mobile-nav__backdrop", {
-            type: "button",
-            "aria-label": "Close navigation",
-            "aria-hidden": drawerOpen ? undefined : "true",
-            inert: drawerOpen ? undefined : "",
-            tabindex: drawerOpen ? 0 : -1,
+        backdropRendered && m(".mobile-nav__backdrop", {
+            "aria-hidden": "true",
             onclick: () => { closeDrawer(true); },
             ontransitionend: handleBackdropTransitionEnd,
         }),
@@ -159,6 +163,11 @@ const mobileNavigation = () =>
                     m(".mobile-nav__kicker", "Grolleg"),
                     m(".mobile-nav__current", activeDestinationLabel()),
                 ),
+                m(PreferencesPopover, {
+                    placement: "mobile",
+                    // The mobile card should expose one overlay surface at a time.
+                    onBeforeOpen: () => { closeDrawer(false); },
+                }),
                 m("button.mobile-nav__toggle", {
                     id: TOGGLE_ID,
                     type: "button",

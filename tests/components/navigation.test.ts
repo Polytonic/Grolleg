@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, it, expect } from "bun:test";
 import m from "mithril";
 import mq from "mithril-query";
 import { Navigation, closeDrawer } from "../../source/components/navigation";
+import { initializeTheme } from "../../source/theme";
 
 
 // Test Helpers
@@ -37,12 +38,14 @@ const renderAtRoute = (path: string) => {
 
 beforeEach(() => {
     globalThis.document = stubDocument;
+    initializeTheme({});
 });
 
 afterEach(() => {
+    initializeTheme({});
     m.route.get = originalGet;
     closeDrawer(false);
-    // @ts-expect-error -- remove the stub so it doesn't leak to other files
+    // @ts-expect-error -- remove the stub so it does not leak to other files
     delete globalThis.document;
 });
 
@@ -69,6 +72,80 @@ describe("Navigation links", () => {
         expect(output.rootEl.querySelector(".sidebar__section-label")).toBeUndefined();
         expect(output.rootEl.querySelectorAll(".navigation-link")[0]?.textContent).toBe("Shrinkage Calculator");
         expect(output.rootEl.querySelectorAll(".navigation-link")[1]?.textContent).toBe("Firing Cost Calculator");
+    });
+});
+
+
+// Preferences
+describe("Navigation preferences", () => {
+    it("places preferences in the desktop footer and before the mobile menu toggle", () => {
+        const output = renderAtRoute("/");
+        const desktopTrigger = output.rootEl.querySelector(".sidebar__footer .preferences-popover--desktop .preferences-popover__trigger");
+        const mobileTrigger = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover--mobile .preferences-popover__trigger");
+        const mobilePreferenceRoot = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover--mobile");
+
+        expect(desktopTrigger?.getAttribute("aria-label")).toBe("Preferences");
+        expect(mobileTrigger?.getAttribute("aria-label")).toBe("Preferences");
+        expect(mobilePreferenceRoot?.nextElementSibling?.classList.contains("mobile-nav__toggle")).toBe(true);
+    });
+
+    it("opens mobile preferences without opening the drawer", () => {
+        const output = renderAtRoute("/");
+        const preferencesTrigger = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover__trigger") as HTMLElement;
+        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+
+        preferencesTrigger.click();
+        output.redraw();
+
+        expect(preferencesTrigger.getAttribute("aria-expanded")).toBe("true");
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    });
+
+    it("closes the mobile drawer before opening mobile preferences", () => {
+        const output = renderAtRoute("/");
+        const preferencesTrigger = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover__trigger") as HTMLElement;
+        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+
+        toggle.click();
+        output.redraw();
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+        preferencesTrigger.click();
+        output.redraw();
+
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
+        expect(preferencesTrigger.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("closes mobile preferences before opening the mobile drawer", () => {
+        const output = renderAtRoute("/");
+        const preferencesTrigger = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover__trigger") as HTMLElement;
+        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+
+        preferencesTrigger.click();
+        output.redraw();
+        expect(preferencesTrigger.getAttribute("aria-expanded")).toBe("true");
+
+        toggle.click();
+        output.redraw();
+
+        expect(preferencesTrigger.getAttribute("aria-expanded")).toBe("false");
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("does not open the mobile drawer from popover panel clicks", () => {
+        const output = renderAtRoute("/");
+        const preferencesTrigger = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover__trigger") as HTMLElement;
+        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+
+        preferencesTrigger.click();
+        output.redraw();
+        const panel = output.rootEl.querySelector(".mobile-nav__bar .preferences-popover__panel") as HTMLElement;
+        panel.click();
+        output.redraw();
+
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
+        expect(preferencesTrigger.getAttribute("aria-expanded")).toBe("true");
     });
 });
 
@@ -182,17 +259,18 @@ describe("Navigation backdrop", () => {
         const output = renderAtRoute("/");
         const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
 
-        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
+        expect(output.rootEl.querySelector(".mobile-nav__backdrop")).toBeUndefined();
 
         toggle.click();
         output.redraw();
-        const openBackdrop = output.rootEl.querySelector("button.mobile-nav__backdrop") as HTMLElement;
+        const openBackdrop = output.rootEl.querySelector(".mobile-nav__backdrop") as HTMLElement;
         expect(openBackdrop).toBeDefined();
-        expect(openBackdrop.getAttribute("aria-hidden")).toBeNull();
+        expect(openBackdrop.getAttribute("aria-hidden")).toBe("true");
+        expect(openBackdrop.hasAttribute("tabindex")).toBe(false);
 
         toggle.click();
         output.redraw();
-        const closingBackdrop = output.rootEl.querySelector("button.mobile-nav__backdrop") as HTMLElement;
+        const closingBackdrop = output.rootEl.querySelector(".mobile-nav__backdrop") as HTMLElement;
         expect(closingBackdrop).toBeDefined();
         expect(closingBackdrop.getAttribute("aria-hidden")).toBe("true");
 
@@ -200,7 +278,7 @@ describe("Navigation backdrop", () => {
         transitionEnd.initEvent("transitionend", true, true);
         closingBackdrop.dispatchEvent(transitionEnd);
         output.redraw();
-        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
+        expect(output.rootEl.querySelector(".mobile-nav__backdrop")).toBeUndefined();
     });
 
     it("keeps the closing backdrop until its opacity transition ends", () => {
@@ -211,20 +289,20 @@ describe("Navigation backdrop", () => {
         toggle.click();
         output.redraw();
 
-        const closingBackdrop = output.rootEl.querySelector("button.mobile-nav__backdrop") as HTMLElement;
+        const closingBackdrop = output.rootEl.querySelector(".mobile-nav__backdrop") as HTMLElement;
         const colorTransitionEnd = output.rootEl.ownerDocument.createEvent("Event");
         colorTransitionEnd.initEvent("transitionend", true, true);
         Object.defineProperty(colorTransitionEnd, "propertyName", { value: "background-color" });
         closingBackdrop.dispatchEvent(colorTransitionEnd);
         output.redraw();
-        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeDefined();
+        expect(output.rootEl.querySelector(".mobile-nav__backdrop")).toBeDefined();
 
         const opacityTransitionEnd = output.rootEl.ownerDocument.createEvent("Event");
         opacityTransitionEnd.initEvent("transitionend", true, true);
         Object.defineProperty(opacityTransitionEnd, "propertyName", { value: "opacity" });
         closingBackdrop.dispatchEvent(opacityTransitionEnd);
         output.redraw();
-        expect(output.rootEl.querySelector("button.mobile-nav__backdrop")).toBeUndefined();
+        expect(output.rootEl.querySelector(".mobile-nav__backdrop")).toBeUndefined();
     });
 
     it("closes the drawer on backdrop click", () => {
@@ -233,7 +311,7 @@ describe("Navigation backdrop", () => {
         toggle.click();
         output.redraw();
 
-        const backdrop = output.rootEl.querySelector("button.mobile-nav__backdrop") as HTMLElement;
+        const backdrop = output.rootEl.querySelector(".mobile-nav__backdrop") as HTMLElement;
         backdrop.click();
         output.redraw();
         expect(toggle.getAttribute("aria-expanded")).toBe("false");

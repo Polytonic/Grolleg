@@ -7,20 +7,13 @@
 
 .firing-calculator {
 
-    /* Section Spacing       20px vertical rhythm for top-level groups, matching shrinkage. The
-       outer .controls-section and .pieces-section cap the gap to whatever
-       follows; the .divider primitive (controls.css) handles the
-       configuration → result transition. */
+    /* Section Spacing */
     :is(.controls-section, .pieces-section) {
         margin-bottom: 1.25rem;
     }
 
 
-    /* Field Group       Label + input column, used for every labeled input/select in the
-       controls section. Mirrors shrinkage's .field-group (same role,
-       same vertical rhythm). The controls section bumps the gap to
-       10px (override below) so a tooltipped label doesn't crowd the
-       input or pill row underneath it. */
+    /* Field Group */
     .field-group {
         min-width: 0;
     }
@@ -29,13 +22,8 @@
     }
 
 
-    /* Three-Row Controls Layout       The controls section stacks three rows with 20px rhythm:
-         1. Billing + Rounding
-         2. Firings pills + Minimum Height
-         3. Firing Rates (with unit toggle inline) + rate inputs
-       Each pairing collapses to a single column when its right-side
-       field doesn't apply (weight basis hides Rounding and Min Height;
-       footprint basis hides Min Height). */
+    /* Three-Row Controls Layout
+       Pairings collapse when the right-side field does not apply. */
 
     .billing-row,
     .firings-row-wrap {
@@ -50,13 +38,9 @@
         grid-template-columns: 1fr 1fr;
     }
 
-    /* Firings + Min Height: a flex pair so Min Height can drop to its
-       own full-width row when the viewport is too narrow to hold both
-       at 50/50. When both fit, each child sits at 50% so Min Height
-       left-aligns with Rounding above. The firings field is pinned to
-       max-content so the chain + Bisque|Glaze + Luster pills stay on
-       one line as a single unit; when their natural width exceeds 50%,
-       the column expands and pushes Min Height to the next row. */
+    /* Firings and Minimum Height
+       The firings column should stay intact when it pushes minimum
+       height to the next row. */
     .firings-row-wrap.paired {
         display: flex;
         flex-wrap: wrap;
@@ -70,17 +54,13 @@
         flex: 1 0 calc(50% - 0.375rem);
     }
 
-    /* Section       Wrapper for the Firing Rates group (label + rate inputs). The
-       outer .controls-section margin handles bottom rhythm. */
+    /* Section */
     .section {
         margin-bottom: 0;
     }
 
-    /* Label Row Alignment       Force every label-row in the controls section to a 24px box so
-       the inputs/pills below them sit on the same baseline whether
-       or not their label has an inline tooltip trigger (24px circle).
-       Without this, a tooltipped label is 24px tall and a plain label
-       is ~14px tall, misaligning paired fields by 10px. */
+    /* Label Row Alignment
+       Label rows should align with or without inline tooltip triggers. */
     .controls-section :is(.label, .section-label) {
         display: flex;
         align-items: center;
@@ -88,10 +68,7 @@
         gap: 0.25rem;
     }
 
-    /* Numeric Input       Wrapper, suffix, and base input styles live in controls.css. The
-       firing calculator narrows the font to mono and widens the
-       suffix-side padding because its units ("¢/in³", "$/lb") need
-       more room than shrinkage's plain "%". */
+    /* Numeric Input */
     .input.numeric {
         font-family: var(--font-mono);
     }
@@ -116,22 +93,16 @@
     }
 
 
-    /* Pill       Sized to align with input row height (10px-equivalent vertical
-       padding gives 44px total with the 14px font). Same color/state
-       conventions as the shrinkage shape-pill but tuned for this tool's
-       denser firings row. */
+    /* Pill
+       Active and inactive states should keep the same box metrics. */
     .pill {
-        --pill-border: var(--color-border);
-        --pill-bg:     var(--color-card);
-        --pill-color:  var(--color-text);
-
         font-family: var(--font-sans);
         font-size: 0.875rem;
         font-weight: 400;
         padding: 0.625rem 0.875rem;
-        background: var(--pill-bg);
-        color: var(--pill-color);
-        border: 1px solid var(--pill-border);
+        background: var(--color-control-bg);
+        color: var(--color-button-text);
+        border: 1px solid var(--color-button-border);
         border-radius: 0.625rem;
         cursor: pointer;
         touch-action: manipulation;
@@ -148,42 +119,37 @@
             color var(--motion-duration-feedback);
 
         &.active {
-            --pill-border: var(--color-accent);
-            --pill-bg:     var(--color-accent);
-            --pill-color:  var(--color-accent-text);
-            font-weight: 600;
+            border-color: var(--color-action-border);
+            background: var(--color-action-bg);
+            color: var(--color-action-text);
         }
 
         @media (hover: hover) {
             &:not(.active):hover {
-                --pill-border: var(--color-accent);
-                --pill-bg:     color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
-                --pill-color:  var(--color-text);
+                border-color: var(--color-control-hover-border);
+                background: var(--color-control-hover-bg);
+                color: var(--color-control-text);
             }
             &.active:hover {
-                --pill-bg: color-mix(in srgb, var(--color-accent) 85%, white);
+                background: var(--color-action-hover-bg);
             }
         }
 
         &:not(.active):active {
-            --pill-border: var(--color-accent);
-            --pill-bg:     color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
-            --pill-color:  var(--color-text);
+            border-color: var(--color-control-press-border);
+            background: var(--color-control-press-bg);
+            color: var(--color-control-text);
             transition: none;
         }
         &.active:active {
-            --pill-bg: color-mix(in srgb, var(--color-accent) 85%, black);
+            background: var(--color-action-press-bg);
             transition: none;
         }
     }
 
 
-    /* Firings Row       Bundled chain pill on the left, separator, then the Bisque|Glaze
-       ConnectedPill and the Luster pill. The row is treated as a single
-       atomic unit, never wrapping internally. When the viewport is too
-       narrow to hold the row plus Min Height side by side, the parent
-       .firings-row-wrap pushes Min Height to its own line; the pills
-       themselves stay together. */
+    /* Firings Row
+       The firing controls should wrap as one unit, not as individual pills. */
     .firings-row {
         display: flex;
         align-items: center;
@@ -212,14 +178,9 @@
     }
 
 
-    /* Rate Inputs       Auto-shrink grid: columns-1 / columns-2 / columns-3 set the column
-       count to match the active firing count. The 480px breakpoint caps
-       at 2 columns so individual fields stay readable on phones.
-       position: relative establishes a positioning context for the
-       leave-animation, which lifts removed cells out of flow with
-       position: absolute so the surviving cells can reflow to the new
-       column count. Without this, leaving cells would jump to viewport
-       coordinates instead of staying where they visually were. */
+    /* Rate Inputs
+       The grid should preserve leave-animation positions while the
+       surviving fields reflow to the active firing count. */
     .rate-inputs {
         position: relative;
         display: grid;
@@ -230,39 +191,27 @@
         &.columns-3 { grid-template-columns: 1fr 1fr 1fr; }
     }
 
-    /* Disabled rate slot: the firing is off but the slot still renders
-       so the row layout stays stable as the user toggles firings. The
-       saved rate value is preserved and reappears at full strength when
-       the firing is re-enabled. Definitive grey rather than translucent
-       so the slot reads as inactive, not clickable-but-faded. */
-    /* Disabled colors mirror shrinkage's "Fired" derived-value card:
-       definitive grey fill, no visible border (border matches the bg
-       so the rule fades into the surface), text in --color-muted to
-       clear WCAG 1.4.3 (4.5:1) on --color-surface. */
+    /* Disabled Rate Slot
+       Disabled slots should keep the rate grid stable. */
     .rate-inputs .field-group.disabled .input-label,
     .rate-inputs .field-group.disabled .input-suffix {
-        color: var(--color-muted);
+        color: var(--color-disabled-text);
     }
     .rate-inputs .field-group.disabled .input {
-        background: var(--color-surface);
-        color: var(--color-muted);
-        border-color: var(--color-surface);
+        background: var(--color-disabled-bg);
+        color: var(--color-disabled-text);
+        border-color: var(--color-disabled-border);
         cursor: not-allowed;
         appearance: textfield;
     }
 
-    /* Pulse on bundled toggle: each new rate input flashes accent fill
-       so the user notices the field that just appeared and likely
-       needs filling. Tuned warmer than shrinkage's pulse (22% accent
-       vs 12% transparent) because the firing calc's pulse fires only
-       on NEW elements (not survivors), and a single brief flash needs
-       to register on its own. Suppressed under reduced-motion. */
+    /* Rate Pulse */
     @media (prefers-reduced-motion: no-preference) {
         .rate-inputs .input.pulsing {
             animation: firing-calc-rate-pulse 0.55s ease-out;
         }
     }
-    /* Hint shown beneath the rate inputs when every slot is disabled. */
+    /* Empty Rate Hint */
     .ghost-hint {
         font-size: 0.75rem;
         color: var(--color-muted);
@@ -279,41 +228,32 @@
         gap: 0.625rem;
     }
 
-    /* Each piece is its own white mini-card on the page background, like
-       a row of compact result cards. White on the page-bg beige clears
-       WCAG 1.4.11 with the 1px border doing the boundary work cleanly. */
+    /* Piece Row */
     .piece-row {
         background: var(--color-card);
         border: 1px solid var(--color-border-subtle);
         border-radius: 0.625rem;
         padding: 0.875rem;
-        box-shadow: 0 1px 4px var(--color-border-subtle);
+        box-shadow: 0 1px 4px var(--color-shadow);
     }
 
-    /* Header row: badge · Piece Dimensions label · meta cluster (size
-       cluster + remove X) right-justified. The label sits naturally
-       between badge and meta. The .section-label margin-bottom is
-       overridden here because the header itself takes the spacing role. */
+    /* Piece Header */
     .piece-row__header {
         display: flex;
         align-items: center;
         gap: 0.625rem;
         margin-bottom: 0.625rem;
         min-height: 1.5rem;
-        /* Wrap at narrow widths so a long comparison label like
-           "≈ a mini fridge (are you sure?)" plus a 10+ piece badge
-           plus the remove X don't overflow the row at iPhone SE
-           (375px) widths. */
+        /* Header content should wrap before it overflows the card. */
         flex-wrap: wrap;
     }
     .piece-row__header .section-label {
         margin-bottom: 0;
     }
 
-    /* Cap the meta cluster so a long comparison label truncates
-       gracefully (via the size-block's ellipsis) rather than pushing
-       the remove X off-screen. min-width: 0 lets the size-block's
-       inner span actually shrink below content width. */
+    /* Header Meta
+       Long comparison labels should truncate before they push out the
+       remove button. */
     .piece-row__header-meta {
         margin-left: auto;
         display: flex;
@@ -323,8 +263,7 @@
         min-width: 0;
     }
 
-    /* Renders as <h3> for SR heading anchoring; reset the default
-       browser h3 margins so the badge sits inline within the header. */
+    /* Piece Badge */
     .piece-row__badge {
         font-family: var(--font-mono);
         font-size: 0.6875rem;
@@ -338,10 +277,7 @@
         display: inline-block;
     }
 
-    /* Ghost button on transparent base: 10%/18% instead of the usual
-       15%/15% because the blend is color-text into transparent, not
-       accent into a solid fill. Lower hover keeps the X understated;
-       higher press gives tactile feedback. */
+    /* Remove Button */
     .piece-row__remove {
         background: transparent;
         border: none;
@@ -371,9 +307,7 @@
         }
     }
 
-    /* Price block sits at the right edge of the Include row. Mono so
-       the $ amount reads as a single number; zero falls to muted so
-       empty cards don't compete with priced ones in the same stack. */
+    /* Price Block */
     .piece-row__price-block {
         font-family: var(--font-mono);
         font-size: 1rem;
@@ -381,7 +315,7 @@
     }
 
     .piece-row__price {
-        color: var(--color-accent);
+        color: var(--color-emphasis-text);
         font-weight: 600;
 
         &.zero {
@@ -390,8 +324,7 @@
         }
     }
 
-    /* Dimension grid: 2-col for footprint, 3-col for volume. Inputs share
-       full row width to keep input target sizes generous. */
+    /* Dimension Grid */
     .piece-row__dimensions {
         display: grid;
         gap: 0.625rem;
@@ -404,19 +337,12 @@
         max-width: 13.75rem;
     }
 
-    /* Object-comparison silhouettes inherit color from their container so
-       the parent's `color` style tints them. flex-shrink: 0 keeps them from
-       being squeezed when their text label wraps in tight rows. */
+    /* Silhouette */
     .silhouette {
         flex-shrink: 0;
     }
 
-    /* Size cluster (silhouette + "≈ name (qty unit)") sits in the
-       piece-row header next to the Remove X. Renders any time
-       dimensions are valid, independent of pricing or which firings
-       are selected, so the user always sees their entered dimensions
-       reflected back. Uses --color-muted to clear WCAG 1.4.11
-       non-text contrast against the white card surface. */
+    /* Size Block */
     .piece-row__size-block {
         display: inline-flex;
         align-items: center;
@@ -433,9 +359,7 @@
         min-width: 0;
     }
 
-    /* Inline warning explainer for sub-minimum height. Repeats the H
-       input's title-attribute hint in always-visible form so mobile users
-       (no hover) see the bill-up reasoning. */
+    /* Height Warning */
     .piece-row__warning {
         margin-top: 0.5rem;
         padding: 0.5rem 0.75rem;
@@ -446,10 +370,7 @@
         line-height: 1.4;
     }
 
-    /* Include row: chips on the left, price right-justified.
-       margin-left: auto on the price-block pushes it to the right
-       edge. flex-wrap allows the price to drop to its own line on
-       narrow viewports so the chips stay one row. */
+    /* Include Row */
     .piece-row__include {
         margin-top: 0.75rem;
         display: flex;
@@ -469,26 +390,17 @@
         margin-left: auto;
     }
 
-    /* Chip       Smaller than the controls Pill (~26px tall) so chip clusters
-       inside piece rows stay visually quiet. This intentionally falls
-       below WCAG 2.5.5's 44px tap target. The chips function as inline
-       grouped controls per WCAG 2.5.8 (Compact, AAA) where 24px is
-       acceptable. Inactive uses font-weight 400 because the suite
-       forbids 500 (Segoe UI on Windows renders 500 inconsistently).
-       Disabled chips dim to signal "studio doesn't bill for this
-       firing". */
+    /* Chip
+       Compact chips should preserve row density. States use one font weight
+       so toggles do not shift layout. */
     .chip {
-        --chip-border: var(--color-border);
-        --chip-bg:     var(--color-card);
-        --chip-color:  var(--color-muted);
-
         padding: 0.3125rem 0.6875rem;
         font-family: var(--font-sans);
         font-size: 0.75rem;
         font-weight: 400;
-        background: var(--chip-bg);
-        color: var(--chip-color);
-        border: 1px solid var(--chip-border);
+        background: var(--color-control-bg);
+        color: var(--color-button-text);
+        border: 1px solid var(--color-button-border);
         border-radius: 0.375rem;
         cursor: pointer;
         touch-action: manipulation;
@@ -502,65 +414,56 @@
             color var(--motion-duration-feedback);
 
         &.active {
-            --chip-border: var(--color-accent);
-            --chip-bg:     var(--color-accent);
-            --chip-color:  var(--color-accent-text);
-            font-weight: 600;
+            border-color: var(--color-action-border);
+            background: var(--color-action-bg);
+            color: var(--color-action-text);
         }
 
-        /* Borderless grey to match the disabled rate-input style: the
-           border tint matches the fill so the chip reads as a flat
-           grey card, not a clickable outlined control. */
         &.disabled {
             cursor: not-allowed;
-            --chip-border: var(--color-surface);
-            --chip-bg:     var(--color-surface);
-            --chip-color:  var(--color-muted);
+            border-color: var(--color-disabled-border);
+            background: var(--color-disabled-bg);
+            color: var(--color-disabled-text);
         }
 
         @media (hover: hover) {
             &:not(.disabled):not(.active):hover {
-                --chip-border: var(--color-accent);
-                --chip-bg:     color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
-                --chip-color:  var(--color-text);
+                border-color: var(--color-control-hover-border);
+                background: var(--color-control-hover-bg);
+                color: var(--color-control-text);
             }
             &.active:not(.disabled):hover {
-                --chip-bg: color-mix(in srgb, var(--color-accent) 85%, white);
+                background: var(--color-action-hover-bg);
             }
         }
 
         &:not(.disabled):not(.active):active {
-            --chip-border: var(--color-accent);
-            --chip-bg:     color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
-            --chip-color:  var(--color-text);
+            border-color: var(--color-control-press-border);
+            background: var(--color-control-press-bg);
+            color: var(--color-control-text);
             transition: none;
         }
         &.active:not(.disabled):active {
-            --chip-bg: color-mix(in srgb, var(--color-accent) 85%, black);
+            background: var(--color-action-press-bg);
             transition: none;
         }
     }
 
 
-    /* Add Piece       Bottom-right of the pieces stack, accent-filled, icon + text. */
+    /* Add Piece Row */
     .pieces-add-row {
         display: flex;
         justify-content: flex-end;
         margin-top: 0.875rem;
     }
 
-    /* Add Piece is an end-of-list secondary action sitting on a 12px
-       margin from the cards. Sized to chip-scale (~36px) rather than
-       the 44px input floor so it doesn't compete visually with the
-       piece cards above. The chip-scale falls under the WCAG 2.5.8
-       (Compact, AAA) carve-out for grouped/secondary controls, the same
-       exception used by the per-piece chips. */
+    /* Add Piece */
     .add-piece {
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
-        background: var(--color-accent);
-        color: var(--color-accent-text);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
         border: none;
         padding: 0.5rem 0.75rem;
         border-radius: 0.375rem;
@@ -573,25 +476,22 @@
 
         @media (hover: hover) {
             &:hover {
-                background: color-mix(in srgb, var(--color-accent) 85%, white);
+                background: var(--color-action-hover-bg);
             }
         }
         &:active {
-            background: color-mix(in srgb, var(--color-accent) 85%, black);
+            background: var(--color-action-press-bg);
             transition: none;
         }
     }
 
 
-    /* Cost Summary       Card-styled to match shrinkage's results-card vocabulary.
-       Only renders in multi-piece mode (orchestrator gates on
-       pieces.length > 1) since a single-piece run already shows its
-       price inside its own card. */
+    /* Cost Summary */
     .cost-summary {
         background: var(--color-card);
         border: 1px solid var(--color-border-subtle);
         border-radius: 0.875rem;
-        box-shadow: 0 4px 20px var(--color-border-subtle);
+        box-shadow: 0 4px 20px var(--color-shadow);
         padding: 1.25rem;
         margin-top: 1.25rem;
         display: grid;
@@ -607,14 +507,13 @@
         min-width: 0;
     }
 
-    /* The Total heading reuses the .results-header treatment from
-       shrinkage's typographic vocabulary: uppercase 11px accent color. */
+    /* Cost Summary Label */
     .cost-summary__label {
         font-size: 0.6875rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--color-accent);
+        color: var(--color-emphasis-text);
         margin: 0;
         line-height: 1.2;
     }
@@ -648,7 +547,7 @@
         font-size: 2.25rem;
         font-weight: 600;
         line-height: 1;
-        color: var(--color-accent);
+        color: var(--color-emphasis-text);
         text-align: right;
         white-space: nowrap;
         align-self: end;
@@ -659,16 +558,7 @@
     }
 
 
-    /* Tap targets: .input and .select get 44px from controls.css. .pill,
-       .chip, .connected-pill__half, and .add-piece declare theirs in
-       their own scopes. .piece-row__remove gets its 44px floor in the
-       main block above. */
-
-
-    /* Narrow Viewport       Below 480px the Billing/Rounding row collapses to a single column
-       and the rate grid caps at 2 columns so individual fields stay
-       readable on phones. The firings + Min Height pair handles its
-       own wrap via flex on the outer container. */
+    /* Narrow Viewport */
     @media (max-width: 480px) {
         .billing-row.paired {
             grid-template-columns: 1fr;
@@ -688,7 +578,7 @@
 
 /* Module-Scope Keyframe (Animations Don't Inherit Cascade Scope) */
 @keyframes firing-calc-rate-pulse {
-    0%   { background-color: color-mix(in srgb, var(--color-accent) 22%, white); }
+    0%   { background-color: var(--color-accent-pulse-start); }
     100% { background-color: var(--color-card); }
 }
 

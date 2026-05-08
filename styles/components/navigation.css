@@ -5,6 +5,8 @@
     border-right: 1px solid var(--color-border-subtle);
     overflow-y: auto;
     scrollbar-gutter: stable;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar__identity {
@@ -20,7 +22,7 @@
     min-height: 2.75rem;
     padding: 0.625rem 0.75rem;
     border-radius: 0.625rem;
-    color: var(--color-accent);
+    color: var(--color-emphasis-text);
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1;
@@ -33,28 +35,28 @@
 
     @media (hover: hover) {
         &:hover:not([aria-current="page"]) {
-            background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+            background: var(--color-control-hover-bg);
         }
     }
 
     &:active:not([aria-current="page"]) {
-        background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+        background: var(--color-control-press-bg);
         transition: none;
     }
 
     &[aria-current="page"] {
-        background: var(--color-accent);
-        color: var(--color-accent-text);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
     }
 
     @media (hover: hover) {
         &[aria-current="page"]:hover {
-            background: color-mix(in srgb, var(--color-accent) 85%, white);
+            background: var(--color-action-hover-bg);
         }
     }
 
     &[aria-current="page"]:active {
-        background: color-mix(in srgb, var(--color-accent) 85%, black);
+        background: var(--color-action-press-bg);
         transition: none;
     }
 }
@@ -67,6 +69,13 @@
 .sidebar__tools {
     display: grid;
     gap: 0.25rem;
+}
+
+.sidebar__footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
 }
 
 /* Links */
@@ -92,30 +101,30 @@
 
     @media (hover: hover) {
         &:hover:not(.active) {
-            background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+            background: var(--color-control-hover-bg);
             color: var(--color-text);
         }
     }
 
     &:active:not(.active) {
-        background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+        background: var(--color-control-press-bg);
         color: var(--color-text);
         transition: none;
     }
 
     &.active {
-        background: var(--color-accent);
-        color: var(--color-accent-text);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
     }
 
     @media (hover: hover) {
         &.active:hover {
-            background: color-mix(in srgb, var(--color-accent) 85%, white);
+            background: var(--color-action-hover-bg);
         }
     }
 
     &.active:active {
-        background: color-mix(in srgb, var(--color-accent) 85%, black);
+        background: var(--color-action-press-bg);
         transition: none;
     }
 }
@@ -147,7 +156,7 @@
     --mobile-nav-width: min(calc(100vw - 1rem), 26rem);
     --mobile-nav-bar-height: calc(4rem + env(safe-area-inset-bottom, 0px));
     --mobile-nav-body-peek: 0.5rem;
-    --mobile-nav-shadow: drop-shadow(0 -4px 20px var(--color-border-subtle));
+    --mobile-nav-shadow: drop-shadow(0 -4px 20px var(--color-shadow));
     --mobile-nav-closed-offset: calc(100% - var(--mobile-nav-bar-height) - var(--mobile-nav-body-peek));
 
     position: fixed;
@@ -184,7 +193,7 @@
     min-height: 2.75rem;
     padding: 0.625rem 0.75rem;
     border-radius: 0.625rem;
-    color: var(--color-accent);
+    color: var(--color-emphasis-text);
     font-size: 0.875rem;
     font-weight: 700;
     line-height: 1;
@@ -197,28 +206,28 @@
 
     @media (hover: hover) {
         &:hover:not(.active) {
-            background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+            background: var(--color-control-hover-bg);
         }
     }
 
     &:active:not(.active) {
-        background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+        background: var(--color-control-press-bg);
         transition: none;
     }
 
     &.active {
-        background: var(--color-accent);
-        color: var(--color-accent-text);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
     }
 
     @media (hover: hover) {
         &.active:hover {
-            background: color-mix(in srgb, var(--color-accent) 85%, white);
+            background: var(--color-action-hover-bg);
         }
     }
 
     &.active:active {
-        background: color-mix(in srgb, var(--color-accent) 85%, black);
+        background: var(--color-action-press-bg);
         transition: none;
     }
 }
@@ -233,7 +242,7 @@
     align-items: center;
     gap: 0.75rem;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 2.75rem;
+    grid-template-columns: minmax(0, 1fr) 2.75rem 2.75rem;
     transition: background-color var(--motion-duration-feedback);
 }
 
@@ -244,7 +253,7 @@
 }
 
 .mobile-nav__kicker {
-    color: var(--color-accent);
+    color: var(--color-emphasis-text);
     font-size: 0.75rem;
     font-weight: 700;
     line-height: 1;
@@ -263,10 +272,10 @@
 .mobile-nav__toggle {
     width: 2.75rem;
     height: 2.75rem;
-    border: 1px solid var(--color-border-subtle);
+    border: 1px solid var(--color-button-border);
     border-radius: 0.75rem;
-    background: var(--color-card);
-    color: var(--color-accent);
+    background: var(--color-control-bg);
+    color: var(--color-button-text);
     position: relative;
     z-index: 1;
     touch-action: manipulation;
@@ -281,36 +290,23 @@
 
     @media (hover: hover) {
         &:hover {
-            border-color: color-mix(in srgb, var(--color-border-subtle) 55%, var(--color-accent));
-            background: color-mix(in srgb, var(--color-accent) 15%, var(--color-card));
+            border-color: var(--color-control-hover-border);
+            background: var(--color-control-hover-bg);
+            color: var(--color-control-text);
         }
     }
 
     &:active {
-        border-color: color-mix(in srgb, var(--color-border-subtle) 45%, var(--color-accent));
-        background: color-mix(in srgb, var(--color-accent) 30%, var(--color-card));
+        border-color: var(--color-control-press-border);
+        background: var(--color-control-press-bg);
+        color: var(--color-control-text);
         transition: none;
     }
 }
 
 /* Mobile State */
-.mobile-nav:not(.open) {
-    .mobile-nav__card {
-        cursor: pointer;
-    }
-
-    @media (hover: hover) and (pointer: fine) {
-        .mobile-nav__card:hover .mobile-nav__bar,
-        .mobile-nav__card:hover .mobile-nav__drawer {
-            background: color-mix(in srgb, var(--color-accent) 15%, var(--color-card));
-        }
-    }
-
-    .mobile-nav__card:active .mobile-nav__bar,
-    .mobile-nav__card:active .mobile-nav__drawer {
-        background: color-mix(in srgb, var(--color-accent) 30%, var(--color-card));
-        transition: none;
-    }
+.mobile-nav:not(.open) .mobile-nav__card {
+    cursor: pointer;
 }
 
 .mobile-nav.open {
@@ -329,23 +325,19 @@
     }
 
     .mobile-nav__toggle {
-        border-color: var(--color-border-subtle);
-        background: var(--color-card);
-        color: var(--color-muted);
+        border-color: var(--color-action-border);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
     }
 
     @media (hover: hover) {
         .mobile-nav__toggle:hover {
-            border-color: color-mix(in srgb, var(--color-border-subtle) 55%, var(--color-border-dark));
-            background: color-mix(in srgb, var(--color-card) 85%, var(--color-surface));
-            color: var(--color-text);
+            background: var(--color-action-hover-bg);
         }
     }
 
     .mobile-nav__toggle:active {
-        border-color: var(--color-border-dark);
-        background: color-mix(in srgb, var(--color-card) 70%, var(--color-surface));
-        color: var(--color-text);
+        background: var(--color-action-press-bg);
         transition: none;
     }
 }

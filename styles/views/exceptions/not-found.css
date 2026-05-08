@@ -1,5 +1,5 @@
 /* Page-Not-Found View
-   404 page rendered when the URL doesn't match any registered route.
+   404 page rendered when the URL does not match any registered route.
    Minimal layout: heading, subtitle, recovery link. */
 
 .not-found-view {
@@ -14,8 +14,8 @@
         display: inline-block;
         margin-top: 1.5rem;
         padding: 0.75rem 1.25rem;
-        background: var(--color-accent);
-        color: var(--color-accent-text);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
         border-radius: 0.5rem;
         font-family: var(--font-sans);
         font-size: 0.875rem;
@@ -27,11 +27,11 @@
 
         @media (hover: hover) {
             &:hover {
-                background: color-mix(in srgb, var(--color-accent) 85%, white);
+                background: var(--color-action-hover-bg);
             }
         }
         &:active {
-            background: color-mix(in srgb, var(--color-accent) 85%, black);
+            background: var(--color-action-press-bg);
             transition: none;
         }
     }

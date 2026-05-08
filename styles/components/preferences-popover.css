@@ -1,0 +1,170 @@
+/* Preferences Popover */
+.preferences-popover {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Trigger */
+.preferences-popover__trigger {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-button-border);
+    border-radius: 0.75rem;
+    background: var(--color-control-bg);
+    color: var(--color-button-text);
+    cursor: pointer;
+    touch-action: manipulation;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background-color var(--motion-duration-feedback),
+        border-color var(--motion-duration-feedback),
+        color var(--motion-duration-feedback);
+
+    @media (hover: hover) {
+        &:hover {
+            border-color: var(--color-control-hover-border);
+            background: var(--color-control-hover-bg);
+            color: var(--color-control-text);
+        }
+    }
+
+    &:active {
+        border-color: var(--color-control-press-border);
+        background: var(--color-control-press-bg);
+        color: var(--color-control-text);
+        transition: none;
+    }
+}
+
+.preferences-popover.open .preferences-popover__trigger {
+    border-color: var(--color-action-border);
+    background: var(--color-action-bg);
+    color: var(--color-action-text);
+
+    @media (hover: hover) {
+        &:hover {
+            background: var(--color-action-hover-bg);
+        }
+    }
+
+    &:active {
+        background: var(--color-action-press-bg);
+        transition: none;
+    }
+}
+
+/* Panel */
+.preferences-popover__panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.5rem);
+    z-index: 1002;
+    width: 12.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 0.75rem;
+    background: var(--color-card);
+    box-shadow: 0 12px 24px var(--color-shadow);
+    cursor: initial;
+    display: grid;
+    gap: 0.625rem;
+}
+
+.preferences-popover__panel[hidden] {
+    display: none;
+}
+
+.preferences-popover--desktop .preferences-popover__panel {
+    /* Placement should mirror the app shell's 200px sidebar and 1080px content rail. */
+    position: fixed;
+    right: auto;
+    bottom: 5.25rem;
+    left: max(0px, calc((100vw - 1080px) / 2 - 200px));
+    width: 200px;
+}
+
+/* Theme Rows */
+.preferences-popover__group {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.preferences-popover__label {
+    padding: 0 0.25rem;
+    color: var(--color-emphasis-text);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.preferences-popover__theme-list {
+    display: grid;
+    gap: 0.125rem;
+}
+
+.preferences-popover__theme-option {
+    min-height: 2.75rem;
+    width: 100%;
+    padding: 0.5rem 0.625rem 0.5rem 0.75rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: var(--color-list-option-bg);
+    color: var(--color-list-option-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: left;
+    touch-action: manipulation;
+    transition:
+        background-color var(--motion-duration-feedback),
+        color var(--motion-duration-feedback);
+
+    @media (hover: hover) {
+        &:hover:not(.active) {
+            background: var(--color-list-option-hover-bg);
+            color: var(--color-list-option-hover-text);
+        }
+    }
+
+    &:active:not(.active) {
+        background: var(--color-list-option-press-bg);
+        color: var(--color-list-option-press-text);
+        transition: none;
+    }
+
+    &.active {
+        background: var(--color-list-option-active-bg);
+        color: var(--color-list-option-active-text);
+        font-weight: 700;
+    }
+
+    @media (hover: hover) {
+        &.active:hover {
+            background: var(--color-list-option-active-hover-bg);
+        }
+    }
+
+    &.active:active {
+        background: var(--color-list-option-active-press-bg);
+        transition: none;
+    }
+}
+
+/* Mobile Placement */
+.preferences-popover--mobile .preferences-popover__panel {
+    width: min(calc(100vw - 2rem), 14rem);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .preferences-popover__trigger,
+    .preferences-popover__theme-option {
+        transition: none;
+    }
+}

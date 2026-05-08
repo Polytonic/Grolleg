@@ -10,11 +10,11 @@
     font-size: 1rem;
     padding: 0.625rem 2.25rem 0.625rem 0.75rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-card);
-    color: var(--color-text);
+    border: 1px solid var(--color-field-border);
+    background: var(--color-control-bg);
+    color: var(--color-control-text);
     cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234A4D4F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: var(--select-chevron-image, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234A4D4F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E"));
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1rem 0.75rem;
@@ -24,14 +24,14 @@
 
     @media (hover: hover) {
         &:hover {
-            border-color: var(--color-accent);
-            background-color: color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
+            border-color: var(--color-control-hover-border);
+            background-color: var(--color-control-hover-bg);
         }
     }
 
     &:active {
-        border-color: var(--color-accent);
-        background-color: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
+        border-color: var(--color-control-press-border);
+        background-color: var(--color-control-press-bg);
         transition: none;
     }
 }
@@ -40,9 +40,9 @@
     font-size: 1rem;
     padding: 0.625rem 0.75rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-card);
-    color: var(--color-text);
+    border: 1px solid var(--color-field-border);
+    background: var(--color-control-bg);
+    color: var(--color-control-text);
     width: 100%;
 
     &.with-suffix {
@@ -124,9 +124,9 @@
     border-radius: 0.625rem;
     font-size: 0.8125rem;
     font-weight: 600;
-    border: 1px solid var(--color-border);
-    background: var(--color-card);
-    color: var(--color-muted);
+    border: 1px solid var(--color-button-border);
+    background: var(--color-control-bg);
+    color: var(--color-button-text);
     cursor: pointer;
     touch-action: manipulation;
     transition:
@@ -138,37 +138,35 @@
     justify-content: center;
     line-height: 1;
 
-    /* Inactive: tint toward accent on hover, deeper tint on press */
     @media (hover: hover) {
         &:hover:not(.active) {
-            border-color: var(--color-accent);
-            background: color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
-            color: var(--color-text);
+            border-color: var(--color-control-hover-border);
+            background: var(--color-control-hover-bg);
+            color: var(--color-control-text);
         }
     }
 
     &:active:not(.active) {
-        border-color: var(--color-accent);
-        background: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
-        color: var(--color-text);
+        border-color: var(--color-control-press-border);
+        background: var(--color-control-press-bg);
+        color: var(--color-control-text);
         transition: none;
     }
 
-    /* Active: tint toward white on hover, toward black on press */
     &.active {
-        border-color: var(--color-accent);
-        background: var(--color-accent);
-        color: var(--color-accent-text);
+        border-color: var(--color-action-border);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
     }
 
     @media (hover: hover) {
         &.active:hover {
-            background: color-mix(in srgb, var(--color-accent) 85%, white);
+            background: var(--color-action-hover-bg);
         }
     }
 
     &.active:active {
-        background: color-mix(in srgb, var(--color-accent) 85%, black);
+        background: var(--color-action-press-bg);
     }
 }
 
@@ -181,7 +179,6 @@
     font-size: 0.6875rem;
     color: var(--color-muted);
     user-select: none;
-
 }
 
 .unit-separator {
@@ -209,13 +206,13 @@
     align-items: center;
 
     @media (hover: hover) {
-        &:hover { color: var(--color-accent); }
+        &:hover { color: var(--color-emphasis-text); }
     }
 
-    &:active { color: var(--color-accent-dark); transition: none; }
+    &:active { color: var(--color-control-text); transition: none; }
 
     &.active {
-        color: var(--color-accent);
+        color: var(--color-emphasis-text);
         text-decoration-line: underline;
     }
 }
@@ -228,7 +225,7 @@
     border-radius: 0.875rem;
     padding: 1.25rem;
     margin-bottom: 1rem;
-    box-shadow: 0 4px 20px var(--color-border-subtle);
+    box-shadow: 0 4px 20px var(--color-shadow);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -245,7 +242,8 @@
 }
 
 
-/* 2.75rem (44px) min-height meets WCAG 2.5.5 minimum tap target */
+/* Tap Targets
+   2.75rem (44px) min-height meets WCAG 2.5.5 minimum tap target. */
 :is(.select, .input, .shape-pill, .unit-text) {
     min-height: 2.75rem;
 }

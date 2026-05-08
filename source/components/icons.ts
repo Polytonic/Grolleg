@@ -15,6 +15,17 @@ const icon = (...paths: string[]) =>
 
 export const xIcon = icon("M18 6 6 18", "m6 6 12 12");
 export const menuIcon = icon("M4 6h16", "M4 12h16", "M4 18h16");
+export const slidersIcon = icon(
+    "M21 4h-7",
+    "M10 4H3",
+    "M14 2v4",
+    "M21 12h-9",
+    "M8 12H3",
+    "M8 10v4",
+    "M21 20h-5",
+    "M12 20H3",
+    "M16 18v4",
+);
 export const plusIcon = icon("M5 12h14", "M12 5v14");
 export const chainLinkIcon = icon(
     "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71",

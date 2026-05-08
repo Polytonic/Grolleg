@@ -267,7 +267,7 @@ describe("PiecesSection", () => {
         expect(output.should.not.have(".piece-row__warning"));
     });
 
-    it("piece-row Bisque|Glaze ConnectedPill connected reflects only `bundled`", () => {
+    it("keeps Bisque and Glaze pill halves separated when bundled is off", () => {
         // Bundled off, both firings on at studio: connected should be false.
         setStudio({
             bundled: false,
@@ -275,13 +275,33 @@ describe("PiecesSection", () => {
         });
         setPieces([makePiece({ firings: { bisque: true, glaze: true, luster: false } })]);
         const output = mq(PiecesSection, { derived: computeDerived() });
-        // Render snapshot via the dom; checking a dom attribute is brittle in
-        // mithril-query, so assert by the chip-size class which is always
-        // present and the absence of the connected-only inner styling is
-        // implicit. The behavioral test in propagation.test.ts covers the
-        // pricing semantics; this is just a smoke test that the chip renders.
-        expect(output.should.have(".piece-row__include"));
-        expect(output.should.have(".connected-pill .size-chip"));
+        const halves = output.rootEl.querySelectorAll(".piece-row__include .connected-pill__half");
+
+        expect(halves.length).toBe(2);
+        expect(halves[0].classList.contains("active")).toBe(true);
+        expect(halves[1].classList.contains("active")).toBe(true);
+        expect((halves[0] as HTMLElement).style.marginRight).toBe("6px");
+        expect((halves[0] as HTMLElement).style.borderTopRightRadius).toBe("6px");
+        expect((halves[1] as HTMLElement).style.borderTopLeftRadius).toBe("6px");
+        expect(halves[1].getAttribute("style")).not.toContain("border-left: 1px solid transparent");
+    });
+
+    it("joins Bisque and Glaze pill halves when bundled is on", () => {
+        setStudio({
+            bundled: true,
+            firingToggles: { bisque: true, glaze: true, luster: false },
+        });
+        setPieces([makePiece({ firings: { bisque: true, glaze: true, luster: false } })]);
+        const output = mq(PiecesSection, { derived: computeDerived() });
+        const halves = output.rootEl.querySelectorAll(".piece-row__include .connected-pill__half");
+
+        expect(halves.length).toBe(2);
+        expect(halves[0].classList.contains("active")).toBe(true);
+        expect(halves[1].classList.contains("active")).toBe(true);
+        expect((halves[0] as HTMLElement).style.marginRight).toBe("0px");
+        expect((halves[0] as HTMLElement).style.borderTopRightRadius).toBe("0px");
+        expect((halves[1] as HTMLElement).style.borderTopLeftRadius).toBe("0px");
+        expect((halves[1] as HTMLElement).style.borderLeft).toBe("1px solid transparent");
     });
 
     it("Luster chip renders disabled when studio luster is off", () => {

@@ -31,31 +31,32 @@
 
         @media (hover: hover) {
             &:hover:not(.open) {
-                border-color: var(--color-accent);
-                background: color-mix(in srgb, var(--color-card) 85%, var(--color-accent));
-                color: var(--color-text);
+                border-color: var(--color-control-hover-border);
+                background: var(--color-control-hover-bg);
+                color: var(--color-control-text);
             }
         }
 
         &:active:not(.open) {
-            border-color: var(--color-accent);
-            background: color-mix(in srgb, var(--color-card) 70%, var(--color-accent));
-            color: var(--color-text);
+            border-color: var(--color-control-press-border);
+            background: var(--color-control-press-bg);
+            color: var(--color-control-text);
         }
 
         &.open {
-            background: var(--color-accent);
-            color: var(--color-accent-text);
+            border-color: var(--color-action-border);
+            background: var(--color-action-bg);
+            color: var(--color-action-text);
         }
 
         @media (hover: hover) {
             &.open:hover {
-                background: color-mix(in srgb, var(--color-accent) 85%, white);
+                background: var(--color-action-hover-bg);
             }
         }
 
         &.open:active {
-            background: color-mix(in srgb, var(--color-accent) 85%, black);
+            background: var(--color-action-press-bg);
         }
     }
 }
@@ -69,12 +70,12 @@
     width: 16.25rem;
     padding: 0.75rem 0.875rem;
     background: var(--color-tooltip-bg);
-    color: var(--color-accent-text);
+    color: var(--color-tooltip-text);
     font-size: 0.8125rem;
     line-height: 1.6;
     border-radius: 0.625rem;
     z-index: 10000;
-    box-shadow: 0 6px 24px color-mix(in srgb, black 20%, transparent);
+    box-shadow: 0 6px 24px var(--color-shadow);
     text-transform: none;
     letter-spacing: normal;
 }
