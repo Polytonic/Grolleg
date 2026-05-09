@@ -22,6 +22,6 @@ export function mockKeyboardEvent(key: string): KeyboardEvent & { defaultPrevent
     } as unknown as KeyboardEvent & { defaultPrevented: boolean };
 }
 
-export function resetState() {
+export function resetShrinkageState() {
     Object.assign(state, cloneInitialState());
 }

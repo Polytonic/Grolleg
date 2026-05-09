@@ -13,7 +13,9 @@ import type { Direction, Unit } from "./state";
 import type { Derived } from "./derived";
 
 
-// Shape, direction, unit toggle, and dimension inputs grouped as one section
+// Clay Controls
+// ClayControls should keep shape, direction, unit toggle, and dimension inputs
+// in one grouped section.
 export const ClayControls: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".section",
         { role: "group", "aria-label": "Shape, direction, and dimensions" },
@@ -42,15 +44,15 @@ export const ClayControls: m.Component<{ derived: Derived }> = {
     ),
 };
 
-// Shape and direction buttons should remain plain pressed toggles because the
-// shared pill primitive does not own radio-group keyboard behavior.
+// Shape and direction controls should use pressed toggles because the shared
+// pill primitive does not own radio-group keyboard behavior.
 const ShapeSection: m.Component = {
     view: () => m("div",
         m(".section-label",
             "Shape",
             m(Tooltip, {
                 label: "shape",
-                text: "Choose the shape closest to your piece. Cylinder for round forms such as mugs, bowls, and vases. Rectangle for tiles, slabs, and boxes. Linear for a single length such as a test bar or tile edge.",
+                text: "Choose the closest shape. Cylinder fits round forms. Rectangle fits tiles, slabs, and boxes. Linear fits one measured length.",
             }),
         ),
         m(".shape-pills", { role: "group", "aria-label": "Shape" },
@@ -66,9 +68,15 @@ const ShapeSection: m.Component = {
     ),
 };
 
-const DIRECTION_OPTIONS: [Direction, string, string][] = [
-    ["fired-to-wet", "Fired → Wet", "Fired to wet"],
-    ["wet-to-fired", "Wet → Fired", "Wet to fired"],
+interface DirectionOption {
+    value: Direction;
+    label: string;
+    ariaLabel: string;
+}
+
+const DIRECTION_OPTIONS: DirectionOption[] = [
+    { value: "fired-to-wet", label: "Fired → Wet", ariaLabel: "Fired to wet" },
+    { value: "wet-to-fired", label: "Wet → Fired", ariaLabel: "Wet to fired" },
 ];
 
 const DirectionSection: m.Component = {
@@ -77,11 +85,11 @@ const DirectionSection: m.Component = {
             "Direction",
             m(Tooltip, {
                 label: "direction",
-                text: "Controls which way the conversion runs. Fired to Wet shows the wet size you need to throw to reach a given fired dimension. Wet to Fired shows how much a piece at a given wet size will shrink after firing.",
+                text: "Fired to Wet finds the wet size needed for a fired dimension. Wet to Fired predicts fired size from wet size.",
             }),
         ),
         m(".shape-pills", { role: "group", "aria-label": "Direction" },
-            DIRECTION_OPTIONS.map(([value, label, ariaLabel]) =>
+            DIRECTION_OPTIONS.map(({ value, label, ariaLabel }) =>
                 m(TogglePill, {
                     key: value,
                     className: "shape-pill",
@@ -96,7 +104,9 @@ const DirectionSection: m.Component = {
 
 const UNITS: readonly Unit[] = ["mm", "cm", "in"];
 
-// Single numeric input with unit suffix and pulse animation on direction change
+// Dimension Input
+// DimensionInput should pair a numeric field with the active unit and direction
+// pulse animation.
 const DimensionInput: m.Component<{ field: string; fieldIndex: number; isLast: boolean }> = {
     view: ({ attrs: { field, fieldIndex, isLast } }) => m(".dimension-field",
         m("label.input-label", { for: `dimension-${field.toLowerCase()}` }, field),

@@ -6,7 +6,9 @@ import type { Stage } from "./state";
 import type { Derived } from "./derived";
 
 
-// Greenware, bisque, and derived firing percentage inputs with stage hints
+// Stage Inputs
+// StageInputs should show greenware, bisque, and derived firing percentages
+// with stage hints.
 const STAGE_FIELDS = [
     { id: "greenware-percent", label: "Greenware", hint: "Wet → Bone Dry",    placeholder: "e.g. 6",    stateKey: "greenwareShrinkage" as const, handler: handleGreenwareInput },
     { id: "bisque-percent",    label: "Bisque",    hint: "Bone Dry → Bisque", placeholder: "e.g. 1",    stateKey: "bisqueShrinkage" as const,    handler: handleBisqueInput },
@@ -27,9 +29,8 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
             }),
             m("span.hint-text", field.hint),
         )),
-        // Firing percentage is derived, not user-entered. Inlined (not via
-        // InputWithSuffix) because the value sits in a <div.derived-value>
-        // not an <input>.
+        // Firing percentage should render as read-only text because it is
+        // derived, not user-entered.
         m(".stage-field",
             m("span.label", "Fired"),
             m(".input-with-suffix",
@@ -49,7 +50,8 @@ export const StageInputs: m.Component<{ derived: Derived }> = {
 };
 
 
-// Vertical timeline showing dimensions at each stage: Wet → Bone Dry → Bisque → Fired
+// Stages Card
+// StagesCard should show dimensions from Wet through Fired.
 export const StagesCard: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
         if (!derived.stageWetDimensions || !derived.boneDryDimensions
@@ -84,7 +86,8 @@ export const StagesCard: m.Component<{ derived: Derived }> = {
     },
 };
 
-// Single stage card with arrow connector showing shrinkage percent from previous stage
+// Timeline Stage
+// TimelineStage should show one stage with its shrinkage from the previous one.
 const TimelineStage: m.Component<{ stage: Stage; fields: string[]; isFirst: boolean }> = {
     view: ({ attrs: { stage, fields, isFirst } }) => m(".timeline-stage",
         !isFirst && m(".timeline-arrow",

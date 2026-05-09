@@ -9,6 +9,9 @@ import { ClayControls } from "./controls";
 import { ResultsCard } from "./results";
 
 
+// Shrinkage Calculator View
+// ShrinkageCalculatorView should compute derived data once per render and
+// orchestrate clay setup, dimensions, results, and optional stage details.
 export const ShrinkageCalculatorView: m.Component = {
     view: () => {
         const derived = computeDerived();

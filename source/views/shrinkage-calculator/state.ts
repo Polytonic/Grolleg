@@ -33,7 +33,8 @@ export interface Stage {
     isEndpoint: boolean;
 }
 
-// Tracks which dimension the user enters: "fired-to-wet" = user inputs fired, calculator shows wet.
+// Direction should name which dimension the user enters and which side the
+// calculator converts toward.
 export type Direction = "fired-to-wet" | "wet-to-fired";
 export type Unit = "mm" | "cm" | "in";
 
@@ -53,7 +54,7 @@ const PRESETS: Preset[] = [
 
 const CUSTOM_INDEX = PRESETS.findIndex((preset) => preset.name === "Custom");
 
-// Group presets by their `group` field once at module load. The list is static.
+// PRESET_GROUPS should group the static preset list once at module load.
 export const PRESET_GROUPS: PresetGroup[] = (() => {
     const groups: PresetGroup[] = [];
     let currentLabel: string | null = null;
@@ -75,12 +76,9 @@ export const SHAPE_MODES: ShapeMode[] = [
     { id: "rectangle", label: "Rectangle", fields: ["Length", "Width", "Height"] },
 ];
 
-
-
-
-const defaultUnit: Unit = detectDefaultDimensionUnit();
-
 // State
+const defaultDimensionUnit: Unit = detectDefaultDimensionUnit();
+
 interface StateShape {
     direction: Direction;
     shapeIndex: number;
@@ -90,12 +88,14 @@ interface StateShape {
     bisqueShrinkage: string;
     showStages: boolean;
     unit: Unit;
-    dimensions: string[];  // strings, not numbers: preserves partial input ("12.") and distinguishes empty from 0
+    // dimensions should stay as strings so partial input like "12." survives redraws.
+    dimensions: string[];
     shrinkageTouched: boolean;
-    pulseKey: number;  // monotonic counter that triggers CSS pulse animation on direction change
+    // pulseKey should tick when direction changes and inputs need to replay the CSS pulse.
+    pulseKey: number;
 }
 
-// Shared initial values so tests can reset to the same defaults
+// Shared initial values should let tests reset to the same defaults.
 const INITIAL_STATE: StateShape = {
     direction: "fired-to-wet",
     shapeIndex: 1,
@@ -104,12 +104,14 @@ const INITIAL_STATE: StateShape = {
     greenwareShrinkage: "6",
     bisqueShrinkage: "0.75",
     showStages: false,
-    unit: defaultUnit,
+    unit: defaultDimensionUnit,
     dimensions: SHAPE_MODES[1].fields.map(() => ""),
     shrinkageTouched: false,
     pulseKey: 0,
 };
 
+// cloneInitialState should deep-clone dimensions so callers can mutate the
+// active draft without changing shared defaults.
 export function cloneInitialState(): StateShape {
     return { ...INITIAL_STATE, dimensions: [...INITIAL_STATE.dimensions] };
 }
@@ -156,8 +158,8 @@ export const handleBisqueInput = (event: Event) => {
     state.presetIndex = CUSTOM_INDEX;
 };
 
-// Switching shapes preserves values for named fields that exist in both modes.
-// Height carries from Cylinder to Rectangle, for example.
+// handleShapeChange should preserve values for named fields that exist in both
+// modes, such as Height moving from Cylinder to Rectangle.
 export const handleShapeChange = (newShapeIndex: number) => {
     haptic();
     const oldFields = SHAPE_MODES[state.shapeIndex].fields;
@@ -170,9 +172,8 @@ export const handleShapeChange = (newShapeIndex: number) => {
     focusLater(`dimension-${newFields[0].toLowerCase()}`);
 };
 
-// Changing direction with dimensions entered flashes the inputs briefly so
-// the user notices the output side swapped. pulseKey monotonically increments
-// to signal the input's onupdate hook that the animation class should restart.
+// handleDirectionChange should flash entered dimensions so the user notices the
+// output side swapped.
 export const handleDirectionChange = (nextDirection: Direction) => {
     haptic();
     if (nextDirection !== state.direction && state.dimensions.some((value) => value !== "")) {
@@ -187,12 +188,12 @@ export const handleUnitChange = (nextUnit: Unit) => {
 };
 
 export const handleDimensionInput = (fieldIndex: number, event: Event) => {
-    state.dimensions = state.dimensions.map((v, i) =>
-        i === fieldIndex ? (event.currentTarget as HTMLInputElement).value : v,
+    state.dimensions = state.dimensions.map((value, index) =>
+        index === fieldIndex ? (event.currentTarget as HTMLInputElement).value : value,
     );
 };
 
-// Enter on a dimension input advances to the next field, or blurs on the last.
+// Enter should advance to the next dimension input, or blur the last one.
 export const handleDimensionKey = (fieldIndex: number, event: KeyboardEvent) => {
     if (event.key !== "Enter") return;
     event.preventDefault();

@@ -4,7 +4,9 @@ import { state } from "./state";
 import type { Derived } from "./derived";
 
 
-// Per-dimension results with delta and optional volumetric shrinkage
+// Results Card
+// ResultsCard should show per-dimension conversions, deltas, and optional
+// volumetric shrinkage.
 export const ResultsCard: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
         const showVolume = derived.volumeShrink !== null && derived.shape.id !== "single";
@@ -30,11 +32,12 @@ export const ResultsCard: m.Component<{ derived: Derived }> = {
     },
 };
 
-// Single dimension row: value with unit, and delta from the entered dimension
+// Result Item
+// ResultItem should pair each converted dimension with its input delta.
 const ResultItem: m.Component<{ derived: Derived; field: string; fieldIndex: number }> = {
     view: ({ attrs: { derived, field, fieldIndex } }) => {
-        if (!derived.firedResults) return null;
-        const result = derived.firedResults[fieldIndex];
+        if (!derived.convertedDimensions) return null;
+        const result = derived.convertedDimensions[fieldIndex];
         return m(".result-item",
             m("span.result-label", field),
             result !== null

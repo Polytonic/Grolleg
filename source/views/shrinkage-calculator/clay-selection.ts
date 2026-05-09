@@ -8,7 +8,8 @@ import {
 import type { Derived } from "./derived";
 
 
-// Preset dropdown grouped by generic and brand-name clay bodies
+// Clay Body Field
+// ClayBodyField should group generic and brand-name clay presets in one select.
 export const ClayBodyField: m.Component = {
     view: () => m(".field-group",
         m("span.label",
@@ -35,7 +36,8 @@ export const ClayBodyField: m.Component = {
     ),
 };
 
-// Numeric input for total wet-to-fired shrinkage percentage
+// Shrinkage Field
+// ShrinkageField should collect the total wet-to-fired shrinkage percentage.
 export const ShrinkageField: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".field-group",
         m("span.label",
@@ -45,7 +47,7 @@ export const ShrinkageField: m.Component<{ derived: Derived }> = {
             ),
             m(Tooltip, {
                 label: "shrinkage rate",
-                text: "Wet-to-fired shrinkage combining drying and firing. Most clay bodies publish this on their spec sheet. To measure yourself: scratch a known length into a wet test bar, fire to maturity, measure again. Shrinkage = (wet − fired) ÷ wet × 100.",
+                text: "Wet-to-fired shrinkage, including drying and firing. Clay spec sheets usually list it. To measure it, mark a wet test bar, fire it, and compare lengths.",
             }),
         ),
         m(InputWithSuffix, {

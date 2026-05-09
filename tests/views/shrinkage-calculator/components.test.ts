@@ -7,9 +7,9 @@ import { ClayControls } from "../../../source/views/shrinkage-calculator/control
 import { ClayBodyField, ShrinkageField } from "../../../source/views/shrinkage-calculator/clay-selection";
 import { ResultsCard } from "../../../source/views/shrinkage-calculator/results";
 import { StageInputs } from "../../../source/views/shrinkage-calculator/shrinkage-stages";
-import { resetState } from "../../helpers";
+import { resetShrinkageState } from "../../helpers";
 
-beforeEach(() => resetState());
+beforeEach(() => resetShrinkageState());
 
 
 // Orchestrator Layout
@@ -81,14 +81,20 @@ describe("ShrinkageCalculatorView", () => {
         expect(output.should.contain("Shrinkage stages"));
     });
 
-    it("timeline appears with stages enabled and a partial multi-dimension shape", () => {
+    it("timeline uses en dashes for missing dimensions in each stage", () => {
         state.showStages = true;
+        state.shapeIndex = 1;
         state.shrinkage = "12";
         state.dimensions = ["100", ""];
         const output = mq(ShrinkageCalculatorView);
+        const emptyHeightValues = Array.from(output.rootEl.querySelectorAll(".timeline-dimension"))
+            .filter((dimension) => dimension.querySelector(".timeline-dimension-label")?.textContent === "Height")
+            .map((dimension) => dimension.querySelector(".timeline-dimension-value")?.textContent);
+
         expect(output.should.contain("Shrinkage stages"));
         expect(output.should.contain("Diameter"));
         expect(output.should.contain("Height"));
+        expect(emptyHeightValues).toEqual(["\u2013", "\u2013", "\u2013", "\u2013"]);
     });
 
     it("checkbox label reads correctly", () => {
@@ -212,12 +218,23 @@ describe("ClayControls", () => {
 
     it("direction pills have aria-label", () => {
         const output = mq(ClayControls, { derived: computeDerived() });
-        expect(output.should.have("[aria-label]"));
+        const directionButtons = Array.from(
+            output.rootEl.querySelectorAll(".shape-pills[aria-label='Direction'] button.shape-pill"),
+        );
+
+        expect(directionButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+            "Fired to wet", "Wet to fired",
+        ]);
     });
 
     it("section has role group", () => {
         const output = mq(ClayControls, { derived: computeDerived() });
-        expect(output.should.have("[role]"));
+        const sectionSelector = ".section[aria-label='Shape, direction, and dimensions']";
+        const section = output.rootEl.matches(sectionSelector)
+            ? output.rootEl
+            : output.rootEl.querySelector(sectionSelector);
+
+        expect(section?.getAttribute("role")).toBe("group");
     });
 });
 
@@ -259,11 +276,13 @@ describe("ResultsCard", () => {
         expect(mq(ResultsCard, { derived: computeDerived() }).should.not.contain("Volumetric shrinkage"));
     });
 
-    it("empty result shows en dash", () => {
+    it("empty result shows the em dash placeholder", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", ""];
         const output = mq(ResultsCard, { derived: computeDerived() });
-        expect(output.should.have(".result-value.empty"));
+        const emptyResult = output.rootEl.querySelector(".result-value.empty");
+
+        expect(emptyResult?.textContent).toBe("\u2014");
     });
 });
 
@@ -322,7 +341,9 @@ describe("StageInputs", () => {
     it("fired percentage has live region for screen readers", () => {
         state.showStages = true;
         const output = mq(StageInputs, { derived: computeDerived() });
-        expect(output.should.have("[role]"));
-        expect(output.should.have("[aria-live]"));
+        const firedPercentage = output.rootEl.querySelector(".derived-value[aria-label='Fired shrinkage percentage']");
+
+        expect(firedPercentage?.getAttribute("role")).toBe("status");
+        expect(firedPercentage?.getAttribute("aria-live")).toBe("polite");
     });
 });

@@ -5,6 +5,8 @@ import type { ShapeMode } from "./state";
 
 
 // Derived View Data
+// computeDerived should parse editable state, convert dimensions, and collect
+// optional stage data once per render.
 export interface Derived {
     shape: ShapeMode;
     totalValid: boolean;
@@ -13,7 +15,7 @@ export interface Derived {
     anyDimensionsEntered: boolean;
     greenwarePercent: number;
     bisquePercent: number;
-    firedResults: (number | null)[] | null;
+    convertedDimensions: (number | null)[] | null;
     anyResults: boolean;
     wetDimensions: number[] | null;
     finalDimensions: number[] | null;
@@ -29,6 +31,8 @@ export interface Derived {
 
 type DimensionResult = number | null;
 
+
+// Input Parsing
 const completeDimensions = (dimensions: DimensionResult[]): number[] | null =>
     dimensions.every((dimension): dimension is number => dimension !== null)
         ? dimensions
@@ -51,10 +55,12 @@ const parseInputs = () => {
 
 type ParsedInputs = ReturnType<typeof parseInputs>;
 
+
+// Direction Conversion
 const computeResults = (inputs: ParsedInputs) => {
     if (!inputs.totalValid) {
         return {
-            firedResults: null,
+            convertedDimensions: null,
             anyResults: false,
             wetDimensions: null,
             finalDimensions: null,
@@ -62,30 +68,32 @@ const computeResults = (inputs: ParsedInputs) => {
             stageFinalDimensions: null,
         };
     }
-    const firedResults = inputs.parsedDimensions.map((value) => {
+    const convertedDimensions = inputs.parsedDimensions.map((value) => {
         if (!Number.isFinite(value) || value <= 0) return null;
         return state.direction === "wet-to-fired"
             ? applyRate(value, inputs.totalPercent)
             : reverseRate(value, inputs.totalPercent);
     });
-    const anyResults = firedResults.some((result) => result !== null);
+    const anyResults = convertedDimensions.some((result) => result !== null);
     // Stage cards should mirror per-dimension results, while volume waits for a complete shape.
-    const stageWetDimensions = firedResults.map((result, index) => {
+    const stageWetDimensions = convertedDimensions.map((result, index) => {
         if (result === null) return null;
         return state.direction === "wet-to-fired" ? inputs.parsedDimensions[index] : result;
     });
-    const stageFinalDimensions = firedResults.map((result, index) => {
+    const stageFinalDimensions = convertedDimensions.map((result, index) => {
         if (result === null) return null;
         return state.direction === "wet-to-fired" ? result : inputs.parsedDimensions[index];
     });
     const wetDimensions = completeDimensions(stageWetDimensions);
     const finalDimensions = completeDimensions(stageFinalDimensions);
-    return { firedResults, anyResults, wetDimensions, finalDimensions, stageWetDimensions, stageFinalDimensions };
+    return { convertedDimensions, anyResults, wetDimensions, finalDimensions, stageWetDimensions, stageFinalDimensions };
 };
 
+
+// Stage Conversion
 const computeStageData = (
     inputs: ParsedInputs,
-    wetDimensions: DimensionResult[] | null,
+    partialWetDimensions: DimensionResult[] | null,
     showStages: boolean,
 ) => {
     const stagesValid = showStages
@@ -95,8 +103,8 @@ const computeStageData = (
         ? deriveFiringPercent(inputs.totalPercent, inputs.greenwarePercent, inputs.bisquePercent)
         : null;
     const stagesConsistent = firingPercent !== null && firingPercent >= 0;
-    const boneDryDimensions = wetDimensions && stagesConsistent
-        ? wetDimensions.map((value) => value === null ? null : applyRate(value, inputs.greenwarePercent))
+    const boneDryDimensions = partialWetDimensions && stagesConsistent
+        ? partialWetDimensions.map((value) => value === null ? null : applyRate(value, inputs.greenwarePercent))
         : null;
     const bisqueDimensions = boneDryDimensions
         ? boneDryDimensions.map((value) => value === null ? null : applyRate(value, inputs.bisquePercent))
@@ -107,6 +115,8 @@ const computeStageData = (
     return { firingPercent, boneDryDimensions, bisqueDimensions, stagesWarning };
 };
 
+
+// Volume Summary
 const computeVolumeShrink = (
     wetDimensions: number[] | null,
     finalDimensions: number[] | null,
@@ -119,6 +129,8 @@ const computeVolumeShrink = (
     return (1 - volumeFired / volumeWet) * 100;
 };
 
+
+// Public Derivation
 export const computeDerived = (): Derived => {
     const inputs = parseInputs();
     const results = computeResults(inputs);
@@ -132,7 +144,7 @@ export const computeDerived = (): Derived => {
         anyDimensionsEntered: inputs.anyDimensionsEntered,
         greenwarePercent: inputs.greenwarePercent,
         bisquePercent: inputs.bisquePercent,
-        firedResults: results.firedResults,
+        convertedDimensions: results.convertedDimensions,
         anyResults: results.anyResults,
         wetDimensions: results.wetDimensions,
         finalDimensions: results.finalDimensions,

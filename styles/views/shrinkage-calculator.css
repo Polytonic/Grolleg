@@ -13,7 +13,7 @@
         margin-bottom: 1.25rem;
     }
 
-    /* Stages Toggle + Inputs */
+    /* Stages Toggle and Inputs */
     .option-toggle {
         display: flex;
         align-items: center;
@@ -22,8 +22,31 @@
         color: var(--color-text);
         cursor: pointer;
         margin-bottom: 1.25rem;
-        padding-left: 0.75rem;
+        padding: 0 0.75rem;
         min-height: 2.75rem;
+        border: 1px solid transparent;
+        border-radius: 0.5rem;
+        box-sizing: border-box;
+        touch-action: manipulation;
+        transition:
+            background-color var(--motion-duration-feedback),
+            border-color var(--motion-duration-feedback),
+            color var(--motion-duration-feedback);
+
+        @media (hover: hover) {
+            &:hover {
+                border-color: var(--color-control-hover-border);
+                background: var(--color-control-hover-bg);
+                color: var(--color-control-text);
+            }
+        }
+
+        &:active {
+            border-color: var(--color-control-press-border);
+            background: var(--color-control-press-bg);
+            color: var(--color-control-text);
+            transition: none;
+        }
 
         &.collapsed {
             margin-bottom: 0;
@@ -69,7 +92,7 @@
     }
 
 
-    /* Shape + Direction Section */
+    /* Shape and Direction Section */
     .section {
         margin-bottom: 1.25rem;
     }
@@ -114,7 +137,7 @@
             animation: grolleg-reveal-up var(--motion-duration-reveal) var(--motion-ease-enter);
         }
 
-        .input.pulsing {
+        .dimension-field .input.pulsing {
             animation: shrinkage-calc-pulse 0.4s ease-out;
         }
     }
