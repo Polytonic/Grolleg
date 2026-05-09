@@ -3,20 +3,25 @@ import type { SilhouetteKey } from "./silhouettes";
 
 
 // Types
+/** Aspect bucket used to choose the comparison lookup table. */
 type ComparisonBucket = "cubeish" | "narrow" | "flat";
 
+/** Size comparison option rendered with a label and silhouette. */
 export interface ComparisonEntry {
-    max: number;             // upper bound, inclusive, in cubic or square inches
-    name: string;            // user-facing label, prefixed with "≈ " at render
+    /** Inclusive upper bound in cubic or square inches. */
+    max: number;
+    /** User-facing label, prefixed with "≈ " at render. */
+    name: string;
+    /** Silhouette key paired with the comparison label. */
     silhouette: SilhouetteKey;
 }
 
 
-/* Lookup Tables   Each table is ordered ascending by `max`. Find the first entry whose
-   max equals or exceeds the candidate volume. The final entry uses Infinity
-   as a catch-all. The cubeish table doubles as the aggregate-load comparison
-   since a stack of pieces has no meaningful aspect ratio. */
+// Lookup Tables
+// Each table should stay ordered by max so lookup can use the first matching
+// entry. The cubeish table also represents aggregate loads.
 
+/** Human-scale volume and footprint comparison tables, ordered by upper bound. */
 export const COMPARISONS: Record<ComparisonBucket, ComparisonEntry[]> = {
     cubeish: [
         { max: 4,        name: "a golf ball",                   silhouette: "golfBall" },
@@ -50,8 +55,10 @@ export const COMPARISONS: Record<ComparisonBucket, ComparisonEntry[]> = {
 };
 
 
-/* Conversion   Lookup tables are in inches; convert user dimensions before lookup. */
+// Conversion
+// Lookup tables use inches, so user dimensions should convert before lookup.
 
+/** Supported display-unit multipliers for inch-based comparison lookup. */
 export const INCHES_PER_UNIT: Record<DimensionUnit, number> = {
     in: 1,
     cm: 1 / 2.54,
@@ -59,11 +66,14 @@ export const INCHES_PER_UNIT: Record<DimensionUnit, number> = {
 };
 
 
-/* Bucket Selection by Aspect Ratio     narrow:  tallest dim is more than 1.8× the next-largest (vases, bottles)
-     flat:    shortest dim is less than 0.5× the next-largest (plates, tiles)
-     cubeish: everything else
-   For 2D inputs (footprint mode), pass H=0; the function returns 'cubeish'. */
+// Bucket Selection by Aspect Ratio
+// bucketOf should classify tall forms as narrow, thin forms as flat, and all
+// other three-dimensional forms as cubeish.
 
+/**
+ * Classifies aspect ratio for comparison lookup.
+ * Two-dimensional footprint inputs stay cubeish.
+ */
 export const bucketOf = (length: number, width: number, height: number): ComparisonBucket => {
     const [longest, middle, shortest] = [length, width, height].sort((first, second) => second - first);
     if (middle === 0) return "cubeish";
@@ -73,9 +83,11 @@ export const bucketOf = (length: number, width: number, height: number): Compari
 };
 
 
-/* Lookup   Returns the first entry whose max >= vol. Returns null for non-positive
-   inputs so callers can short-circuit without rendering a silhouette. */
+// Lookup
+// findComparison should return null for non-positive volume so callers can skip
+// silhouette rendering.
 
+/** Non-positive candidates produce null so callers skip silhouette rendering. */
 export const findComparison = (
     volume: number,
     bucket: ComparisonBucket,

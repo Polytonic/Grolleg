@@ -2,15 +2,16 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import {
     bucketOf, findComparison, INCHES_PER_UNIT, COMPARISONS,
 } from "../../../source/views/firing-calculator/comparison";
-import { state } from "../../../source/views/firing-calculator/state";
 import { computeDerived } from "../../../source/views/firing-calculator/derived";
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
 beforeEach(() => resetState());
 
 
-/* Bucket Selection Thresholds   The narrow rule is strict greater-than (>) for 1.8×; the flat rule is
-   strict less-than (<) for 0.5×. Boundary cases collapse to cubeish. */
+// Bucket Selection Thresholds
+// The narrow rule is strict greater-than (>) for 1.8×.
+// The flat rule is strict less-than (<) for 0.5×.
+// Boundary cases collapse to cubeish.
 
 describe("bucketOf classifies by aspect ratio", () => {
     it("narrow when tallest > 1.8 × next-largest", () => {
@@ -38,19 +39,19 @@ describe("bucketOf classifies by aspect ratio", () => {
         expect(bucketOf(8, 6, 4)).toBe("cubeish");
     });
 
-    it("zero second dim returns cubeish", () => {
+    it("zero second dimension returns cubeish", () => {
         expect(bucketOf(10, 0, 0)).toBe("cubeish");
     });
 
-    it("dimensions can come in any order; sort handles it", () => {
+    it("dimensions can come in any order, and sorting handles them", () => {
         expect(bucketOf(5, 10, 5)).toBe("narrow");
         expect(bucketOf(1, 10, 8)).toBe("flat");
     });
 });
 
 
-// findComparison Lookup
-describe("findComparison finds the first entry where vol <= max", () => {
+// Comparison Lookup
+describe("findComparison selects the matching comparison by volume", () => {
     it("returns mug for cubeish 50 in³", () => {
         expect(findComparison(50, "cubeish")?.name).toBe("a coffee mug");
     });
@@ -120,17 +121,17 @@ describe("INCHES_PER_UNIT factors", () => {
 });
 
 
-/* End-to-End via computeDerived   The derived layer must convert user-entered dimensions to inches before
-   calling findComparison. Forgetting the conversion produces nonsense
-   (a 10mm cube comparing to a microwave). */
+// End-to-End Derived Comparisons
+// The derived layer must convert user-entered dimensions to inches before calling findComparison.
+// Forgetting the conversion makes a 10mm cube compare to a microwave.
 
-describe("comparison via computeDerived applies dimensionUnit → inches", () => {
+describe("derived comparisons apply display-unit conversion", () => {
     it("10cm × 10cm × 10cm cube classifies via inch volume (~ 61 in³)", () => {
         setStudio({ basis: "volume", dimensionUnit: "cm" });
         setPieces([makePiece({ L: "10", W: "10", H: "10" })]);
         const derived = computeDerived();
         const comparison = derived.pieces[0].comparison;
-        // 10cm = 3.94in; volume ≈ 61in³ → "a coffee mug" (the 35–90 cubeish bracket)
+        // 10cm = 3.94in. Volume ≈ 61in³, so "a coffee mug" (the 35–90 cubeish bracket).
         expect(comparison?.name).toBe("a coffee mug");
     });
 
@@ -139,7 +140,7 @@ describe("comparison via computeDerived applies dimensionUnit → inches", () =>
         setPieces([makePiece({ L: "10", W: "10", H: "10" })]);
         const derived = computeDerived();
         const comparison = derived.pieces[0].comparison;
-        // 10mm ≈ 0.394in; volume ≈ 0.06in³ → smallest cubeish: "a golf ball"
+        // 10mm ≈ 0.394in. Volume ≈ 0.06in³, so the smallest cubeish item is "a golf ball".
         expect(comparison?.name).toBe("a golf ball");
     });
 

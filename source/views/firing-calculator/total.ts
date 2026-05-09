@@ -5,7 +5,7 @@ import type { Derived } from "./derived";
 
 
 // Cost Summary
-// The result card should keep identity and comparison copy separate from the total.
+// CostSummary should keep identity and comparison copy separate from the total.
 
 export const CostSummary: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
@@ -15,9 +15,8 @@ export const CostSummary: m.Component<{ derived: Derived }> = {
             ? `${pieceCount} piece${pieceCount === 1 ? "" : "s"} \u00b7 ${formatQuantity(aggregate.totalQuantity, studio.basis)} ${totalQuantityUnit}`
             : `${pieceCount} piece${pieceCount === 1 ? "" : "s"}`;
 
-        // The aggregate comparison is suppressed for a single piece because
-        // the per-piece row already shows the same silhouette, and "All
-        // together" reads oddly when there's nothing to combine.
+        // Aggregate comparison should stay hidden for a single piece because
+        // the piece row already shows the same silhouette.
         const comparison = pieceCount > 1 ? aggregate.comparison : null;
 
         return m("section.cost-summary", { "aria-labelledby": "cost-summary__heading" },
@@ -30,10 +29,8 @@ export const CostSummary: m.Component<{ derived: Derived }> = {
                 ),
                 m(".cost-summary__subtitle", subtitle),
             ),
-            // role/aria-live announces the new total when it actually
-            // changes. aria-atomic was dropped because Mithril's auto-
-            // redraw fires on every keystroke, and atomic re-announcement
-            // of the entire region on every redraw was extremely chatty.
+            // The amount should announce price changes without repeating the
+            // entire result region on every redraw.
             m(".cost-summary__amount",
                 { role: "status", "aria-live": "polite", "aria-label": "Total price" },
                 formatPrice(aggregate.total)),

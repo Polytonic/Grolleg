@@ -8,10 +8,9 @@ import { toPositive, calculatePrice, rateUnitFor } from "./pricing";
 import { state, studioSnapshot, handleDimensionUnitChange, handleWeightUnitChange } from "./state";
 
 
-/* Derived View Data   Computed once per render. Bundles per-piece pricing, comparison
-   lookups, warning state, and the affordances the controls section
-   needs (which fields show, what step value, what unit suffix) so view
-   code stays declarative. */
+// Derived View Data
+// computeDerived should bundle per-piece pricing, comparison lookup, warning
+// state, and control affordances once per render so view code stays declarative.
 
 export interface PieceComputed {
     piece: Piece;
@@ -34,12 +33,17 @@ export interface Derived {
     showMinHeight: boolean;
     activeUnitSet: readonly DimensionUnit[] | readonly WeightUnit[];
     activeUnit: DimensionUnit | WeightUnit;
-    // Widened to `string` so the shared UnitToggle's `onSelect: (unit:
-    // string) => void` accepts it. The implementation knows the unit
-    // is a member of `activeUnitSet` and casts internally.
+    // setActiveUnit should accept UnitToggle's shared string callback and
+    // ignore values outside the active unit set.
     setActiveUnit: (unit: string) => void;
     totalQuantityUnit: string;
 }
+
+const isDimensionUnit = (unit: string): unit is DimensionUnit =>
+    DIMENSION_UNITS.some((candidate) => candidate === unit);
+
+const isWeightUnit = (unit: string): unit is WeightUnit =>
+    WEIGHT_UNITS.some((candidate) => candidate === unit);
 
 const pieceToInches = (piece: Piece, dimensionUnit: DimensionUnit) => {
     const factor = INCHES_PER_UNIT[dimensionUnit];
@@ -54,9 +58,8 @@ const computePieceComparison = (piece: Piece, studio: Studio): ComparisonEntry |
     if (studio.basis === "weight") return null;
     const { length, width, height } = pieceToInches(piece, studio.dimensionUnit);
     if (studio.basis === "footprint") {
-        // Footprint mode falls back to the flat-aspect table by area. The L/W
-        // sort handles non-square footprints. Bucket selection is moot since
-        // we're directly indexing the flat table.
+        // Footprint mode should use the flat-aspect table by area. Sorting
+        // length and width handles non-square footprints.
         const sorted = [length, width].sort((a, b) => b - a);
         if (sorted[1] === 0) return null;
         const area = sorted[0] * sorted[1];
@@ -66,14 +69,15 @@ const computePieceComparison = (piece: Piece, studio: Studio): ComparisonEntry |
     return findComparison(length * width * height, bucketOf(length, width, height));
 };
 
-const computeQuantityUnit = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: WeightUnit): string =>
-    basis === "volume"    ? `${dimensionUnit}³`
-  : basis === "footprint" ? `${dimensionUnit}²`
-  : weightUnit;
+const computeQuantityUnit = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: WeightUnit): string => {
+    if (basis === "volume") return `${dimensionUnit}³`;
+    if (basis === "footprint") return `${dimensionUnit}²`;
+    return weightUnit;
+};
 
-// Aggregate. Total volume is computed in cubic inches across all pieces
-// for the cubeish silhouette lookup, which always uses inches regardless
-// of the user's display unit.
+// Aggregate
+// computeAggregate should use cubic inches for the cubeish silhouette lookup,
+// regardless of the user's display unit.
 const computeAggregate = (pieces: PieceComputed[], studio: Studio) => {
     let total = 0;
     let totalQuantity = 0;
@@ -94,16 +98,19 @@ const computeAggregate = (pieces: PieceComputed[], studio: Studio) => {
 
 export const computeDerived = (): Derived => {
     const studio = studioSnapshot();
+    const quantityUnit = computeQuantityUnit(studio.basis, studio.dimensionUnit, studio.weightUnit);
     const pieces: PieceComputed[] = state.pieces.map((piece) => {
         const result = calculatePrice(piece, studio);
         const comparison = computePieceComparison(piece, studio);
+        const enteredHeight = toPositive(piece.H);
+        const minimumHeight = toPositive(studio.minHeight);
         const heightBelowMin = studio.basis === "volume"
-            && toPositive(piece.H) > 0
-            && toPositive(studio.minHeight) > 0
-            && toPositive(piece.H) < toPositive(studio.minHeight);
+            && enteredHeight > 0
+            && minimumHeight > 0
+            && enteredHeight < minimumHeight;
         return {
             piece, result, comparison, heightBelowMin,
-            quantityUnit: computeQuantityUnit(studio.basis, studio.dimensionUnit, studio.weightUnit),
+            quantityUnit,
         };
     });
 
@@ -117,8 +124,8 @@ export const computeDerived = (): Derived => {
         activeUnitSet: studio.basis === "weight" ? WEIGHT_UNITS : DIMENSION_UNITS,
         activeUnit: studio.basis === "weight" ? studio.weightUnit : studio.dimensionUnit,
         setActiveUnit: studio.basis === "weight"
-            ? (unit) => handleWeightUnitChange(unit as WeightUnit)
-            : (unit) => handleDimensionUnitChange(unit as DimensionUnit),
-        totalQuantityUnit: computeQuantityUnit(studio.basis, studio.dimensionUnit, studio.weightUnit),
+            ? (unit) => { if (isWeightUnit(unit)) handleWeightUnitChange(unit); }
+            : (unit) => { if (isDimensionUnit(unit)) handleDimensionUnitChange(unit); },
+        totalQuantityUnit: quantityUnit,
     };
 };

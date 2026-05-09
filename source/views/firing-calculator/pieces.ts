@@ -13,14 +13,9 @@ import {
 } from "./state";
 import type { Derived, PieceComputed } from "./derived";
 
-
-
-
-/* Price Label   Right-justified inside the Include row. Active price is accent
-   coloured; $0 reads as muted so empty cards don't compete with
-   priced ones in a stack. The price sits in the same row as the
-   firings chips so it reads as "with these firings included, the
-   piece costs $X." */
+// Price Label
+// PriceLabel should sit in the Include row so the price reads as the result of
+// the selected firing chips.
 
 const PriceLabel: m.Component<{ computed: PieceComputed }> = {
     view: ({ attrs: { computed } }) => {
@@ -33,13 +28,9 @@ const PriceLabel: m.Component<{ computed: PieceComputed }> = {
 };
 
 
-/* Size Label   Silhouette icon + comparison name + parenthetical quantity, right
-   justified in the piece-row header (next to the Remove X when the
-   row is removable). Renders any time the piece has valid dimensions
-   (quantity > 0), independent of pricing or which firings are
-   selected: toggling firings off shouldn't hide the dimensions the
-   user just entered. When no comparison shape matches the
-   dimensions, falls back to the bare quantity. */
+// Size Label
+// SizeLabel should show valid dimensions independent of firing selection, so
+// toggling firings off does not hide the entered size.
 
 const SizeLabel: m.Component<{ computed: PieceComputed; derived: Derived }> = {
     view: ({ attrs: { computed, derived } }) => {
@@ -59,10 +50,8 @@ const SizeLabel: m.Component<{ computed: PieceComputed; derived: Derived }> = {
 };
 
 
-/* Dimension Inputs   Volume: 3-col grid (L, W, H). The H input gains the .warn class when the
-   piece's entered height is below the studio minimum, which the parent
-   passes via heightBelowMin. Footprint: 2-col grid (L, W). Weight: single
-   input bounded to 220px so it doesn't stretch full-width. */
+// Dimension Inputs
+// Dimensions should render only the fields that the active billing basis needs.
 
 interface DimensionsAttrs {
     piece: Piece;
@@ -127,13 +116,9 @@ const Dimensions: m.Component<DimensionsAttrs> = {
 };
 
 
-/* Include Row   The Bisque|Glaze ConnectedPill (chip scale) and Luster chip on the
-   left. Price right-justified on the right. The size cluster
-   (silhouette + comparison + qty) lives in the Piece Dimensions
-   header row above, so this row reads as "with these firings
-   included, the piece costs $X." The pair's `connected` reflects
-   ONLY the studio bundled flag, never the per-piece firing-active
-   state. */
+// Include Row
+// IncludeRow should keep firing chips and price together while the size cluster
+// stays in the Piece Dimensions header.
 
 interface IncludeRowAttrs {
     piece: Piece;
@@ -175,13 +160,9 @@ const IncludeRow: m.Component<IncludeRowAttrs> = {
 };
 
 
-/* Piece Row   Header row: badge (multi-piece) · "Piece Dimensions" label · size
-   cluster (silhouette + comparison + qty, when dimensions are valid)
-   · remove X (multi-piece, far right). The size cluster renders any
-   time dimensions are valid, independent of firings, so a user
-   toggling firings off doesn't lose visual confirmation of the
-   dimensions they entered. Single-piece mode skips badge and remove
-   X so the header collapses to label + size cluster. */
+// Piece Row
+// PieceRow should collapse single-piece headers and reserve badges plus remove
+// buttons for multi-piece mode.
 
 interface PieceRowAttrs {
     computed: PieceComputed;
@@ -196,9 +177,8 @@ const PieceRow: m.Component<PieceRowAttrs> = {
         const studio = derived.studio;
         return m(".piece-row",
             m(".piece-row__header",
-                // The badge is the SR heading anchor in multi-piece mode
-                // ("Piece 02") so heading-nav has somewhere to land
-                // between the section h2 and the input controls.
+                // The badge should anchor screen-reader heading navigation in
+                // multi-piece mode.
                 indexLabel && m("h3.piece-row__badge",
                     { "aria-label": `Piece ${indexLabel}` },
                     indexLabel),
@@ -223,9 +203,9 @@ const PieceRow: m.Component<PieceRowAttrs> = {
 };
 
 
-/* Section Export   Naked stack of piece rows on the page background, mirroring shrinkage's
-   convention of inputs sitting directly on the page. The Add Piece button
-   right-aligns at the end of the stack. */
+// Section Export
+// PiecesSection should keep piece rows directly on the page background and
+// right-align the Add Piece button at the end.
 
 export const PiecesSection: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {

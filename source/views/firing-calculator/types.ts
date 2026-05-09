@@ -8,9 +8,8 @@ export type Rounding = "dimension-ceil" | "total-ceil" | "total-round" | "none";
 export type FiringFlags = Record<FiringKey, boolean>;
 export type FiringRates = Record<FiringKey | "bundled", number>;
 
-// Pieces store dimensions as strings so partial input like "12."
-// survives re-renders and empty distinguishes from zero. Coerced to
-// numbers via toPositive() at use.
+// Pieces should store dimensions as strings so partial input like "12."
+// survives redraws and empty stays distinct from zero.
 export interface Piece {
     id: number;
     L: string;
@@ -20,9 +19,8 @@ export interface Piece {
     firings: FiringFlags;
 }
 
-// The studio bundle a piece needs to be priced. Constructed from state
-// every render via studioSnapshot() rather than nested in state so
-// handlers can mutate primitives directly.
+// Studio should be constructed from state every render rather than nested in
+// state, so handlers can mutate primitives directly.
 export interface Studio {
     basis: Basis;
     dimensionUnit: DimensionUnit;
@@ -48,15 +46,11 @@ export const FIRING_TYPES: { key: FiringKey; label: string }[] = [
     { key: "luster", label: "Luster" },
 ];
 
-// Defaults grounded in typical community-studio rates. Stored in
-// dollars. Volume and footprint display as cents (× 100), weight
-// displays as dollars 1:1. Luster runs 4-6x bisque in real studios
-// (third firing, gold compounds, small batches), not 2x; the volume
-// luster default sits at the low end of that band. The bundled
-// default is the combined bisque+glaze rate a studio pricing the two
-// together would charge, meaningfully higher than bisque alone so
-// toggling Bundled on a single-piece view actually changes the
-// total instead of leaving it at the bisque rate.
+// Defaults should stay grounded in typical community-studio rates. Volume and
+// footprint display cents, while weight displays dollars. Luster runs 4-6x
+// bisque in real studios, so the volume luster default sits at the low end.
+// The bundled default is the combined bisque plus glaze rate a studio would
+// charge when pricing the two together.
 interface BasisMetaEntry {
     label: string;
     defaults: FiringRates;

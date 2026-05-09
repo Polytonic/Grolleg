@@ -8,7 +8,7 @@ import { TogglePill } from "../../components/toggle-pill";
 import { UnitToggle } from "../../components/unit-toggle";
 import { expandUnit, UNIT_VERBOSE } from "../../components/locale";
 import { BASIS_META, ROUNDING_OPTIONS } from "./types";
-import type { Basis, DimensionUnit, WeightUnit } from "./types";
+import type { Basis, DimensionUnit, WeightUnit, FiringKey } from "./types";
 import { toDisplayRate, toPositive } from "./pricing";
 import {
     state,
@@ -19,10 +19,9 @@ import {
 import type { Derived } from "./derived";
 
 
-/* Verbose rate-unit string used by screen readers via aria-describedby.
-   Mirrors the short suffix shown next to the input ("¢/in³" → "cents
-   per cubic inch"). Falls back to the raw rateUnit string for any
-   shape not anticipated. */
+// Rate Unit Text
+// expandRateUnit should give screen readers the long form of the visible rate
+// suffix, such as cents per cubic inch.
 const singularize = (word: string): string => {
     if (word === "inches") return "inch";
     if (word === "ounces") return "ounce";
@@ -34,17 +33,9 @@ const expandRateUnit = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: 
     if (basis === "footprint") return `cents per square ${singularize(expandUnit(dimensionUnit))}`;
     return `dollars per ${singularize(expandUnit(weightUnit))}`;
 };
-
-
-
-
-
-/* Row 1: Billing + Rounding   Billing (volume / footprint / weight) sits at the top. Rounding
-   shares the row as a 2-column grid when it applies (volume and
-   footprint bases); weight basis collapses to a single column. The
-   selects use the bare `.select` class because chaining `.input.select`
-   lets `.input`'s background shorthand wipe the chevron's
-   background-image. */
+// Billing and Rounding Row
+// Billing should sit first. Rounding pairs beside it only for volume and
+// footprint. Selects use bare `.select` so `.input` does not wipe the chevron.
 
 const BasisField: m.Component = {
     view: () => m(".field-group",
@@ -67,7 +58,7 @@ const RoundingField: m.Component = {
             m("label", { for: "rounding-select" }, "Rounding"),
             m(Tooltip, {
                 label: "rounding",
-                text: 'How dimensions are rounded before billing. For a 4.2 × 5.7 × 3.1 piece (74.2 in³ exact): Per Dimension rounds up L, W, H independently to 5 × 6 × 4 = 120 in³, matching the measuring-box convention. Total rounds up the final volume to 75 in³. Nearest Whole rounds without preference to 74 in³. Don\'t Round uses exact decimals.',
+                text: 'How dimensions are rounded before billing. For a 4.2 × 5.7 × 3.1 piece: Per Dimension bills 5 × 6 × 4 = 120 in³. Total bills 75 in³. Nearest Whole bills 74 in³. Don\'t Round keeps decimals.',
             }),
         ),
         m("select.select#rounding-select",
@@ -91,9 +82,8 @@ const BillingRow: m.Component<{ derived: Derived }> = {
 };
 
 
-/* Row 2: Firings + Minimum Height   The firings pill row (chain + Bisque|Glaze + Luster) sits on the
-   left. Minimum Height pairs to the right when volume basis applies;
-   for footprint and weight the firings row takes the full width. */
+// Firings and Minimum Height Row
+// Firings should take the full row except when volume basis adds Minimum Height.
 
 const FiringsRow: m.Component = {
     view: () => m(".firings-row",
@@ -126,16 +116,15 @@ const FiringsRow: m.Component = {
     ),
 };
 
-// Uses a `<span>` rather than a `<label>` because the field has no
-// single input to associate with. The role="group" + aria-label on
-// the .field-group handles the labelling for assistive tech.
+// FiringsField should use a span label because the field has no single input.
+// The group label supplies the accessible name.
 const FiringsField: m.Component = {
     view: () => m(".field-group", { role: "group", "aria-label": "Firing Types" },
         m("span.label",
             m("span", "Firing Types"),
             m(Tooltip, {
                 label: "firings",
-                text: "Which firings to charge for. The chain icon bundles bisque and glaze under one shared rate, common at studios that don't track them separately. Toggle a firing to enable or disable it. Each piece can also opt out of any firing it skips.",
+                text: "Which firings to charge. The chain bundles bisque and glaze under one shared studio rate. Each piece can still opt out of firings it skips.",
             }),
         ),
         m(FiringsRow),
@@ -148,7 +137,7 @@ const MinHeightField: m.Component = {
             m("label", { for: "min-height-input" }, "Minimum Height"),
             m(Tooltip, {
                 label: "minimum height",
-                text: "Some studios bill short pieces at a minimum height to reflect the kiln-shelf interval consumed. A piece below the minimum is charged as if it were that tall. Set to 0 to disable.",
+                text: "Bills short pieces as if they reached this height. Use 0 to disable.",
             }),
         ),
         m(InputWithSuffix, {
@@ -173,15 +162,12 @@ const FiringsAndHeightRow: m.Component<{ derived: Derived }> = {
 };
 
 
-/* Row 3: Firing Rates   Section-labeled group containing the rate inputs. Slot count is
-   stable for a given bundled state (2 if bundled, 3 if not), so toggling
-   an individual firing dims its slot rather than reflowing the row.
-   The unit toggle inlines with the section label because units determine
-   the rate suffix (¢/in³ vs $/lb) and the dimension-input placeholders
-   on each piece. */
+// Firing Rates Row
+// Rate input slots should stay stable for a bundled state, so toggling an
+// individual firing dims its slot instead of reflowing the row.
 
 interface RateField {
-    key: string;
+    key: FiringKey | "bundled";
     label: string;
     value: string;
     placeholder: string;
@@ -189,75 +175,61 @@ interface RateField {
     disabled: boolean;
 }
 
-// Cap a rate display value at 2 decimals and strip both trailing zeros
-// and floating-point artifacts. The cents conversion (× 100) introduces
-// noise like 0.035 → 3.5000000000000004, which would otherwise render
-// in the input as a ten-digit string. toPositive guards against NaN /
-// non-finite slipping through if a stored rate ever gets corrupted.
+// formatRateNumber should strip trailing zeros and floating-point artifacts
+// from display rates before they reach text inputs.
 // Examples:
 //   3.5000000000000004 → "3.5"
 //   3.25               → "3.25"
 //   8                  → "8"
 //   NaN                → "0"
-// .toFixed(2) is intentional: input value attrs need a plain decimal
-// string, not a locale-formatted one with group separators.
+// .toFixed(2) should keep input values as plain decimals, not locale strings.
 const formatRateNumber = (value: number): string =>
     Number(toPositive(value).toFixed(2)).toString();
 
-// Stored 0 is rendered as an empty string so the input shows its
-// placeholder rather than a literal "0". The placeholder reads as
-// a suggested value, whereas "0" reads as a deliberate entry.
+// Stored zero should render as an empty string so the placeholder reads as the
+// suggested value.
 const formatRateValue = (stored: number, basis: Basis): string =>
     stored === 0 ? "" : formatRateNumber(toDisplayRate(stored, basis));
 
-// Placeholder text shows the BASIS_META default for that firing in the
-// active basis' display unit (cents for volume/footprint, dollars for
-// weight).
+// Placeholder text should show the basis default in the active display unit.
 const formatPlaceholder = (defaultDollars: number, basis: Basis): string =>
     formatRateNumber(toDisplayRate(defaultDollars, basis));
 
-const collectRateFields = (basis: Basis): RateField[] => {
+// collectRateFieldsFromState should read the current firing toggles and rates
+// once per render so disabled slots, values, and placeholders stay aligned.
+const collectRateFieldsFromState = (basis: Basis): RateField[] => {
     const defaults = BASIS_META[basis];
-    const fields: RateField[] = [];
-    if (state.bundled) {
-        // Bundled rate is shared between bisque and glaze. The slot
-        // stays active as long as either firing is on.
-        fields.push({
+    const primaryFields: RateField[] = state.bundled
+        ? [{
             key: "bundled",
             label: "Bundled",
             value: formatRateValue(state.firingRates.bundled, basis),
             placeholder: formatPlaceholder(defaults.defaults.bundled, basis),
             onInput: handleBundledRateInput,
             disabled: !state.firingToggles.bisque && !state.firingToggles.glaze,
-        });
-    } else {
-        (["bisque", "glaze"] as const).forEach((key) => {
-            fields.push({
-                key,
-                label: key === "bisque" ? "Bisque" : "Glaze",
-                value: formatRateValue(state.firingRates[key], basis),
-                placeholder: formatPlaceholder(defaults.defaults[key], basis),
-                onInput: (event: Event) => handleFiringRateInput(key, event),
-                disabled: !state.firingToggles[key],
-            });
-        });
-    }
-    fields.push({
+        }]
+        : (["bisque", "glaze"] as const).map((key) => ({
+            key,
+            label: key === "bisque" ? "Bisque" : "Glaze",
+            value: formatRateValue(state.firingRates[key], basis),
+            placeholder: formatPlaceholder(defaults.defaults[key], basis),
+            onInput: (event: Event) => handleFiringRateInput(key, event),
+            disabled: !state.firingToggles[key],
+        }));
+    const lusterField: RateField = {
         key: "luster",
         label: "Luster",
         value: formatRateValue(state.firingRates.luster, basis),
         placeholder: formatPlaceholder(defaults.defaults.luster, basis),
         onInput: (event: Event) => handleFiringRateInput("luster", event),
         disabled: !state.firingToggles.luster,
-    });
-    return fields;
+    };
+    return [...primaryFields, lusterField];
 };
 
-/* Rate Inputs   Bundled toggle reshapes the row from 2 columns (Bundled, Luster)
-   to 3 columns (Bisque, Glaze, Luster) and back. FLIP utilities
-   from components/flip handle the layout transition; InputWithSuffix's
-   pulseKey drives the flash on bisque/glaze/bundled rate inputs
-   (luster stays calm). */
+// Rate Inputs
+// RateInputs should let FLIP handle layout transitions when Bundled changes
+// the visible column set.
 
 interface RateInputsState {
     snapshot: Map<string, DOMRect> | null;
@@ -286,7 +258,7 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
                     suffix: derived.rateUnit,
                     suffixSr: expandRateUnit(derived.studio.basis, derived.studio.dimensionUnit, derived.studio.weightUnit),
                     modifiers: ["numeric"],
-                    pulseKey: field.key === "luster" || field.disabled ? undefined : state.bundlePulseKey,
+                    pulseKey: field.disabled || field.key === "luster" ? undefined : state.bundlePulseKey,
                     id: `rate-${field.key}`,
                     type: "text",
                     inputmode: "decimal",
@@ -301,7 +273,7 @@ const RateInputs: m.Component<{ derived: Derived; fields: RateField[] }, RateInp
 
 const FiringRatesSection: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => {
-        const fields = collectRateFields(state.basis);
+        const fields = collectRateFieldsFromState(state.basis);
         const allDisabled = fields.every((field) => field.disabled);
         return m(".section", { role: "group", "aria-label": "Firing rates" },
             m(".section-label",
@@ -321,14 +293,14 @@ const FiringRatesSection: m.Component<{ derived: Derived }> = {
 };
 
 
-/* Section Export   No wrapping card. Three rows: billing+rounding, firings+min-height,
-   firing-rates. */
+// Section Export
+// ControlsSection should render the three calculator-control rows without a
+// wrapping card.
 
 export const ControlsSection: m.Component<{ derived: Derived }> = {
     view: ({ attrs: { derived } }) => m(".controls-section",
-        // Anchors SR navigation between the page <h1> and the per-piece
-        // h3 badges below. Visually hidden because the row labels
-        // (Measurement Method, Rounding, Firing Types) already orient sighted users.
+        // The hidden h2 should anchor screen-reader navigation between the
+        // page h1 and the per-piece h3 badges.
         m("h2.sr-only", "Controls"),
         m(BillingRow, { derived }),
         m(FiringsAndHeightRow, { derived }),

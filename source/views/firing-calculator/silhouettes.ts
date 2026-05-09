@@ -1,6 +1,7 @@
 import m from "mithril";
 
 
+// Types
 type SilhouetteKey =
     | "golfBall" | "apple" | "softball" | "mug" | "grapefruit"
     | "cantaloupe" | "basketball" | "microwave" | "cat" | "fridge"
@@ -10,7 +11,9 @@ type SilhouetteKey =
 
 export type { SilhouetteKey };
 
-const PAGE_BG = "var(--color-bg)";
+
+// SVG Helpers
+const PAGE_BACKGROUND = "var(--color-bg)";
 
 const svg = (size: number, ...children: m.Vnode[]): m.Vnode =>
     m("svg.silhouette", {
@@ -19,6 +22,9 @@ const svg = (size: number, ...children: m.Vnode[]): m.Vnode =>
         "aria-hidden": "true",
     }, children);
 
+
+// Silhouette Map
+// Silhouettes should stay small and single-color so they work as inline badges.
 const SILHOUETTES: Record<SilhouetteKey, (size: number) => m.Vnode> = {
     golfBall: (size) => svg(size,
         m("circle", { cx: 20, cy: 20, r: 13, fill: "currentColor" }),
@@ -43,11 +49,11 @@ const SILHOUETTES: Record<SilhouetteKey, (size: number) => m.Vnode> = {
     ),
     basketball: (size) => svg(size,
         m("circle", { cx: 20, cy: 20, r: 14, fill: "currentColor" }),
-        m("path", { d: "M20 6 L20 34 M6 20 L34 20", stroke: PAGE_BG, "stroke-width": 0.9, opacity: 0.8 }),
+        m("path", { d: "M20 6 L20 34 M6 20 L34 20", stroke: PAGE_BACKGROUND, "stroke-width": 0.9, opacity: 0.8 }),
     ),
     microwave: (size) => svg(size,
         m("rect", { x: 3, y: 10, width: 34, height: 22, rx: 1, fill: "currentColor" }),
-        m("rect", { x: 6, y: 13, width: 22, height: 16, fill: PAGE_BG, opacity: 0.7 }),
+        m("rect", { x: 6, y: 13, width: 22, height: 16, fill: PAGE_BACKGROUND, opacity: 0.7 }),
     ),
     cat: (size) => svg(size,
         m("path", { d: "M4 28 Q6 20 13 19 Q16 14 20 15 Q24 14 27 19 Q34 20 36 28 Q36 31 33 31 L7 31 Q4 31 4 28Z", fill: "currentColor" }),
@@ -55,7 +61,7 @@ const SILHOUETTES: Record<SilhouetteKey, (size: number) => m.Vnode> = {
     ),
     fridge: (size) => svg(size,
         m("rect", { x: 10, y: 4, width: 20, height: 32, rx: 1.5, fill: "currentColor" }),
-        m("line", { x1: 10, y1: 14, x2: 30, y2: 14, stroke: PAGE_BG, "stroke-width": 0.7, opacity: 0.8 }),
+        m("line", { x1: 10, y1: 14, x2: 30, y2: 14, stroke: PAGE_BACKGROUND, "stroke-width": 0.7, opacity: 0.8 }),
     ),
     pen: (size) => svg(size,
         m("rect", { x: 18.5, y: 4, width: 3, height: 28, fill: "currentColor" }),
@@ -107,6 +113,7 @@ const SILHOUETTES: Record<SilhouetteKey, (size: number) => m.Vnode> = {
 };
 
 
+// Component Export
 export const Silhouette: m.Component<{ type: SilhouetteKey; size?: number }> = {
     view: ({ attrs: { type, size = 22 } }) =>
         SILHOUETTES[type](size),

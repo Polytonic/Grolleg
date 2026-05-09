@@ -77,15 +77,8 @@
         padding-right: 3.5rem;
     }
 
-    /* At iPhone-SE widths the 3-column piece dimension grid squeezes
-       each cell to ~98px, leaving the 56px suffix padding only ~28px
-       of usable text area. Drop to 32px here so the dimension input
-       gets ~52px of typeable room while the suffix (anchored at
-       right: 12px) still has ~20px of clearance — enough for short
-       units like "in"/"cm". Wide rate suffixes ("¢/in³", "$/lb") are
-       a known tradeoff: at 480px the rate grid caps at 2 columns
-       (cell ≈ 166px), so the suffix may visually crowd the rightmost
-       digits but the input itself remains usable. */
+    /* Mobile Suffix Padding
+       Narrow dimension fields need more text room before unit suffixes. */
     @media (max-width: 480px) {
         .input.with-suffix {
             padding-right: 2rem;
@@ -93,58 +86,67 @@
     }
 
 
-    /* Pill
-       Active and inactive states should keep the same box metrics. */
-    .pill {
+    /* Local Button States */
+    :is(.pill, .chip, .add-piece) {
         font-family: var(--font-sans);
-        font-size: 0.875rem;
-        font-weight: 400;
-        padding: 0.625rem 0.875rem;
+        cursor: pointer;
+        touch-action: manipulation;
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+    }
+
+    :is(.pill, .chip) {
         background: var(--color-control-bg);
         color: var(--color-button-text);
         border: 1px solid var(--color-button-border);
-        border-radius: 0.625rem;
-        cursor: pointer;
-        touch-action: manipulation;
-        line-height: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.375rem;
-        box-sizing: border-box;
-        min-height: 2.75rem;
         transition:
             background-color var(--motion-duration-feedback),
             border-color var(--motion-duration-feedback),
             color var(--motion-duration-feedback);
+    }
 
-        &.active {
-            border-color: var(--color-action-border);
-            background: var(--color-action-bg);
-            color: var(--color-action-text);
-        }
+    :is(.pill.active, .chip.active:not(.disabled)) {
+        border-color: var(--color-action-border);
+        background: var(--color-action-bg);
+        color: var(--color-action-text);
+    }
 
-        @media (hover: hover) {
-            &:not(.active):hover {
-                border-color: var(--color-control-hover-border);
-                background: var(--color-control-hover-bg);
-                color: var(--color-control-text);
-            }
-            &.active:hover {
-                background: var(--color-action-hover-bg);
-            }
-        }
-
-        &:not(.active):active {
-            border-color: var(--color-control-press-border);
-            background: var(--color-control-press-bg);
+    @media (hover: hover) {
+        :is(.pill, .chip):not(.disabled):not(.active):hover {
+            border-color: var(--color-control-hover-border);
+            background: var(--color-control-hover-bg);
             color: var(--color-control-text);
-            transition: none;
         }
-        &.active:active {
-            background: var(--color-action-press-bg);
-            transition: none;
+
+        :is(.pill.active, .chip.active:not(.disabled), .add-piece):hover {
+            background: var(--color-action-hover-bg);
         }
+    }
+
+    :is(.pill, .chip):not(.disabled):not(.active):active {
+        border-color: var(--color-control-press-border);
+        background: var(--color-control-press-bg);
+        color: var(--color-control-text);
+        transition: none;
+    }
+
+    :is(.pill.active, .chip.active:not(.disabled), .add-piece):active {
+        background: var(--color-action-press-bg);
+        transition: none;
+    }
+
+    /* Pill
+       Active and inactive states should keep the same box metrics. */
+    .pill {
+        font-size: 0.875rem;
+        font-weight: 400;
+        padding: 0.625rem 0.875rem;
+        border-radius: 0.625rem;
+        line-height: 1;
+        justify-content: center;
+        gap: 0.375rem;
+        box-sizing: border-box;
     }
 
 
@@ -395,57 +397,17 @@
        so toggles do not shift layout. */
     .chip {
         padding: 0.3125rem 0.6875rem;
-        font-family: var(--font-sans);
         font-size: 0.75rem;
         font-weight: 400;
-        background: var(--color-control-bg);
-        color: var(--color-button-text);
-        border: 1px solid var(--color-button-border);
         border-radius: 0.375rem;
-        cursor: pointer;
-        touch-action: manipulation;
-        display: inline-flex;
-        align-items: center;
         gap: 0.25rem;
         line-height: 1.2;
-        transition:
-            background-color var(--motion-duration-feedback),
-            border-color var(--motion-duration-feedback),
-            color var(--motion-duration-feedback);
-
-        &.active {
-            border-color: var(--color-action-border);
-            background: var(--color-action-bg);
-            color: var(--color-action-text);
-        }
 
         &.disabled {
             cursor: not-allowed;
             border-color: var(--color-disabled-border);
             background: var(--color-disabled-bg);
             color: var(--color-disabled-text);
-        }
-
-        @media (hover: hover) {
-            &:not(.disabled):not(.active):hover {
-                border-color: var(--color-control-hover-border);
-                background: var(--color-control-hover-bg);
-                color: var(--color-control-text);
-            }
-            &.active:not(.disabled):hover {
-                background: var(--color-action-hover-bg);
-            }
-        }
-
-        &:not(.disabled):not(.active):active {
-            border-color: var(--color-control-press-border);
-            background: var(--color-control-press-bg);
-            color: var(--color-control-text);
-            transition: none;
-        }
-        &.active:not(.disabled):active {
-            background: var(--color-action-press-bg);
-            transition: none;
         }
     }
 
@@ -459,30 +421,16 @@
 
     /* Add Piece */
     .add-piece {
-        display: inline-flex;
-        align-items: center;
         gap: 0.375rem;
         background: var(--color-action-bg);
         color: var(--color-action-text);
         border: none;
         padding: 0.5rem 0.75rem;
         border-radius: 0.375rem;
-        font-family: var(--font-sans);
         font-size: 0.75rem;
         font-weight: 600;
-        cursor: pointer;
         line-height: 1;
         transition: background-color var(--motion-duration-feedback);
-
-        @media (hover: hover) {
-            &:hover {
-                background: var(--color-action-hover-bg);
-            }
-        }
-        &:active {
-            background: var(--color-action-press-bg);
-            transition: none;
-        }
     }
 
 
@@ -585,6 +533,6 @@
 /* Warn state takes priority: the warn background carries more information
    than the pulse animation, so suppress the pulse when both classes are
    present. The warn border remains the primary signal. */
-.input.warn.pulsing {
+.firing-calculator .rate-inputs .input.warn.pulsing {
     animation: none;
 }

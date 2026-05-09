@@ -30,6 +30,8 @@ export function setStudio(options: {
     minHeight?: number;
     rounding?: Rounding;
 }) {
+    // setStudio should keep the active basis' cached rates in sync for tests
+    // that bypass rate input handlers.
     if (options.basis !== undefined) state.basis = options.basis;
     if (options.dimensionUnit !== undefined) state.dimensionUnit = options.dimensionUnit;
     if (options.weightUnit !== undefined) state.weightUnit = options.weightUnit;
@@ -44,6 +46,7 @@ export function setStudio(options: {
 }
 
 export function setPieces(pieces: Piece[]) {
+    // setPieces should advance nextPieceId past supplied fixtures.
     state.pieces = pieces;
     state.nextPieceId = pieces.reduce((max, piece) => Math.max(max, piece.id), 0) + 1;
 }

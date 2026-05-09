@@ -3,10 +3,10 @@ import type { Basis, DimensionUnit, WeightUnit, Piece, Studio, PieceResult, Roun
 
 
 // Pure Helpers
-// Coerces unknown input to a positive number, returning 0 for empty,
-// non-finite, or non-positive values. Treating empty inputs as zero lets
-// quantity/rate calculations short-circuit to a $0 price without throwing.
-// Strings use parseLocaleNumber for locale-aware decimal handling.
+/**
+ * Empty, invalid, or non-positive inputs become zero before quantity and rate math.
+ * String inputs use locale-aware parsing.
+ */
 export const toPositive = (value: string | number): number => {
     const parsed = typeof value === "string" ? parseLocaleNumber(value) : Number(value);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
@@ -18,16 +18,17 @@ const applyRounding = (value: number, method: Rounding): number => {
     return value;
 };
 
-// Quantity in display units (cm³, in³, lb, etc.). Volume applies the
-// height floor before per-dim ceiling so the floor reflects the studio's
-// true billable height. Rounding is a measurement convention layered
-// on top.
-const roundedProduct = (raw: number[], rounding: Rounding): number => {
-    if (raw.some((d) => d === 0)) return 0;
-    const dimensions = rounding === "dimension-ceil" ? raw.map(Math.ceil) : raw;
-    return applyRounding(dimensions.reduce((a, b) => a * b, 1), rounding);
+/**
+ * Dimension rounding applies before total rounding.
+ * Any zero dimension keeps the billable product at zero.
+ */
+const roundedProduct = (rawDimensions: number[], rounding: Rounding): number => {
+    if (rawDimensions.some((dimension) => dimension === 0)) return 0;
+    const dimensions = rounding === "dimension-ceil" ? rawDimensions.map(Math.ceil) : rawDimensions;
+    return applyRounding(dimensions.reduce((product, dimension) => product * dimension, 1), rounding);
 };
 
+/** Volume uses billable height, footprint uses area, and weight uses entered weight. */
 export const computeQuantity = (
     piece: Piece, basis: Basis, rounding: Rounding, minHeight: number,
 ): number => {
@@ -41,16 +42,15 @@ export const computeQuantity = (
         return roundedProduct([toPositive(piece.L), toPositive(piece.W)], rounding);
     }
     if (basis === "weight") return toPositive(piece.weight);
-    return 0;
+    const _exhaustive: never = basis;
+    return _exhaustive;
 };
 
-// A piece pays for a firing only when both the studio toggle and the
-// piece chip are on. The bundled flag picks one of two rate models:
-//   • Bundled: a single combined charge (firingRates.bundled) covers
-//     bisque AND glaze together, applied once if the piece includes either.
-//   • Unbundled: bisque and glaze are independent charges, summed.
-// Luster is independent in both modes. Both quantity and rate must
-// be positive for a non-zero price; either being zero produces $0.
+/**
+ * Computes quantity, effective rate, and price for one piece.
+ * Studio toggles and piece chips both gate charges.
+ * Bundled mode charges bisque or glaze once, with luster added separately.
+ */
 export const calculatePrice = (piece: Piece, studio: Studio): PieceResult => {
     const quantity = computeQuantity(piece, studio.basis, studio.rounding, studio.minHeight);
     let rate = 0;
@@ -74,23 +74,22 @@ export const calculatePrice = (piece: Piece, studio: Studio): PieceResult => {
 };
 
 
-/* Cents-vs-Dollars Rate Conversion   Volume and footprint rates display as cents (matching how potters speak:
-   "4 cents per cubic inch"). Weight rates display as dollars ("$2/lb").
-   All math operates on stored dollars; conversion happens at the input
-   boundary via toDisplayRate / toStoredRate. */
+// Rate Conversion
+// Display rates should match how potters speak: cents for volume and footprint,
+// dollars for weight. Stored rates stay in dollars.
 
+/** Volume and footprint rates display as cents while storage stays in dollars. */
 export const rateIsCents = (basis: Basis): boolean =>
     basis === "volume" || basis === "footprint";
 
+/** Stored dollar rates show as cents for spatial bases and dollars for weight. */
 export const toDisplayRate = (stored: number, basis: Basis): number =>
     rateIsCents(basis) ? toPositive(stored) * 100 : toPositive(stored);
 
-// Upper bound on display-unit rates. Catches accidental paste of
-// scientific-notation values (`1e10` would otherwise produce a
-// hundred-billion-dollar bill on a 10×10×10 piece) and absurd typos
-// without restricting realistic studio rates (typical max ~50¢/in³).
+/** The display-rate ceiling catches pasted scientific notation and implausible typos. */
 const MAX_DISPLAY_RATE = 1000;
 
+/** Invalid rates become zero and extreme display values clamp before storage. */
 export const toStoredRate = (display: number | string, basis: Basis): number => {
     const value = typeof display === "string" ? parseLocaleNumber(display) : display;
     if (!Number.isFinite(value)) return 0;
@@ -98,6 +97,7 @@ export const toStoredRate = (display: number | string, basis: Basis): number => 
     return rateIsCents(basis) ? clamped / 100 : clamped;
 };
 
+/** Spatial pricing suffixes use cents. Weight pricing suffixes use dollars. */
 export const rateUnitFor = (basis: Basis, dimensionUnit: DimensionUnit, weightUnit: WeightUnit): string => {
     if (basis === "volume")    return `¢/${dimensionUnit}³`;
     if (basis === "footprint") return `¢/${dimensionUnit}²`;
@@ -113,10 +113,10 @@ const wholeFormat = new Intl.NumberFormat(undefined, {
     maximumFractionDigits: 0,
 });
 
+/** Result rows and totals always show dollar currency. */
 export const formatPrice = (value: number): string =>
     `$${decimalFormat.format(value)}`;
 
-// Weight basis prints two decimals (small numbers like 1.25 lb);
-// volume and footprint print whole numbers (large numbers like 240 in³).
+/** Formats billable quantity, preserving decimals for weight and rounding spatial bases. */
 export const formatQuantity = (value: number, basis: Basis): string =>
     basis === "weight" ? decimalFormat.format(value) : wholeFormat.format(value);

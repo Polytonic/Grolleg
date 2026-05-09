@@ -15,11 +15,14 @@ const isRounding = (value: string): value is Rounding => ROUNDINGS.has(value);
 
 // Unit-Aware Defaults
 const DEFAULT_MIN_HEIGHTS: Record<DimensionUnit, number> = { in: 2, cm: 5, mm: 50 };
+const defaultDimensionUnit: DimensionUnit = detectDefaultDimensionUnit();
+const defaultWeightUnit: WeightUnit = detectDefaultWeightUnit();
 
 
-/* State   Default load is bisque-only with one empty piece. Tapping Glaze
-   teaches studio-to-piece propagation; tapping the chain icon teaches
-   Bundled. Don't pre-populate with example pieces. */
+// State
+// The default load should be bisque-only with one empty piece. Tapping Glaze
+// teaches studio-to-piece propagation. Tapping the chain icon teaches Bundled.
+// Do not pre-populate with example pieces.
 
 interface StateShape {
     basis: Basis;
@@ -32,26 +35,22 @@ interface StateShape {
     rounding: Rounding;
     pieces: Piece[];
     nextPieceId: number;
-    // Monotonic counter that ticks every time the bundled toggle is
-    // flipped. Threaded through the bisque/glaze/bundled rate inputs
-    // (not luster) so the inputs replay their CSS pulse on each
-    // toggle, signalling that those rates likely need refreshing.
+    // bundlePulseKey should tick every time the bundled toggle flips, so
+    // bisque, glaze, and bundled rate inputs replay their CSS pulse.
     bundlePulseKey: number;
-    // Per-basis cache of the user's last-entered rates, so switching
-    // measurement methods preserves prior edits instead of silently
-    // discarding them. Updated on basis change and on every rate-input
-    // event for the active basis.
+    // firingRatesByBasis should preserve each measurement method's last
+    // edited rates instead of sharing incompatible display units.
     firingRatesByBasis: Record<Basis, FiringRates>;
 }
 
 const INITIAL_STATE: StateShape = {
     basis: "volume",
-    dimensionUnit: detectDefaultDimensionUnit(),
-    weightUnit: detectDefaultWeightUnit(),
+    dimensionUnit: defaultDimensionUnit,
+    weightUnit: defaultWeightUnit,
     firingToggles: { bisque: true, glaze: false, luster: false },
     firingRates: { ...BASIS_META.volume.defaults },
     bundled: false,
-    minHeight: DEFAULT_MIN_HEIGHTS[detectDefaultDimensionUnit()],
+    minHeight: DEFAULT_MIN_HEIGHTS[defaultDimensionUnit],
     rounding: "dimension-ceil",
     pieces: [
         { id: 1, L: "", W: "", H: "", weight: "",
@@ -68,9 +67,8 @@ const INITIAL_STATE: StateShape = {
 
 export const state: StateShape = cloneInitialState();
 
-// Returns a fresh copy of INITIAL_STATE with nested objects deep-cloned,
-// so callers that mutate the result don't leak changes back into the
-// shared default.
+// cloneInitialState should return a fresh copy with nested objects cloned, so
+// callers that mutate the result do not leak changes into the shared default.
 export function cloneInitialState(): StateShape {
     return {
         ...INITIAL_STATE,
@@ -85,9 +83,8 @@ export function cloneInitialState(): StateShape {
     };
 }
 
-// A Studio bundle for calculatePrice and the comparison lookup. Nested
-// objects are shallow-cloned so a snapshot survives an event-handler
-// mutation mid-render without aliasing global state.
+// studioSnapshot should give pricing and comparison code a stable studio bundle
+// whose nested objects cannot alias event-handler mutations mid-render.
 export const studioSnapshot = (): Studio => ({
     basis: state.basis,
     dimensionUnit: state.dimensionUnit,
@@ -100,11 +97,10 @@ export const studioSnapshot = (): Studio => ({
 });
 
 
-/* Propagation Primitive   Writing studio firing toggles also writes the new values to every
-   piece's matching chip. Individual toggles and bundled pair-toggles
-   both route through this helper for uniform behavior. Bundled
-   activation uses a different rule (preserve luster-only pieces) and
-   is implemented inline in toggleBundled. */
+// Propagation Primitive
+// setStudioFirings should write studio firing toggles and each piece's matching
+// chip together. Bundled activation preserves luster-only pieces, so it stays
+// inline in toggleBundled.
 
 const setStudioFirings = (next: Partial<FiringFlags>) => {
     state.firingToggles = { ...state.firingToggles, ...next };
@@ -120,11 +116,8 @@ export const handleBasisChange = (event: Event) => {
     const next = (event.currentTarget as HTMLSelectElement).value;
     if (!isBasis(next)) return;
     if (next === state.basis) return;
-    // Save the active basis' rates into the per-basis cache so a return
-    // to this basis later restores the user's edits instead of reseeding
-    // from defaults. Rates carry semantic meaning per basis (cents/in³ vs
-    // $/lb), so the cache is segmented by basis rather than shared.
-    // firingRatesByBasis[basis] should always receive a spread copy, never a reference to state.firingRates
+    // The active basis should save a spread copy before switching, so returning
+    // to this basis restores edits in the same display units.
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
     state.basis = next;
     state.firingRates = { ...state.firingRatesByBasis[next] };
@@ -150,7 +143,9 @@ export const handleRoundingChange = (event: Event) => {
 // pasted exponents and fat-fingered values that would otherwise scale
 // every billed quantity to nonsense.
 const MIN_HEIGHT_MAX = 100;
-const parsedDecimalDraft = (raw: string): number | null => {
+// parseDecimalDraft should preserve editable field semantics: blank becomes
+// zero, invalid locale text becomes null, and valid locale decimals parse.
+const parseDecimalDraft = (raw: string): number | null => {
     if (raw.trim() === "") return 0;
     const value = parseLocaleNumber(raw);
     return Number.isFinite(value) ? value : null;
@@ -158,7 +153,7 @@ const parsedDecimalDraft = (raw: string): number | null => {
 
 export const handleMinHeightInput = (event: Event) => {
     const raw = (event.currentTarget as HTMLInputElement).value;
-    const value = parsedDecimalDraft(raw);
+    const value = parseDecimalDraft(raw);
     if (value === null) return;
     if (value < 0) {
         state.minHeight = 0;
@@ -167,10 +162,8 @@ export const handleMinHeightInput = (event: Event) => {
     state.minHeight = Math.min(value, MIN_HEIGHT_MAX);
 };
 
-// Tap a studio firing pill. When bundled is on, bisque and glaze flip
-// together (one logical control). Otherwise the tapped firing flips
-// alone. Both paths route through setStudioFirings so propagation is
-// uniform.
+// toggleFiring should treat bisque and glaze as one logical control while
+// bundled mode is on.
 export const toggleFiring = (key: FiringKey) => {
     const nextValue = !state.firingToggles[key];
     if (state.bundled && (key === "bisque" || key === "glaze")) {
@@ -180,22 +173,17 @@ export const toggleFiring = (key: FiringKey) => {
     setStudioFirings({ [key]: nextValue });
 };
 
-// Bundled is a rate-structure change, not a firing-state change. On
-// activation, pieces already paying for bisque or glaze get both
-// forced on (sharing firingRates.bundled). Pieces with neither
-// (e.g. luster-only) stay untouched. Bisque/glaze rates live in
-// firingRates alongside the bundled rate, so they survive the
-// round-trip without explicit save/restore.
+// toggleBundled should change rate structure, not luster-only pieces. Pieces
+// already paying for bisque or glaze get both because the bundled rate covers
+// that pair.
 export const toggleBundled = () => {
     state.bundlePulseKey += 1;
     if (state.bundled) {
         state.bundled = false;
         return;
     }
-    // Seed the bundled rate if the user hasn't edited it yet. When
-    // bisque/glaze are still at their per-basis defaults, use the
-    // bundled default so toggling on a fresh page visibly changes
-    // the total instead of echoing the bisque rate.
+    // The bundled rate should start from edited bisque plus glaze rates when
+    // those rates differ from defaults.
     const meta = BASIS_META[state.basis];
     const ratesAtDefaults =
         state.firingRates.bisque === meta.defaults.bisque
@@ -224,7 +212,7 @@ export const toggleBundled = () => {
 
 export const handleFiringRateInput = (key: FiringKey, event: Event) => {
     const raw = (event.currentTarget as HTMLInputElement).value;
-    const value = parsedDecimalDraft(raw);
+    const value = parseDecimalDraft(raw);
     if (value === null) return;
     state.firingRates = { ...state.firingRates, [key]: toStoredRate(value, state.basis) };
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
@@ -232,7 +220,7 @@ export const handleFiringRateInput = (key: FiringKey, event: Event) => {
 
 export const handleBundledRateInput = (event: Event) => {
     const raw = (event.currentTarget as HTMLInputElement).value;
-    const value = parsedDecimalDraft(raw);
+    const value = parseDecimalDraft(raw);
     if (value === null) return;
     state.firingRates = { ...state.firingRates, bundled: toStoredRate(value, state.basis) };
     state.firingRatesByBasis[state.basis] = { ...state.firingRates };
@@ -282,14 +270,13 @@ export const addPiece = () => {
 };
 
 export const removePiece = (id: number) => {
-    // Guard the invariant: at least one piece always exists. The UI hides
-    // the X button on a single-piece view, but a programmatic call (or
-    // a future keyboard shortcut) would otherwise leave the page empty.
+    // removePiece should keep at least one piece. The UI hides the remove
+    // button on a single-piece view, but programmatic calls need the same guard.
     if (state.pieces.length <= 1) return;
     const removedIndex = state.pieces.findIndex((piece) => piece.id === id);
     state.pieces = state.pieces.filter((piece) => piece.id !== id);
-    // Focus should land on the piece immediately before the removed one,
-    // or on the new last piece when the removed piece was last.
+    // Focus should land on the piece before the removed one, or on the new last
+    // piece when the removed piece was last.
     const targetIndex = Math.min(Math.max(removedIndex - 1, 0), state.pieces.length - 1);
     const target = state.pieces[targetIndex];
     const firstInputId = state.basis === "weight" ? `piece-${target.id}-weight` : `piece-${target.id}-L`;
