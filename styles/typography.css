@@ -16,7 +16,7 @@
     margin-bottom: 1.25rem;
 }
 
-/* Uppercase section labels for field labels and section headers */
+/* Section Labels */
 :is(.label, .section-label) {
     font-size: 0.6875rem;
     font-weight: 600;
@@ -29,16 +29,13 @@
     margin-bottom: 0.5rem;
 }
 
-/* Sentence-case 13px label for sub-text input labels within a multi-input
-   row (e.g. Length / Width / Height under a single Dimensions section, or
-   Bisque / Glaze / Luster Rate under a single Firings section). Quieter
-   than the uppercase .label so the input it labels stays the dominant
-   visual element in the row. */
+/* Input Labels */
 .input-label {
     font-size: 0.8125rem;
     color: var(--color-muted);
 }
 
+/* Helper Text */
 .hint-text {
     font-size: 0.6875rem;
     color: var(--color-muted);
@@ -64,9 +61,7 @@
     margin-top: 0.25rem;
 }
 
-/* Visually hidden but available to assistive tech. Used for landmark
-   headings (h2, h3) that anchor screen-reader navigation but don't
-   need a visible duplicate of an existing visual section label. */
+/* Screen Reader Text */
 .sr-only {
     position: absolute;
     width: 1px;

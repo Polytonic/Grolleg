@@ -1,29 +1,17 @@
 import m from "mithril";
 import { parseLocaleNumber } from "./locale";
 
+// Input With Suffix
+// The component should expose a non-interactive unit suffix inside a positioned input wrapper.
 
-/* Input With Suffix   Number input with an absolutely-positioned unit string at the right
-   edge ("%", "in", "¢/in³"). The wrapper provides the relative
-   positioning context. The suffix is non-interactive so it doesn't
-   eat clicks meant for the input.
-
-   Pass-through API: `suffix`, `modifiers`, and `pulseKey` are consumed
-   by the component, everything else flows to the inner <input>.
-   `modifiers` is a typed list of class hooks ("numeric", "warn",
-   "error") that get appended to the base `.input.with-suffix` selector.
-   `pulseKey` is a monotonic counter. Whenever it changes between
-   renders the input replays its `.pulsing` background-fade animation
-   (CSS-defined per consumer). The animation also plays on initial
-   mount when pulseKey is non-zero, so newly-appearing inputs flash
-   alongside surviving ones on the same state change. */
-
+// Component Contract
 type Modifier = "numeric" | "warn" | "error";
 
 interface InputWithSuffixAttrs {
     suffix: m.Children;
     modifiers?: readonly Modifier[];
     pulseKey?: number;
-    // Verbose unit string for SR announcement, adding aria-describedby to a hidden sibling.
+    // Expanded suffix text should be exposed through a screen-reader description.
     suffixSr?: string;
     [key: string]: unknown;
 }
@@ -32,14 +20,14 @@ let suffixSrIdCounter = 0;
 
 type PulseTracker = { lastPulseKey: number };
 
+// Pulse Animation
 const replayPulse = (element: HTMLElement) => {
     element.classList.remove("pulsing");
     void element.offsetHeight;
     element.classList.add("pulsing");
 };
 
-// Per-instance counter used to mint a stable id for the SR-only unit
-// span when `suffixSr` is provided.
+// The generated suffix description id should stay stable for this component instance.
 interface InputWithSuffixState {
     suffixSrId?: string;
 }
@@ -51,22 +39,20 @@ export const InputWithSuffix: m.Component<InputWithSuffixAttrs, InputWithSuffixS
         }
     },
     view({ attrs, state }) {
-        // m.censor strips Mithril's reserved attrs (key + lifecycle hooks)
-        // plus the named extras, so the remainder spreads cleanly onto the
-        // inner <input> without the fragment-key error.
+        // Lifecycle attrs should stay on the component vnode. The inner input
+        // lifecycle is reserved for pulse animation replay.
         const inputAttrs = m.censor(attrs, ["suffix", "modifiers", "pulseKey", "suffixSr"]);
         const modifierClass = attrs.modifiers?.length
             ? "." + attrs.modifiers.join(".")
             : "";
 
         const hasExplicitState = attrs.modifiers?.includes("warn") || attrs.modifiers?.includes("error");
-        let parseInvalid = false;
-        if (!hasExplicitState && attrs.inputmode === "decimal") {
-            const value = attrs.value;
-            if (typeof value === "string" && value !== "" && !Number.isFinite(parseLocaleNumber(value))) {
-                parseInvalid = true;
-            }
-        }
+        const value = attrs.value;
+        const parseInvalid = !hasExplicitState
+            && attrs.inputmode === "decimal"
+            && typeof value === "string"
+            && value !== ""
+            && !Number.isFinite(parseLocaleNumber(value));
 
         const inputProps: Record<string, unknown> = { ...inputAttrs };
         if (state.suffixSrId) {
@@ -79,16 +65,14 @@ export const InputWithSuffix: m.Component<InputWithSuffixAttrs, InputWithSuffixS
             const pulseKey = attrs.pulseKey;
             inputProps.oncreate = (vnode: m.VnodeDOM<unknown, PulseTracker>) => {
                 vnode.state.lastPulseKey = pulseKey;
-                // Mount-time pulse: this input just appeared in response
-                // to the same toggle that bumped the key. Animate so the
-                // new field reads as "this is what changed."
+                // New inputs should flash for the state change that created them.
                 if (pulseKey > 0) replayPulse(vnode.dom as HTMLElement);
             };
             inputProps.onupdate = (vnode: m.VnodeDOM<unknown, PulseTracker>) => {
-                if (vnode.state.lastPulseKey === pulseKey) return;
-                vnode.state.lastPulseKey = pulseKey;
-                if (pulseKey === 0) return;
-                replayPulse(vnode.dom as HTMLElement);
+                if (vnode.state.lastPulseKey !== pulseKey) {
+                    vnode.state.lastPulseKey = pulseKey;
+                    if (pulseKey !== 0) replayPulse(vnode.dom as HTMLElement);
+                }
             };
         }
 

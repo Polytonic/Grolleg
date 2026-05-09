@@ -14,7 +14,7 @@
     background: var(--color-control-bg);
     color: var(--color-control-text);
     cursor: pointer;
-    background-image: var(--select-chevron-image, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234A4D4F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E"));
+    background-image: var(--select-chevron-image);
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1rem 0.75rem;

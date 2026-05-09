@@ -6,6 +6,7 @@ import m from "mithril";
 // primitive owns radio-group keyboard behavior.
 
 interface TogglePillAttrs {
+    // Single selector-safe class token. Space-separated class names are not supported.
     className: string;
     active: boolean;
     onclick: () => void;

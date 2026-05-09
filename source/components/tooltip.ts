@@ -1,12 +1,13 @@
 import m from "mithril";
 import "@css/components/tooltip.css";
 
-// Tooltip constants. CSS duplicates the width and margin values
-// because overflow flip logic needs them in JS to measure before painting.
+// Geometry Constants
+// CSS should mirror these values so JS can measure before painting.
 const BUBBLE_WIDTH = 260;
 const VIEWPORT_MARGIN = 16;
 
-// Only one tooltip open at a time. Opening a second invokes the first's close.
+// Singleton Open State
+// Opening a second tooltip should close the first.
 let globalCloseTooltip: (() => void) | null = null;
 let groupIdCounter = 0;
 
@@ -25,9 +26,8 @@ interface TooltipState {
 
 const stateRegistry = new Map<string, TooltipState>();
 
-// Creates a shared state entry for a tooltip group. All open/close/dismiss
-// logic lives here so compound components only need to read and call methods.
-const createState = (groupId: string): TooltipState => {
+// State should own dismissal so compound parts stay declarative.
+const createState = (): TooltipState => {
     const state: TooltipState = {
         open: false,
         pinned: false,
@@ -37,24 +37,33 @@ const createState = (groupId: string): TooltipState => {
         closeTimer: null,
 
         openTooltip(asPinned: boolean) {
-            if (globalCloseTooltip && globalCloseTooltip !== state.close) globalCloseTooltip();
+            if (globalCloseTooltip && globalCloseTooltip !== state.close) {
+                globalCloseTooltip();
+            }
             state.open = true;
             state.pinned = asPinned;
             globalCloseTooltip = state.close;
-            if (typeof document !== "undefined") document.addEventListener("pointerdown", handleOutsidePointerDown);
+            if (typeof document !== "undefined") {
+                document.addEventListener("pointerdown", handleOutsidePointerDown);
+            }
         },
 
         close() {
             if (!state.open) return;
             state.open = false;
             state.pinned = false;
-            if (state.closeTimer) { clearTimeout(state.closeTimer); state.closeTimer = null; }
+            if (state.closeTimer) {
+                clearTimeout(state.closeTimer);
+                state.closeTimer = null;
+            }
             if (globalCloseTooltip === state.close) globalCloseTooltip = null;
-            if (typeof document !== "undefined") document.removeEventListener("pointerdown", handleOutsidePointerDown);
+            if (typeof document !== "undefined") {
+                document.removeEventListener("pointerdown", handleOutsidePointerDown);
+            }
         },
     };
 
-    // Closes when clicking outside both trigger and portal bubble
+    // Outside pointer presses should dismiss both trigger and portal.
     const handleOutsidePointerDown = (event: PointerEvent) => {
         const target = event.target as Node;
         if (state.triggerElement?.contains(target)) return;
@@ -66,22 +75,29 @@ const createState = (groupId: string): TooltipState => {
     return state;
 };
 
-// Schedules a close after a short delay, giving the user time
-// to move the mouse from trigger to portal bubble across the gap.
+// Hover gaps should not close the bubble before the pointer can cross.
 const scheduleClose = (state: TooltipState) => {
     if (state.pinned) return;
     state.closeTimer = setTimeout(() => {
-        if (!state.pinned) { state.close(); m.redraw(); }
+        if (!state.pinned) {
+            state.close();
+            m.redraw();
+        }
     }, 100);
 };
 
 const cancelClose = (state: TooltipState) => {
-    if (state.closeTimer) { clearTimeout(state.closeTimer); state.closeTimer = null; }
+    if (state.closeTimer) {
+        clearTimeout(state.closeTimer);
+        state.closeTimer = null;
+    }
 };
 
 
 // Compound Components
-// State lifecycle and singleton management
+
+// Root State Lifecycle
+
 interface TooltipRootAttrs {
     groupId?: string;
 }
@@ -92,11 +108,14 @@ const TooltipRoot: m.ClosureComponent<TooltipRootAttrs> = () => {
     return {
         oninit(vnode) {
             groupId = vnode.attrs.groupId ?? `tooltip-auto-${++groupIdCounter}`;
-            stateRegistry.set(groupId, createState(groupId));
+            stateRegistry.set(groupId, createState());
         },
         onremove() {
             const state = stateRegistry.get(groupId);
-            if (state) { state.close(); stateRegistry.delete(groupId); }
+            if (state) {
+                state.close();
+                stateRegistry.delete(groupId);
+            }
         },
         view: (vnode) => m("span.tooltip", {
             onmouseleave: () => {
@@ -107,13 +126,13 @@ const TooltipRoot: m.ClosureComponent<TooltipRootAttrs> = () => {
     };
 };
 
-// Wraps any child element and wires up interaction handlers
+// Trigger Wrapper
+
 interface TooltipTriggerAttrs {
     groupId: string;
 }
 
-// Detect touch capability to prevent mouseenter from racing with click on mobile.
-// Touch devices fire mouseenter → click in sequence, causing open-then-close.
+// Touch devices often fire mouseenter before click, causing open then close.
 const hasHover = typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches;
 
 const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
@@ -122,8 +141,10 @@ const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
             const state = stateRegistry.get(vnode.attrs.groupId);
             if (!state) return vnode.children;
 
-            return m("span", {
-                oncreate: (vnode: m.VnodeDOM) => { state.triggerElement = vnode.dom as HTMLElement; },
+            return m("span.tooltip-trigger", {
+                oncreate: (vnode: m.VnodeDOM) => {
+                    state.triggerElement = vnode.dom as HTMLElement;
+                },
                 onmouseenter: () => {
                     cancelClose(state);
                     if (hasHover && !state.open) state.openTooltip(false);
@@ -131,7 +152,10 @@ const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
                 onclick: (event: MouseEvent) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    if (state.open) { state.close(); return; }
+                    if (state.open) {
+                        state.close();
+                        return;
+                    }
                     state.openTooltip(true);
                 },
                 onkeydown: (event: KeyboardEvent) => {
@@ -150,7 +174,8 @@ const TooltipTrigger: m.ClosureComponent<TooltipTriggerAttrs> = () => {
     };
 };
 
-// Renders tooltip bubble content via a portal appended to document.body
+// Portal Content
+
 interface TooltipContentAttrs {
     groupId: string;
 }
@@ -192,14 +217,16 @@ const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
         mountViewportListeners(groupId);
 
         const tooltipState = stateRegistry.get(groupId);
-        if (tooltipState) tooltipState.portalElement = portalDiv;
+        if (tooltipState) {
+            tooltipState.portalElement = portalDiv;
+        }
 
         m.mount(portalDiv, {
             view: () => {
                 const state = stateRegistry.get(groupId);
                 if (!state?.open || !state.triggerElement) return null;
 
-                // Position bubble below the trigger using fixed coordinates
+                // Bubble should stay within the viewport before it paints.
                 const rect = state.triggerElement.getBoundingClientRect();
                 const flipRight = rect.left + BUBBLE_WIDTH > window.innerWidth - VIEWPORT_MARGIN;
                 const style: Record<string, string> = {
@@ -246,9 +273,8 @@ const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
 };
 
 
-// Convenience Wrapper
-// Backward-compatible Tooltip that composes Root + Trigger + Content
-// with the "?" button pattern. Existing call sites use this unchanged.
+// Compatibility Wrapper
+// Keeps the existing question-button API over the compound pieces.
 interface TooltipAttrs {
     label: string;
     text: string;

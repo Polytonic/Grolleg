@@ -1,8 +1,8 @@
 import m from "mithril";
 
 
-/* Icon Factory   Builds stroke-style icon functions from SVG path data. All icons share
-   the same 24x24 viewBox and stroke attributes; only the paths differ. */
+// Icon Factory
+// Builds 24x24 stroke icons from SVG path data.
 
 const icon = (...paths: string[]) =>
     (size: number): m.Vnode =>

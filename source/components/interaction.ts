@@ -1,15 +1,19 @@
-/* Interaction Utilities   Lightweight progressive enhancements shared across tools. */
+// Interaction Utilities
+
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 const reducedMotionQuery =
     typeof window !== "undefined" && window.matchMedia
-        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        ? window.matchMedia(REDUCED_MOTION_QUERY)
         : null;
 
+// Missing media-query support should behave like no reduced-motion preference.
 export const prefersReducedMotion = (): boolean => reducedMotionQuery?.matches ?? false;
 
-// iOS Safari silently ignores vibration, so no error handling needed.
-export const haptic = () => { navigator?.vibrate?.(15); };
+// Unsupported haptics should be a no-op for callers.
+export const haptic = () => { globalThis.navigator?.vibrate?.(15); };
 
-// Defer focus to next tick so the DOM reflects the latest state mutation.
-export const focusLater = (id: string) =>
+// Focus should wait until Mithril applies the latest state mutation.
+export const focusLater = (id: string) => {
     setTimeout(() => { globalThis.document?.getElementById(id)?.focus(); }, 0);
+};
