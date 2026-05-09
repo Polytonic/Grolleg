@@ -8,6 +8,7 @@ import { initializeTheme } from "../../source/theme";
 // Test Helpers
 
 const originalGet = m.route.get;
+const originalRedraw = m.redraw;
 
 // The navigation component references the global document for content inertness
 // and oncreate/onremove keydown listeners.
@@ -36,7 +37,18 @@ const renderAtRoute = (path: string) => {
     return mq(Navigation);
 };
 
+// focusLater schedules with setTimeout(0), so focus assertions wait one macrotask.
 const flushFocus = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+const dispatchDocumentKeydown = (key: string) => {
+    let defaultPrevented = false;
+    document.dispatchEvent({
+        type: "keydown",
+        key,
+        preventDefault() { defaultPrevented = true; },
+    } as unknown as Event);
+    return defaultPrevented;
+};
 
 beforeEach(() => {
     globalThis.document = stubDocument;
@@ -46,6 +58,7 @@ beforeEach(() => {
 afterEach(() => {
     initializeTheme({});
     m.route.get = originalGet;
+    m.redraw = originalRedraw;
     closeDrawer(false);
     // @ts-expect-error -- remove the stub so it does not leak to other files
     delete globalThis.document;
@@ -64,16 +77,30 @@ describe("Navigation landmarks", () => {
 
 // Links
 describe("Navigation links", () => {
-    it("renders desktop brand and tool links plus mobile brand and tool links", () => {
+    it("renders desktop brand and tool links in the sidebar", () => {
         const output = renderAtRoute("/");
-        expect(output.rootEl.querySelectorAll("a").length).toBe(6);
-        expect(output.rootEl.querySelectorAll(".sidebar__brand").length).toBe(1);
-        expect(output.rootEl.querySelectorAll(".mobile-nav__brand").length).toBe(1);
-        expect(output.rootEl.querySelectorAll(".navigation-link").length).toBe(4);
-        expect(output.rootEl.textContent).not.toContain("Studio tools");
-        expect(output.rootEl.querySelector(".sidebar__section-label")).toBeUndefined();
-        expect(output.rootEl.querySelectorAll(".navigation-link")[0]?.textContent).toBe("Shrinkage Calculator");
-        expect(output.rootEl.querySelectorAll(".navigation-link")[1]?.textContent).toBe("Firing Cost Calculator");
+        const sidebar = output.rootEl.querySelector("nav.sidebar")!;
+        const toolLinks = Array.from(sidebar.querySelectorAll(".navigation-link"));
+
+        expect(sidebar.querySelectorAll(".sidebar__brand").length).toBe(1);
+        expect(toolLinks.map((link) => link.textContent)).toEqual([
+            "Shrinkage Calculator",
+            "Firing Cost Calculator",
+        ]);
+        expect(sidebar.textContent).not.toContain("Studio tools");
+        expect(sidebar.querySelector(".sidebar__section-label")).toBeUndefined();
+    });
+
+    it("renders mobile brand and tool links in the drawer", () => {
+        const output = renderAtRoute("/");
+        const drawer = output.rootEl.querySelector("nav.mobile-nav__drawer")!;
+        const toolLinks = Array.from(drawer.querySelectorAll(".navigation-link"));
+
+        expect(drawer.querySelectorAll(".mobile-nav__brand").length).toBe(1);
+        expect(toolLinks.map((link) => link.textContent)).toEqual([
+            "Shrinkage Calculator",
+            "Firing Cost Calculator",
+        ]);
     });
 });
 
@@ -280,12 +307,27 @@ describe("Navigation mobile toggle", () => {
 
 
 // Escape Key Dismissal
-// The document keydown handler is registered in oncreate and calls
-// closeDrawer + m.redraw. In mithril-query, m.redraw lacks a scheduler and
-// throws, so we cannot dispatch a synthetic keydown through the full path.
-// Instead we test closeDrawer directly. It is the same code path the handler
-// invokes, minus the m.redraw call that only matters in a mounted app.
 describe("Navigation escape key dismissal", () => {
+    it("Escape closes an open drawer through the document listener", () => {
+        let redrawCalls = 0;
+        const redraw = (() => { redrawCalls += 1; }) as typeof m.redraw;
+        redraw.sync = () => {};
+        m.redraw = redraw;
+
+        const output = renderAtRoute("/");
+        const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+        toggle.click();
+        output.redraw();
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+        const defaultPrevented = dispatchDocumentKeydown("Escape");
+        output.redraw();
+
+        expect(defaultPrevented).toBe(true);
+        expect(redrawCalls).toBe(1);
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    });
+
     it("closeDrawer closes an open drawer", () => {
         const output = renderAtRoute("/");
         const toggle = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;

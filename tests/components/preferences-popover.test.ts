@@ -44,11 +44,16 @@ const removePopover = (output: PopoverOutput) => {
     if (outputIndex >= 0) mountedPopovers.splice(outputIndex, 1);
 };
 
-const themeOptionByText = (output: PopoverOutput, text: string): HTMLElement =>
-    Array.from(output.rootEl.querySelectorAll<HTMLElement>(".preferences-popover__theme-option"))
-        .find((button) => button.textContent === text) as HTMLElement;
+const themeOptionByText = (output: PopoverOutput, text: string): HTMLElement => {
+    const option = Array.from(output.rootEl.querySelectorAll<HTMLElement>(".preferences-popover__theme-option"))
+        .find((button) => button.textContent === text);
+    if (!option) throw new Error(`Missing theme option: ${text}`);
+    return option;
+};
 
 const listenerCount = (type: string) => listeners.get(type)?.size ?? 0;
+
+// focusLater schedules with setTimeout(0), so focus assertions wait one macrotask.
 const flushFocus = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const dispatchDocumentPointerDown = (target: Node) => {
@@ -201,7 +206,7 @@ describe("PreferencesPopover interaction", () => {
 
         dispatchKeydown(system, "ArrowRight");
         output.redraw();
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await flushFocus();
 
         expect(getThemePreference()).toBe("light");
         expect(themeOptionByText(output, "Light").getAttribute("aria-checked")).toBe("true");
@@ -242,7 +247,7 @@ describe("PreferencesPopover interaction", () => {
         output.redraw();
         dispatchDocumentPointerDown(outside);
         output.redraw();
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await flushFocus();
 
         expect(trigger.getAttribute("aria-expanded")).toBe("false");
         expect(focusedIds).not.toContain(trigger.id);
@@ -256,7 +261,7 @@ describe("PreferencesPopover interaction", () => {
         output.redraw();
         const defaultPrevented = dispatchDocumentEscape();
         output.redraw();
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await flushFocus();
 
         expect(defaultPrevented).toBe(true);
         expect(trigger.getAttribute("aria-expanded")).toBe("false");

@@ -7,7 +7,7 @@
 @import "../styles/controls.css";
 
 /* Project-Specific Resets on Top of Normalize */
-*, *::before, *::after { margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+*, *::before, *::after { margin: 0; padding: 0; }
 html, body { overflow: hidden; }
 
 /* Site-Wide Page Styling Shared Across All Tools */
@@ -129,6 +129,18 @@ body {
     --motion-ease-out: ease-out;
     --motion-ease-enter: cubic-bezier(0.2, 0, 0, 1);
 
+    /* Layout */
+    --layout-sidebar-width: 200px;
+    --layout-content-width: 1080px;
+    --layout-shell-width: calc(var(--layout-sidebar-width) + var(--layout-content-width));
+
+    /* Layers */
+    --layer-mobile-nav-backdrop: 999;
+    --layer-mobile-nav: 1000;
+    --layer-popover: 1002;
+    --layer-tooltip: 10000;
+    --layer-skip-link: 10001;
+
     color-scheme: light;
 }
 
@@ -208,6 +220,15 @@ body {
     color-scheme: dark;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-duration-feedback: 0s;
+        --motion-duration-tooltip: 0s;
+        --motion-duration-reveal: 0s;
+        --motion-duration-panel: 0s;
+    }
+}
+
 /* Focus Ring
    Inherits each element's own border-radius so circular and rectangular
    targets get matching ring shapes. */
@@ -222,7 +243,7 @@ body {
     position: absolute;
     inset-block-start: 0.75rem;
     inset-inline-start: 0.75rem;
-    z-index: 10001;
+    z-index: var(--layer-skip-link);
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
@@ -284,10 +305,10 @@ body {
 /* App Shell */
 .app {
     display: grid;
-    grid-template-columns: 200px minmax(0, 1080px);
-    max-width: 1280px;
+    grid-template-columns: var(--layout-sidebar-width) minmax(0, var(--layout-content-width));
+    max-width: var(--layout-shell-width);
     height: 100dvh;
-    margin-left: max(0px, calc((100vw - 1080px) / 2 - 200px));
+    margin-left: max(0px, calc((100vw - var(--layout-content-width)) / 2 - var(--layout-sidebar-width)));
 }
 
 .app__content {

@@ -6,8 +6,6 @@ import { PreferencesPopover, closePreferencesPopovers } from "./preferences-popo
 
 
 // Navigation
-// Fixed desktop tool rail and collapsible mobile tray.
-
 interface Tool {
     path: string;
     label: string;
@@ -23,11 +21,15 @@ const TOGGLE_ID = "mobile-navigation-toggle";
 const FIRST_LINK_ID = "mobile-navigation-first-link";
 const BACKDROP_EXIT_MS = 200;
 
+
+// Drawer State
 let drawerOpen = false;
 let backdropRendered = false;
 let listenerRegistered = false;
 let backdropRemovalTimeout: ReturnType<typeof setTimeout> | undefined;
 
+
+// Route State
 const isActiveTool = (path: string): boolean =>
     m.route.get() === path;
 
@@ -36,6 +38,8 @@ const activeDestinationLabel = (): string => {
     return TOOLS.find((tool) => isActiveTool(tool.path))?.label ?? "Tools";
 };
 
+
+// Drawer Accessibility
 const syncContentInert = () => {
     globalThis.document?.querySelector(".app__content")?.toggleAttribute("inert", drawerOpen);
 };
@@ -52,6 +56,13 @@ const syncDrawerAccessibilityFromDocument = () => {
     syncDrawerAccessibility(globalThis.document?.getElementById(DRAWER_ID));
 };
 
+const syncDrawerShell = () => {
+    syncDrawerAccessibilityFromDocument();
+    syncContentInert();
+};
+
+
+// Backdrop Lifecycle
 const clearBackdropRemovalTimeout = () => {
     if (!backdropRemovalTimeout) return;
     clearTimeout(backdropRemovalTimeout);
@@ -82,32 +93,38 @@ const scheduleBackdropRemoval = () => {
     }, BACKDROP_EXIT_MS);
 };
 
-export const closeDrawer = (focusToggle: boolean) => {
-    if (!drawerOpen) {
-        removeBackdrop();
+
+// Drawer Actions
+const setDrawerOpen = (nextDrawerOpen: boolean, focusTargetId?: string) => {
+    if (drawerOpen === nextDrawerOpen) {
+        if (!drawerOpen) removeBackdrop();
         return;
     }
-    drawerOpen = false;
-    scheduleBackdropRemoval();
-    if (focusToggle) focusLater(TOGGLE_ID);
-    syncDrawerAccessibilityFromDocument();
-    syncContentInert();
+
+    drawerOpen = nextDrawerOpen;
+    if (drawerOpen) showBackdrop();
+    else scheduleBackdropRemoval();
+    if (focusTargetId) focusLater(focusTargetId);
+    syncDrawerShell();
+};
+
+export const closeDrawer = (focusToggle: boolean) => {
+    setDrawerOpen(false, focusToggle ? TOGGLE_ID : undefined);
 };
 
 const toggleDrawer = (event: Event) => {
-    const opening = !drawerOpen;
-    if (opening) closePreferencesPopovers(false);
+    const shouldOpenDrawer = !drawerOpen;
+    const openedByKeyboard = ((event as MouseEvent).detail ?? 0) === 0;
+    if (shouldOpenDrawer) closePreferencesPopovers(false);
 
-    drawerOpen = opening;
-    if (drawerOpen) showBackdrop();
-    else scheduleBackdropRemoval();
-    if (!(event as PointerEvent).detail) {
-        focusLater(drawerOpen ? FIRST_LINK_ID : TOGGLE_ID);
-    }
-    syncDrawerAccessibilityFromDocument();
-    syncContentInert();
+    setDrawerOpen(
+        shouldOpenDrawer,
+        openedByKeyboard ? (shouldOpenDrawer ? FIRST_LINK_ID : TOGGLE_ID) : undefined,
+    );
 };
 
+
+// Event Handling
 const handleBackdropTransitionEnd = (event: Event) => {
     if (event.target !== event.currentTarget || drawerOpen) return;
     const propertyName = (event as TransitionEvent).propertyName;
@@ -128,13 +145,11 @@ const isInteractiveTarget = (target: EventTarget | null): boolean =>
 const openDrawerFromCard = (event: Event) => {
     if (drawerOpen || isInteractiveTarget(event.target)) return;
     closePreferencesPopovers(false);
-    drawerOpen = true;
-    showBackdrop();
-    syncDrawerAccessibilityFromDocument();
-    syncContentInert();
+    setDrawerOpen(true);
 };
 
 
+// Render Helpers
 const toolLink = (tool: Tool, className: string, id?: string) => {
     const active = isActiveTool(tool.path);
     return m(m.route.Link, {
@@ -146,6 +161,8 @@ const toolLink = (tool: Tool, className: string, id?: string) => {
     }, tool.label);
 };
 
+
+// Desktop Navigation
 const desktopSidebar = () =>
     m("nav.sidebar", { "aria-label": "Site navigation" },
         m(".sidebar__identity",
@@ -165,6 +182,8 @@ const desktopSidebar = () =>
         ),
     );
 
+
+// Mobile Navigation
 const mobileNavigation = () =>
     m(".mobile-nav", { class: drawerOpen ? "open" : "" },
         backdropRendered && m(".mobile-nav__backdrop", {
@@ -214,6 +233,8 @@ const mobileNavigation = () =>
         ),
     );
 
+
+// Component Lifecycle
 export const Navigation: m.Component = {
     oncreate() {
         if (!listenerRegistered && globalThis.document) {

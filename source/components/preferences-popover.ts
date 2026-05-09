@@ -37,14 +37,20 @@ export const closePreferencesPopovers = (returnFocus = false) => {
 };
 
 
-// Event Helpers
+// Event Boundaries
 
 const stopPopoverEvent = (event: Event) => {
     event.stopPropagation();
 };
 
+
+// Element IDs
+
 const themeId = (popoverId: string, option: ThemePreference) =>
     `${popoverId}-theme-${option}`;
+
+
+// Keyboard Navigation
 
 const themeAtOffset = (option: ThemePreference, offset: number): ThemePreference => {
     const currentIndex = THEME_PREFERENCES.indexOf(option);
@@ -69,9 +75,13 @@ const themeForKey = (key: string, option: ThemePreference): ThemePreference | un
     }
 };
 
-const selectTheme = (option: ThemePreference, popoverId?: string) => {
+
+// Theme Selection and Focus
+
+const selectTheme = (option: ThemePreference, focusPopoverId?: string) => {
     setThemePreference(option);
-    if (popoverId) focusLater(themeId(popoverId, option));
+    // Keyboard-driven selection should follow the roving radio focus.
+    if (focusPopoverId) focusLater(themeId(focusPopoverId, option));
 };
 
 const handleThemeKeydown = (
@@ -113,6 +123,7 @@ const themeRow = (
     const isSelected = selectedTheme === option;
     const optionId = themeId(popoverId, option);
 
+    // Button-backed rows should keep native activation while ARIA exposes radio state.
     return m(`button.preferences-popover__theme-option${isSelected ? ".active" : ""}`, {
         id: optionId,
         key: option,
