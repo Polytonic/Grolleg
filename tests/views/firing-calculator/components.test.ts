@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
+import { readFileSync } from "node:fs";
 import mq from "mithril-query";
 import { computeDerived } from "../../../source/views/firing-calculator/derived";
 import { FiringCalculatorView } from "../../../source/views/firing-calculator/firing-calculator";
@@ -8,6 +9,26 @@ import { CostSummary } from "../../../source/views/firing-calculator/total";
 import { resetState, makePiece, setStudio, setPieces } from "./helpers";
 
 beforeEach(() => resetState());
+
+
+// CSS Contract Helpers
+function cssBlock(styles: string, selector: string): string {
+    const selectorStart = styles.indexOf(selector);
+    if (selectorStart < 0) throw new Error(`Missing CSS selector: ${selector}`);
+
+    const blockStart = styles.indexOf("{", selectorStart);
+    if (blockStart < 0) throw new Error(`Missing opening brace for ${selector}`);
+
+    let depth = 0;
+    for (let index = blockStart; index < styles.length; index += 1) {
+        const character = styles[index];
+        if (character === "{") depth += 1;
+        if (character === "}") depth -= 1;
+        if (depth === 0) return styles.slice(blockStart + 1, index);
+    }
+
+    throw new Error(`Missing closing brace for ${selector}`);
+}
 
 
 // Orchestrator
@@ -164,6 +185,25 @@ describe("ControlsSection", () => {
         setStudio({ basis: "volume", dimensionUnit: "in" });
         const output = mq(ControlsSection, { derived: computeDerived() });
         expect(output.should.contain("¢/in³"));
+    });
+});
+
+
+// CSS Contracts
+describe("Firing calculator CSS contracts", () => {
+    it("keeps standalone Luster chips out of the full-size button min-height", () => {
+        const styles = readFileSync("styles/views/firing-calculator.css", "utf8");
+
+        const sharedButtonBlock = cssBlock(styles, "    :is(.pill, .chip, .add-piece)");
+        expect(sharedButtonBlock).toContain("font-family: var(--font-sans);");
+        expect(sharedButtonBlock).toContain("display: inline-flex;");
+        expect(sharedButtonBlock).not.toContain("min-height:");
+
+        const fullSizeButtonBlock = cssBlock(styles, "    :is(.pill, .add-piece)");
+        expect(fullSizeButtonBlock).toContain("min-height: 2.75rem;");
+
+        const chipBlock = cssBlock(styles, "    .chip");
+        expect(chipBlock).not.toContain("min-height:");
     });
 });
 
