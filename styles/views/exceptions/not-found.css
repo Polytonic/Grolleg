@@ -1,7 +1,3 @@
-/* Page-Not-Found View
-   404 page rendered when the URL does not match any registered route.
-   Minimal layout: heading, subtitle, recovery link. */
-
 .not-found-view {
 
     .container {
