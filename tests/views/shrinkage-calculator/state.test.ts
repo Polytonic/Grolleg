@@ -1,17 +1,30 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import {
     state,
+    PRESET_GROUPS,
     handlePresetChange, handleShrinkageInput, handleShrinkageBlur,
     handleStageToggle, handleGreenwareInput, handleBisqueInput,
     handleShapeChange, handleDirectionChange, handleUnitChange,
     handleDimensionInput, handleDimensionKey,
 } from "../../../source/views/shrinkage-calculator/state";
 import { computeDerived } from "../../../source/views/shrinkage-calculator/derived";
-import { resetState, mockInputEvent, mockCheckboxEvent, mockSelectEvent, mockKeyboardEvent } from "../../helpers";
+import {
+    resetShrinkageState,
+    mockInputEvent, mockCheckboxEvent, mockSelectEvent, mockKeyboardEvent,
+} from "../../helpers";
 
-import { PRESET_GROUPS } from "../../../source/views/shrinkage-calculator/state";
+beforeEach(() => resetShrinkageState());
 
-beforeEach(() => resetState());
+const presetIndexByName = (name: string): number => {
+    const preset = PRESET_GROUPS.flatMap((group) => group.options)
+        .find((option) => option.name === name);
+
+    if (!preset) throw new Error(`Missing preset: ${name}`);
+    return preset.index;
+};
+
+const presetSelectValue = (name: string): string =>
+    String(presetIndexByName(name));
 
 
 // Preset Data
@@ -90,8 +103,8 @@ describe("dimension results", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", "200"];
         const derived = computeDerived();
-        expect(derived.firedResults![0]).toBeCloseTo(88, 1);
-        expect(derived.firedResults![1]).toBeCloseTo(176, 1);
+        expect(derived.convertedDimensions![0]).toBeCloseTo(88, 1);
+        expect(derived.convertedDimensions![1]).toBeCloseTo(176, 1);
     });
 
     it("fired-to-wet reverses shrinkage", () => {
@@ -99,23 +112,17 @@ describe("dimension results", () => {
         state.shrinkage = "12";
         state.dimensions = ["88", "176"];
         const derived = computeDerived();
-        expect(derived.firedResults![0]).toBeCloseTo(100, 0);
-        expect(derived.firedResults![1]).toBeCloseTo(200, 0);
+        expect(derived.convertedDimensions![0]).toBeCloseTo(100, 0);
+        expect(derived.convertedDimensions![1]).toBeCloseTo(200, 0);
     });
 
-    it("partial entry shows per-dimension results", () => {
+    it("partial entry shows per-dimension results but blocks volume", () => {
         state.shrinkage = "12";
         state.dimensions = ["100", ""];
         const derived = computeDerived();
         expect(derived.anyResults).toBe(true);
-        expect(derived.firedResults![0]).not.toBeNull();
-        expect(derived.firedResults![1]).toBeNull();
-    });
-
-    it("partial entry blocks volume but keeps stage display dimensions", () => {
-        state.shrinkage = "12";
-        state.dimensions = ["100", ""];
-        const derived = computeDerived();
+        expect(derived.convertedDimensions![0]).not.toBeNull();
+        expect(derived.convertedDimensions![1]).toBeNull();
         expect(derived.wetDimensions).toBeNull();
         expect(derived.finalDimensions).toBeNull();
         expect(derived.stageWetDimensions![0]).not.toBeNull();
@@ -130,19 +137,19 @@ describe("dimension results", () => {
         state.dimensions = ["100", "200"];
         const derived = computeDerived();
         expect(derived.anyResults).toBe(false);
-        expect(derived.firedResults).toBeNull();
+        expect(derived.convertedDimensions).toBeNull();
     });
 
     it("zero dimension returns null for that field", () => {
         state.shrinkage = "12";
         state.dimensions = ["0", "100"];
-        expect(computeDerived().firedResults![0]).toBeNull();
+        expect(computeDerived().convertedDimensions![0]).toBeNull();
     });
 
     it("negative dimension returns null for that field", () => {
         state.shrinkage = "12";
         state.dimensions = ["-5", "100"];
-        expect(computeDerived().firedResults![0]).toBeNull();
+        expect(computeDerived().convertedDimensions![0]).toBeNull();
     });
 });
 
@@ -298,8 +305,10 @@ describe("hint message flags", () => {
 // Event Handlers: Preset and Shrinkage
 describe("handlePresetChange", () => {
     it("populates shrinkage from preset", () => {
-        handlePresetChange(mockSelectEvent("0")); // Earthenware Cone 04
-        expect(state.presetIndex).toBe(0);
+        const earthenwareIndex = presetIndexByName("Earthenware (Cone 04)");
+
+        handlePresetChange(mockSelectEvent(String(earthenwareIndex)));
+        expect(state.presetIndex).toBe(earthenwareIndex);
         expect(state.shrinkage).toBe("7");
         expect(state.greenwareShrinkage).toBe("5");
         expect(state.bisqueShrinkage).toBe("0.5");
@@ -307,7 +316,7 @@ describe("handlePresetChange", () => {
 
     it("Custom preset clears shrinkage and resets touched", () => {
         state.shrinkageTouched = true;
-        handlePresetChange(mockSelectEvent("4")); // Custom
+        handlePresetChange(mockSelectEvent(presetSelectValue("Custom")));
         expect(state.shrinkage).toBe("");
         expect(state.shrinkageTouched).toBe(false);
     });
@@ -317,7 +326,7 @@ describe("handlePresetChange", () => {
         state.shrinkageTouched = true;
         expect(computeDerived().shrinkageInvalid).toBe(true);
 
-        handlePresetChange(mockSelectEvent("1")); // Stoneware Cone 6
+        handlePresetChange(mockSelectEvent(presetSelectValue("Stoneware (Cone 6)")));
         expect(state.shrinkage).toBe("12");
         expect(computeDerived().shrinkageInvalid).toBe(false);
     });
@@ -325,10 +334,10 @@ describe("handlePresetChange", () => {
 
 describe("handleShrinkageInput", () => {
     it("updates shrinkage and switches to Custom preset", () => {
-        state.presetIndex = 1;
+        state.presetIndex = presetIndexByName("Stoneware (Cone 6)");
         handleShrinkageInput(mockInputEvent("15"));
         expect(state.shrinkage).toBe("15");
-        expect(state.presetIndex).toBe(4); // CUSTOM_INDEX
+        expect(state.presetIndex).toBe(presetIndexByName("Custom"));
     });
 });
 
@@ -355,19 +364,19 @@ describe("handleStageToggle", () => {
 
 describe("handleGreenwareInput", () => {
     it("updates greenware and switches to Custom", () => {
-        state.presetIndex = 1;
+        state.presetIndex = presetIndexByName("Stoneware (Cone 6)");
         handleGreenwareInput(mockInputEvent("8"));
         expect(state.greenwareShrinkage).toBe("8");
-        expect(state.presetIndex).toBe(4);
+        expect(state.presetIndex).toBe(presetIndexByName("Custom"));
     });
 });
 
 describe("handleBisqueInput", () => {
     it("updates bisque and switches to Custom", () => {
-        state.presetIndex = 1;
+        state.presetIndex = presetIndexByName("Stoneware (Cone 6)");
         handleBisqueInput(mockInputEvent("1.5"));
         expect(state.bisqueShrinkage).toBe("1.5");
-        expect(state.presetIndex).toBe(4);
+        expect(state.presetIndex).toBe(presetIndexByName("Custom"));
     });
 });
 
@@ -453,7 +462,7 @@ describe("handleDimensionKey", () => {
     });
 
     it("prevents default on Enter and blurs last field", () => {
-        // Use last field index so handler takes the blur path (no document.getElementById)
+        // Use the last field index so the handler takes the blur path without document.getElementById.
         let blurred = false;
         let prevented = false;
         const event = {
@@ -469,6 +478,6 @@ describe("handleDimensionKey", () => {
         expect(blurred).toBe(true);
     });
 
-    // Focus advance to next field (non-last index) requires document.getElementById.
+    // Focus advance to the next field requires document.getElementById.
     // Tested manually in browser, not automatable without jsdom.
 });

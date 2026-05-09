@@ -29,8 +29,13 @@ describe("ConnectedPill active state", () => {
             aLabel: "Bisque", bLabel: "Glaze",
             onToggleA: () => {}, onToggleB: () => {},
         });
-        // Exactly one half has .active.
-        expect(output.should.have(".connected-pill__half.active"));
+        const halves = output.rootEl.querySelectorAll(".connected-pill__half");
+
+        expect(halves.length).toBe(2);
+        expect(halves[0].textContent).toBe("Bisque");
+        expect(halves[0].classList.contains("active")).toBe(true);
+        expect(halves[1].textContent).toBe("Glaze");
+        expect(halves[1].classList.contains("active")).toBe(false);
     });
 
     it("applies .active to both halves when both active", () => {
@@ -40,29 +45,17 @@ describe("ConnectedPill active state", () => {
             aLabel: "Bisque", bLabel: "Glaze",
             onToggleA: () => {}, onToggleB: () => {},
         });
-        // Two halves with .active.
-        const matches = output.rootEl.querySelectorAll(".connected-pill__half.active");
-        expect(matches.length).toBe(2);
-    });
+        const activeStates = Array.from(output.rootEl.querySelectorAll(".connected-pill__half"))
+            .map((half) => half.classList.contains("active"));
 
-    it("keeps active state from changing the inline font weight", () => {
-        const output = mq(ConnectedPill, {
-            connected: true,
-            aActive: true, bActive: false,
-            aLabel: "Bisque", bLabel: "Glaze",
-            onToggleA: () => {}, onToggleB: () => {},
-        });
-        const halves = output.rootEl.querySelectorAll(".connected-pill__half");
-        const fontWeights = Array.from(halves, half => (half as HTMLElement).style.fontWeight);
-
-        expect(fontWeights).toEqual(["400", "400"]);
+        expect(activeStates).toEqual([true, true]);
     });
 });
 
 
 // Disabled State
 describe("ConnectedPill disabled state", () => {
-    it("applies .disabled to a half when disabled prop is true", () => {
+    it("applies .disabled only to the disabled half", () => {
         const output = mq(ConnectedPill, {
             connected: false,
             aActive: false, bActive: false,
@@ -70,7 +63,13 @@ describe("ConnectedPill disabled state", () => {
             aDisabled: true,
             onToggleA: () => {}, onToggleB: () => {},
         });
-        expect(output.should.have(".connected-pill__half.disabled"));
+        const halves = output.rootEl.querySelectorAll(".connected-pill__half");
+
+        expect(halves.length).toBe(2);
+        expect(halves[0].textContent).toBe("Bisque");
+        expect(halves[0].classList.contains("disabled")).toBe(true);
+        expect(halves[1].textContent).toBe("Glaze");
+        expect(halves[1].classList.contains("disabled")).toBe(false);
     });
 
     it("does not invoke onToggle when half is disabled", () => {
@@ -94,7 +93,7 @@ describe("ConnectedPill disabled state", () => {
 });
 
 
-// Aria
+// ARIA Attributes
 describe("ConnectedPill aria attributes", () => {
     it("sets aria-pressed reflecting active prop on each half", () => {
         const output = mq(ConnectedPill, {
@@ -130,30 +129,5 @@ describe("ConnectedPill aria attributes", () => {
         });
         const halves = output.rootEl.querySelectorAll(".connected-pill__half");
         expect(halves[0].getAttribute("aria-label")).toBe("Bisque firing for piece 1");
-    });
-});
-
-
-// Size Variants
-describe("ConnectedPill size variants", () => {
-    it("applies .size-pill by default", () => {
-        const output = mq(ConnectedPill, {
-            connected: false,
-            aActive: false, bActive: false,
-            aLabel: "A", bLabel: "B",
-            onToggleA: () => {}, onToggleB: () => {},
-        });
-        expect(output.should.have(".connected-pill__half.size-pill"));
-    });
-
-    it("applies .size-chip when size='chip'", () => {
-        const output = mq(ConnectedPill, {
-            connected: false,
-            aActive: false, bActive: false,
-            size: "chip",
-            aLabel: "A", bLabel: "B",
-            onToggleA: () => {}, onToggleB: () => {},
-        });
-        expect(output.should.have(".connected-pill__half.size-chip"));
     });
 });

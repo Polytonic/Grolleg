@@ -8,7 +8,7 @@ import {
 } from "../../source/components/locale";
 
 
-// parseLocaleNumber
+// Parse Locale Number
 describe("parseLocaleNumber", () => {
     it("12.5 (US decimal)", () => {
         expect(parseLocaleNumber("12.5")).toBe(12.5);
@@ -83,7 +83,7 @@ describe("parseLocaleNumber", () => {
     });
 });
 
-describe("parseLocaleNumber — ambiguous comma input", () => {
+describe("parseLocaleNumber handles ambiguous comma input", () => {
     it("1,234 → thousands (3 digits after comma, no dot)", () => {
         expect(parseLocaleNumber("1,234")).toBe(1234);
     });
@@ -135,22 +135,27 @@ describe("parseLocaleNumber — ambiguous comma input", () => {
 
 
 // Region Detection
+const currentRegion = (() => {
+    try { return new Intl.Locale(navigator?.language ?? "").region ?? ""; }
+    catch { return ""; }
+})();
+
+const currentLocaleUsesImperialUnits = ["US", "LR", "MM"].includes(currentRegion);
+
 describe("detectDefaultDimensionUnit", () => {
-    it("returns a valid dimension unit", () => {
-        const unit = detectDefaultDimensionUnit();
-        expect(["mm", "cm", "in"]).toContain(unit);
+    it("defaults to inches for imperial regions and centimeters elsewhere", () => {
+        expect(detectDefaultDimensionUnit()).toBe(currentLocaleUsesImperialUnits ? "in" : "cm");
     });
 });
 
 describe("detectDefaultWeightUnit", () => {
-    it("returns a valid weight unit", () => {
-        const unit = detectDefaultWeightUnit();
-        expect(["g", "kg", "oz", "lb"]).toContain(unit);
+    it("defaults to pounds for imperial regions and kilograms elsewhere", () => {
+        expect(detectDefaultWeightUnit()).toBe(currentLocaleUsesImperialUnits ? "lb" : "kg");
     });
 });
 
 
-// formatNumber
+// Format Number
 describe("formatNumber", () => {
     it("formats with two decimal places", () => {
         expect(formatNumber(12.5)).toBe("12.50");
@@ -176,22 +181,27 @@ describe("formatNumber", () => {
         expect(formatNumber(0)).toBe("0.00");
     });
 
-    it("negative zero preserves sign (IEEE 754)", () => {
-        expect(formatNumber(-0)).toBe("-0.00");
+    it("normalizes negative zero for display", () => {
+        expect(formatNumber(-0)).toBe("0.00");
+    });
+
+    it("normalizes negative values that round to zero for display", () => {
+        expect(formatNumber(-0.004)).toBe("0.00");
     });
 });
 
 
-// decimalFormat
+// Decimal Format
 describe("decimalFormat", () => {
     it("formats with two decimal places", () => {
-        const result = decimalFormat.format(3.5);
-        expect(result).toContain("3");
-        expect(result).toContain("50");
+        const parts = decimalFormat.formatToParts(3.5);
+        expect(parts.find((part) => part.type === "integer")?.value).toBe("3");
+        expect(parts.find((part) => part.type === "fraction")?.value).toBe("50");
     });
 
     it("rounds to two decimals", () => {
-        const result = decimalFormat.format(1.999);
-        expect(result).toContain("2");
+        const parts = decimalFormat.formatToParts(1.999);
+        expect(parts.find((part) => part.type === "integer")?.value).toBe("2");
+        expect(parts.find((part) => part.type === "fraction")?.value).toBe("00");
     });
 });

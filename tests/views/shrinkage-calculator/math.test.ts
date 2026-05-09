@@ -8,7 +8,6 @@ import {
 
 
 // Shrinkage Application and Reversal
-
 describe("applyRate", () => {
     it("shrinks 100 by 12% to 88", () => {
         expect(applyRate(100, 12)).toBeCloseTo(88, 2);
@@ -40,10 +39,6 @@ describe("reverseRate", () => {
         expect(reverseRate(100, 100)).toBe(Infinity);
     });
 
-    it("reverseRate is the inverse of applyRate", () => {
-        expect(reverseRate(applyRate(150, 13), 13)).toBeCloseTo(150, 10);
-    });
-
     it("round-trips through both directions", () => {
         const original = 234.5;
         const percent = 15.3;
@@ -51,12 +46,7 @@ describe("reverseRate", () => {
         expect(applyRate(reverseRate(original, percent), percent)).toBeCloseTo(original, 10);
     });
 });
-
-
-
-
 // Volume Calculation
-
 describe("calculateVolume", () => {
     it("rectangular: L * W * H", () => {
         expect(calculateVolume([10, 20, 30], "rectangle")).toBe(6000);
@@ -83,7 +73,6 @@ describe("calculateVolume", () => {
 
 
 // Stage Decomposition: (1 - total) = (1 - greenware) * (1 - bisque) * (1 - firing)
-
 describe("deriveFiringPercent", () => {
     it("derives firing from Stoneware Cone 6 defaults (12%, 6%, 0.75%)", () => {
         const result = deriveFiringPercent(12, 6, 0.75);

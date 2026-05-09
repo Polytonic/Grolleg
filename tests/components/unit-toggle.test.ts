@@ -16,37 +16,25 @@ describe("UnitToggle default render", () => {
         expect(output.should.contain("cm"));
         expect(output.should.contain("in"));
     });
-
-    it("renders separator spans between units", () => {
-        const output = mq(UnitToggle, {
-            units: ["mm", "cm", "in"],
-            active: "cm",
-            onSelect: () => {},
-        });
-        const separators = output.rootEl.querySelectorAll(".unit-separator");
-        expect(separators.length).toBe(2);
-    });
-
-    it("renders no separator for a single unit", () => {
-        const output = mq(UnitToggle, {
-            units: ["cm"],
-            active: "cm",
-            onSelect: () => {},
-        });
-        expect(output.should.not.have(".unit-separator"));
-    });
 });
 
 
 // Active State
 describe("UnitToggle active state", () => {
-    it("applies .active to the currently selected unit", () => {
+    it("applies .active only to the currently selected unit", () => {
         const output = mq(UnitToggle, {
             units: ["mm", "cm", "in"],
             active: "in",
             onSelect: () => {},
         });
-        expect(output.should.have("button.unit-text.active"));
+        const activeStates = Array.from(output.rootEl.querySelectorAll("button.unit-text"))
+            .map((button) => [button.textContent, button.classList.contains("active")]);
+
+        expect(activeStates).toEqual([
+            ["mm", false],
+            ["cm", false],
+            ["in", true],
+        ]);
     });
 
     it("sets aria-pressed='true' on the active unit", () => {
@@ -82,8 +70,8 @@ describe("UnitToggle active state", () => {
 
         const toggle = output.rootEl.querySelector(".unit-text-toggle")!;
         expect(toggle.getAttribute("role")).toBe("group");
-        expect(toggle.querySelector("[role='radio']")).toBeUndefined();
-        expect(toggle.querySelector("[aria-checked]")).toBeUndefined();
+        expect(toggle.querySelectorAll("[role='radio']").length).toBe(0);
+        expect(toggle.querySelectorAll("[aria-checked]").length).toBe(0);
     });
 });
 

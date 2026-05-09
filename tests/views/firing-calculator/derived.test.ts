@@ -6,140 +6,129 @@ import { resetState, setStudio, setPieces, makePiece } from "./helpers";
 beforeEach(() => resetState());
 
 
-// rateUnit
-describe("rateUnit matches rateUnitFor(basis, dimensionUnit, weightUnit)", () => {
-    it("volume/in yields cents per cubic inch", () => {
-        setStudio({ basis: "volume", dimensionUnit: "in" });
-        expect(computeDerived().rateUnit).toBe("¢/in³");
-    });
+// Rate Unit
+describe("derived rate unit follows the billing basis and display unit", () => {
+    const cases = [
+        {
+            label: "volume/in yields cents per cubic inch",
+            studio: { basis: "volume", dimensionUnit: "in" },
+            rateUnit: "¢/in³",
+        },
+        {
+            label: "footprint/cm yields cents per square centimeter",
+            studio: { basis: "footprint", dimensionUnit: "cm" },
+            rateUnit: "¢/cm²",
+        },
+        {
+            label: "weight/lb yields dollars per pound",
+            studio: { basis: "weight", weightUnit: "lb" },
+            rateUnit: "$/lb",
+        },
+    ] as const;
 
-    it("footprint/cm yields cents per square centimeter", () => {
-        setStudio({ basis: "footprint", dimensionUnit: "cm" });
-        expect(computeDerived().rateUnit).toBe("¢/cm²");
-    });
-
-    it("weight/lb yields dollars per pound", () => {
-        setStudio({ basis: "weight", weightUnit: "lb" });
-        expect(computeDerived().rateUnit).toBe("$/lb");
-    });
+    for (const { label, studio, rateUnit } of cases) {
+        it(label, () => {
+            setStudio(studio);
+            expect(computeDerived().rateUnit).toBe(rateUnit);
+        });
+    }
 });
 
 
-// showRounding
-describe("showRounding is true for volume and footprint, false for weight", () => {
-    it("volume shows rounding", () => {
-        setStudio({ basis: "volume" });
-        expect(computeDerived().showRounding).toBe(true);
-    });
+// Basis Visibility
+describe("derived visibility follows the billing basis", () => {
+    const cases = [
+        { basis: "volume", showRounding: true, showMinHeight: true },
+        { basis: "footprint", showRounding: true, showMinHeight: false },
+        { basis: "weight", showRounding: false, showMinHeight: false },
+    ] as const;
 
-    it("footprint shows rounding", () => {
-        setStudio({ basis: "footprint" });
-        expect(computeDerived().showRounding).toBe(true);
-    });
-
-    it("weight hides rounding", () => {
-        setStudio({ basis: "weight" });
-        expect(computeDerived().showRounding).toBe(false);
-    });
+    for (const { basis, showRounding, showMinHeight } of cases) {
+        it(`${basis} visibility`, () => {
+            setStudio({ basis });
+            const derived = computeDerived();
+            expect(derived.showRounding).toBe(showRounding);
+            expect(derived.showMinHeight).toBe(showMinHeight);
+        });
+    }
 });
 
 
-// showMinHeight
-describe("showMinHeight is true only for volume", () => {
-    it("volume shows min height", () => {
-        setStudio({ basis: "volume" });
-        expect(computeDerived().showMinHeight).toBe(true);
-    });
+// Active Units
+describe("active units follow the billing basis", () => {
+    const cases = [
+        {
+            label: "volume uses dimension units and current dimension unit",
+            studio: { basis: "volume", dimensionUnit: "cm" },
+            activeUnitSet: DIMENSION_UNITS,
+            activeUnit: "cm",
+        },
+        {
+            label: "footprint uses dimension units and current dimension unit",
+            studio: { basis: "footprint", dimensionUnit: "mm" },
+            activeUnitSet: DIMENSION_UNITS,
+            activeUnit: "mm",
+        },
+        {
+            label: "weight uses weight units and current weight unit",
+            studio: { basis: "weight", weightUnit: "oz" },
+            activeUnitSet: WEIGHT_UNITS,
+            activeUnit: "oz",
+        },
+    ] as const;
 
-    it("footprint hides min height", () => {
-        setStudio({ basis: "footprint" });
-        expect(computeDerived().showMinHeight).toBe(false);
-    });
-
-    it("weight hides min height", () => {
-        setStudio({ basis: "weight" });
-        expect(computeDerived().showMinHeight).toBe(false);
-    });
+    for (const { label, studio, activeUnitSet, activeUnit } of cases) {
+        it(label, () => {
+            setStudio(studio);
+            const derived = computeDerived();
+            expect(derived.activeUnitSet).toBe(activeUnitSet);
+            expect(derived.activeUnit).toBe(activeUnit);
+        });
+    }
 });
 
 
-// activeUnitSet
-describe("activeUnitSet selects dimension units for volume/footprint, weight units for weight", () => {
-    it("volume uses DIMENSION_UNITS", () => {
-        setStudio({ basis: "volume" });
-        expect(computeDerived().activeUnitSet).toBe(DIMENSION_UNITS);
-    });
+// Total Quantity Unit
+describe("total quantity suffix follows the display unit", () => {
+    const cases = [
+        {
+            label: "volume/in yields cubic inches",
+            studio: { basis: "volume", dimensionUnit: "in" },
+            totalQuantityUnit: "in³",
+        },
+        {
+            label: "footprint/cm yields square centimeters",
+            studio: { basis: "footprint", dimensionUnit: "cm" },
+            totalQuantityUnit: "cm²",
+        },
+        { label: "weight/lb yields pounds", studio: { basis: "weight", weightUnit: "lb" }, totalQuantityUnit: "lb" },
+        { label: "weight/kg yields kilograms", studio: { basis: "weight", weightUnit: "kg" }, totalQuantityUnit: "kg" },
+    ] as const;
 
-    it("footprint uses DIMENSION_UNITS", () => {
-        setStudio({ basis: "footprint" });
-        expect(computeDerived().activeUnitSet).toBe(DIMENSION_UNITS);
-    });
-
-    it("weight uses WEIGHT_UNITS", () => {
-        setStudio({ basis: "weight" });
-        expect(computeDerived().activeUnitSet).toBe(WEIGHT_UNITS);
-    });
+    for (const { label, studio, totalQuantityUnit } of cases) {
+        it(label, () => {
+            setStudio(studio);
+            expect(computeDerived().totalQuantityUnit).toBe(totalQuantityUnit);
+        });
+    }
 });
 
 
-// activeUnit
-describe("activeUnit reflects dimensionUnit for volume/footprint, weightUnit for weight", () => {
-    it("volume returns the dimension unit", () => {
-        setStudio({ basis: "volume", dimensionUnit: "cm" });
-        expect(computeDerived().activeUnit).toBe("cm");
-    });
-
-    it("footprint returns the dimension unit", () => {
-        setStudio({ basis: "footprint", dimensionUnit: "mm" });
-        expect(computeDerived().activeUnit).toBe("mm");
-    });
-
-    it("weight returns the weight unit", () => {
-        setStudio({ basis: "weight", weightUnit: "oz" });
-        expect(computeDerived().activeUnit).toBe("oz");
-    });
-});
-
-
-// totalQuantityUnit
-describe("totalQuantityUnit formats the display-unit suffix", () => {
-    it("volume/in yields cubic inches", () => {
-        setStudio({ basis: "volume", dimensionUnit: "in" });
-        expect(computeDerived().totalQuantityUnit).toBe("in³");
-    });
-
-    it("footprint/cm yields square centimeters", () => {
-        setStudio({ basis: "footprint", dimensionUnit: "cm" });
-        expect(computeDerived().totalQuantityUnit).toBe("cm²");
-    });
-
-    it("weight/lb yields pounds", () => {
-        setStudio({ basis: "weight", weightUnit: "lb" });
-        expect(computeDerived().totalQuantityUnit).toBe("lb");
-    });
-
-    it("weight/kg yields kilograms", () => {
-        setStudio({ basis: "weight", weightUnit: "kg" });
-        expect(computeDerived().totalQuantityUnit).toBe("kg");
-    });
-});
-
-
-// heightBelowMin
-describe("heightBelowMin flags pieces whose H is below studio minHeight", () => {
-    it("true when piece H is below minHeight on volume basis", () => {
+// Minimum Height Warnings
+describe("minimum-height warnings flag only short volume pieces", () => {
+    it("true when piece height is below the studio minimum on volume basis", () => {
         setStudio({ basis: "volume", minHeight: 3 });
         setPieces([makePiece({ L: "5", W: "5", H: "2" })]);
         expect(computeDerived().pieces[0].heightBelowMin).toBe(true);
     });
 
-    it("false when piece H equals minHeight", () => {
+    it("false when piece height equals the studio minimum", () => {
         setStudio({ basis: "volume", minHeight: 3 });
         setPieces([makePiece({ L: "5", W: "5", H: "3" })]);
         expect(computeDerived().pieces[0].heightBelowMin).toBe(false);
     });
 
-    it("false when piece H exceeds minHeight", () => {
+    it("false when piece height exceeds the studio minimum", () => {
         setStudio({ basis: "volume", minHeight: 3 });
         setPieces([makePiece({ L: "5", W: "5", H: "5" })]);
         expect(computeDerived().pieces[0].heightBelowMin).toBe(false);
@@ -151,7 +140,7 @@ describe("heightBelowMin flags pieces whose H is below studio minHeight", () => 
         expect(computeDerived().pieces[0].heightBelowMin).toBe(false);
     });
 
-    it("false when minHeight is zero (floor disabled)", () => {
+    it("false when minimum height is zero (floor disabled)", () => {
         setStudio({ basis: "volume", minHeight: 0 });
         setPieces([makePiece({ L: "5", W: "5", H: "1" })]);
         expect(computeDerived().pieces[0].heightBelowMin).toBe(false);

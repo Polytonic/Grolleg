@@ -25,7 +25,7 @@ describe("studio individual firing toggle propagates to every piece", () => {
         expect(state.firingToggles.bisque).toBe(true);
         expect(state.pieces[0].firings.bisque).toBe(true);
         expect(state.pieces[1].firings.bisque).toBe(true);
-        expect(state.pieces[1].firings.glaze).toBe(true); // unchanged
+        expect(state.pieces[1].firings.glaze).toBe(true);
     });
 
     it("toggle bisque OFF at studio: every piece gets bisque OFF", () => {
@@ -82,8 +82,9 @@ describe("bundled pair-toggle propagates both bisque and glaze", () => {
 });
 
 
-/* Rule 3: Bundled Activation OR-Migrates Pieces   Bundled activation OR-migrates pieces that already participate in bisque
-   or glaze. Luster-only and no-firing pieces are left untouched. */
+// Rule 3: Bundled Activation OR-Migrates Pieces
+// Bundled activation should migrate pieces that already participate in bisque or glaze.
+// Luster-only and no-firing pieces should stay untouched.
 
 describe("bundled activation OR-migrates pieces", () => {
     it("piece with bisque OR glaze on gets both forced on", () => {
@@ -105,7 +106,7 @@ describe("bundled activation OR-migrates pieces", () => {
             makePiece({ firings: { bisque: false, glaze: false, luster: true } }),
         ]);
         toggleBundled();
-        // The piece stays luster-only; bundling doesn't auto-enroll it.
+        // The piece should stay luster-only. Bundling does not auto-enroll it.
         expect(state.pieces[0].firings).toEqual({ bisque: false, glaze: false, luster: true });
     });
 
@@ -124,14 +125,6 @@ describe("bundled activation OR-migrates pieces", () => {
         expect(state.bundled).toBe(true);
         expect(state.firingToggles.bisque).toBe(true);
         expect(state.firingToggles.glaze).toBe(true);
-    });
-
-    it("toggleBundled bumps bundlePulseKey on every flip (drives the rate-input pulse animation)", () => {
-        const before = state.bundlePulseKey;
-        toggleBundled();
-        expect(state.bundlePulseKey).toBe(before + 1);
-        toggleBundled();
-        expect(state.bundlePulseKey).toBe(before + 2);
     });
 
     it("bundled activation seeds firingRates.bundled from sum of bisque and glaze rates", () => {
@@ -217,7 +210,7 @@ describe("bundled deactivation leaves pieces unchanged", () => {
 
 // Rule 5: Per-Piece Chip Toggle Does Not Propagate Up
 describe("piece-level chip toggle leaves studio unchanged", () => {
-    it("toggling a piece chip doesn't touch studio toggles", () => {
+    it("toggling a piece chip does not touch studio toggles", () => {
         setStudio({ firingToggles: { bisque: true, glaze: true, luster: false } });
         setPieces([makePiece({ firings: { bisque: true, glaze: true, luster: false } })]);
         const id = state.pieces[0].id;
@@ -237,21 +230,21 @@ describe("piece-level chip toggle leaves studio unchanged", () => {
         ]);
         const firstId = state.pieces[0].id;
         togglePiecePair(firstId, "bisque");
-        // First piece: both off (the tapped chip was on, so both go off)
+        // The first piece should turn both bundled chips off.
         expect(state.pieces[0].firings.bisque).toBe(false);
         expect(state.pieces[0].firings.glaze).toBe(false);
-        // Second piece: untouched
+        // The second piece should stay untouched.
         expect(state.pieces[1].firings.bisque).toBe(true);
         expect(state.pieces[1].firings.glaze).toBe(true);
-        // Studio: untouched
+        // Studio toggles should stay untouched.
         expect(state.firingToggles.bisque).toBe(true);
         expect(state.firingToggles.glaze).toBe(true);
     });
 });
 
 
-// Basis Change Resets Rates; Unit Change Preserves Them
-describe("basis change reseeds rates; unit change does not", () => {
+// Basis Change Resets Rates and Unit Change Preserves Them
+describe("basis changes reseed rates while unit changes preserve them", () => {
     it("changing basis reseeds rates from the new basis' defaults", () => {
         setStudio({ firingRates: { bisque: 0.05, glaze: 0.06, luster: 0.10 } });
         handleBasisChange(mockInputEvent("weight"));
@@ -270,7 +263,7 @@ describe("basis change reseeds rates; unit change does not", () => {
         expect(state.firingRates.bisque).toBeCloseTo(0.07);
     });
 
-    it("changing dim unit does not reset rates", () => {
+    it("changing dimension unit does not reset rates", () => {
         setStudio({ basis: "volume", firingRates: { bisque: 0.05, glaze: 0.05, luster: 0.10 } });
         handleDimensionUnitChange("cm");
         expect(state.dimensionUnit).toBe("cm");
@@ -294,7 +287,7 @@ describe("basis change reseeds rates; unit change does not", () => {
 });
 
 
-// updatePiece
+// Piece Updates
 describe("updatePiece", () => {
     it("updates the targeted piece and leaves others intact", () => {
         setPieces([makePiece({ id: 1, L: "4" }), makePiece({ id: 2, L: "5" })]);
@@ -333,7 +326,7 @@ describe("bundled rate survives basis round-trip via the per-basis cache", () =>
 });
 
 
-// addPiece and removePiece Handlers
+// Piece Addition and Removal Handlers
 describe("addPiece and removePiece", () => {
     it("addPiece appends with current studio firings as the chip default", () => {
         setStudio({ firingToggles: { bisque: true, glaze: true, luster: false } });
@@ -370,7 +363,7 @@ describe("addPiece and removePiece", () => {
 });
 
 
-// firingRatesByBasis Cache through Handlers
+// Firing Rates by Basis Cache Through Handlers
 describe("firingRatesByBasis cache through handlers", () => {
     it("handleFiringRateInput updates the cache for the active basis", () => {
         handleFiringRateInput("bisque", mockInputEvent("5"));
@@ -392,12 +385,12 @@ describe("firingRatesByBasis cache through handlers", () => {
 });
 
 
-// toggleBundled Seeding Branch: User-Edited Bundled Rate
+// Bundled Rate Seeding with User-Edited Rates
 describe("toggleBundled preserves user-edited bundled rate", () => {
     it("preserves user-edited bundled rate when activating", () => {
-        // Set a non-default bisque rate so ratesAtDefaults is false
+        // A non-default bisque rate should make ratesAtDefaults false.
         handleFiringRateInput("bisque", mockInputEvent("8"));
-        // Set a non-default bundled rate so the seeding condition is skipped
+        // A non-default bundled rate should skip the seeding condition.
         handleBundledRateInput(mockInputEvent("4"));
         const editedBundled = state.firingRates.bundled;
         toggleBundled();

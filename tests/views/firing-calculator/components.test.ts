@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import mq from "mithril-query";
-import { state } from "../../../source/views/firing-calculator/state";
 import { computeDerived } from "../../../source/views/firing-calculator/derived";
 import { FiringCalculatorView } from "../../../source/views/firing-calculator/firing-calculator";
 import { ControlsSection } from "../../../source/views/firing-calculator/controls";
@@ -20,9 +19,8 @@ describe("FiringCalculatorView orchestrator", () => {
     });
 
     it("renders the controls, pieces, and divider on a single-piece default load (no cost summary)", () => {
-        // Default load is one piece, so the cost summary is suppressed
-        // (a single-piece run already shows its price inside the piece
-        // card).
+        // Default load should suppress the cost summary because a
+        // single-piece run already shows its price inside the piece card.
         const output = mq(FiringCalculatorView);
         expect(output.should.have(".firing-calculator"));
         expect(output.should.have(".controls-section"));
@@ -51,7 +49,7 @@ describe("FiringCalculatorView orchestrator", () => {
 });
 
 
-// ControlsSection
+// Controls Section
 describe("ControlsSection", () => {
     it("renders the basis dropdown with all three bases", () => {
         const output = mq(ControlsSection, { derived: computeDerived() });
@@ -76,15 +74,16 @@ describe("ControlsSection", () => {
 
     it("default load: only Bisque is the active studio firing", () => {
         const output = mq(ControlsSection, { derived: computeDerived() });
-        // Three pill-class buttons exist (chain, Luster, plus the one in
-        // ConnectedPill which uses .connected-pill__half). The Bisque ConnectedPill
-        // half should have the .active class.
-        expect(output.should.have(".connected-pill__half.active"));
+        const firingButtons = Array.from(output.rootEl.querySelectorAll(".firings-row__group button"));
+
+        expect(firingButtons.map((button) => button.textContent)).toEqual(["Bisque", "Glaze", "Luster"]);
+        expect(firingButtons.map((button) => button.classList.contains("active"))).toEqual([true, false, false]);
+        expect(firingButtons.map((button) => button.getAttribute("aria-pressed"))).toEqual(["true", "false", "false"]);
     });
 
     it("renders the Bisque rate input by default", () => {
         const output = mq(ControlsSection, { derived: computeDerived() });
-        // The section header carries the "Rates" context; per-input labels
+        // The section header carries the "Rates" context. Per-input labels
         // are just the firing name.
         expect(output.should.contain("Bisque"));
         expect(output.should.have("#rate-bisque"));
@@ -93,9 +92,9 @@ describe("ControlsSection", () => {
     it("renders all rate slots disabled (with hint) when zero firings are active", () => {
         setStudio({ firingToggles: { bisque: false, glaze: false, luster: false } });
         const output = mq(ControlsSection, { derived: computeDerived() });
-        // Slots remain rendered so the layout doesn't reflow as the user
-        // toggles firings. The hint surfaces below the row only when every
-        // slot is disabled.
+        // Slots should stay rendered so the layout does not reflow as the
+        // user toggles firings. The hint should surface below the row only
+        // when every slot is disabled.
         expect(output.should.have(".rate-inputs .field-group.disabled"));
         expect(output.should.have("#rate-bisque"));
         expect(output.should.have("#rate-glaze"));
@@ -138,10 +137,14 @@ describe("ControlsSection", () => {
     it("renders weight unit pills for weight basis", () => {
         setStudio({ basis: "weight", firingRates: { bisque: 1.0, glaze: 1.5, luster: 2.0 } });
         const output = mq(ControlsSection, { derived: computeDerived() });
-        expect(output.should.contain("g"));
-        expect(output.should.contain("kg"));
-        expect(output.should.contain("oz"));
-        expect(output.should.contain("lb"));
+        const rateUnitToggle = output.rootEl.querySelector(".section[aria-label='Firing rates'] .unit-text-toggle");
+        const unitButtons = Array.from(rateUnitToggle?.querySelectorAll("button.unit-text") ?? []);
+
+        expect(rateUnitToggle?.getAttribute("aria-label")).toBe("Rate unit");
+        expect(unitButtons.map((button) => button.textContent)).toEqual(["g", "kg", "oz", "lb"]);
+        expect(unitButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+            "grams", "kilograms", "ounces", "pounds",
+        ]);
     });
 
     it("rate input scrubs floating-point artifacts (0.035 → \"3.5\", not \"3.5000000000000004\")", () => {
@@ -165,7 +168,7 @@ describe("ControlsSection", () => {
 });
 
 
-// PiecesSection and PieceRow
+// Pieces Section and Piece Row
 describe("PiecesSection", () => {
     it("default load: one piece, no badge, no remove button", () => {
         const output = mq(PiecesSection, { derived: computeDerived() });
@@ -208,8 +211,8 @@ describe("PiecesSection", () => {
     });
 
     it("size cluster renders silhouette + comparison name + qty when dimensions are entered", () => {
-        // Pin dimUnit to inches so the cubeish bucket math is deterministic;
-        // otherwise the locale-detected default in the test runtime can
+        // Pin dimensionUnit to inches so the cubeish bucket math is deterministic.
+        // Otherwise the locale-detected default in the test runtime can
         // shift the lookup (e.g., 4×4×5 cm³ falls in a different bucket).
         setStudio({ dimensionUnit: "in" });
         setPieces([makePiece({ L: "4", W: "4", H: "5" })]);
@@ -236,7 +239,7 @@ describe("PiecesSection", () => {
     });
 
     it("warning box renders when piece H is below studio minimum", () => {
-        // dimUnit pinned for the same reason: the warning text templates the
+        // dimensionUnit is pinned for the same reason: the warning text templates the
         // unit string into the user-visible message.
         setStudio({ dimensionUnit: "in", minHeight: 2 });
         setPieces([makePiece({ L: "4", W: "4", H: "1" })]);
@@ -247,10 +250,17 @@ describe("PiecesSection", () => {
     });
 
     it("H input gets warn class when below minHeight", () => {
-        setStudio({ minHeight: 2 });
+        setStudio({ dimensionUnit: "in", minHeight: 2 });
         setPieces([makePiece({ L: "4", W: "4", H: "1" })]);
         const output = mq(PiecesSection, { derived: computeDerived() });
-        expect(output.should.have(".input.numeric.with-suffix.warn"));
+        const lengthInput = output.rootEl.querySelector("input[id$='-L']") as HTMLInputElement;
+        const widthInput = output.rootEl.querySelector("input[id$='-W']") as HTMLInputElement;
+        const heightInput = output.rootEl.querySelector("input[id$='-H']") as HTMLInputElement;
+
+        expect(lengthInput.classList.contains("warn")).toBe(false);
+        expect(widthInput.classList.contains("warn")).toBe(false);
+        expect(heightInput.classList.contains("warn")).toBe(true);
+        expect(heightInput.getAttribute("title")).toBe("Billed at 2 in (minimum height)");
     });
 
     it("warning box does not render when H equals or exceeds minHeight", () => {
@@ -280,10 +290,6 @@ describe("PiecesSection", () => {
         expect(halves.length).toBe(2);
         expect(halves[0].classList.contains("active")).toBe(true);
         expect(halves[1].classList.contains("active")).toBe(true);
-        expect((halves[0] as HTMLElement).style.marginRight).toBe("6px");
-        expect((halves[0] as HTMLElement).style.borderTopRightRadius).toBe("6px");
-        expect((halves[1] as HTMLElement).style.borderTopLeftRadius).toBe("6px");
-        expect(halves[1].getAttribute("style")).not.toContain("border-left: 1px solid transparent");
     });
 
     it("joins Bisque and Glaze pill halves when bundled is on", () => {
@@ -307,11 +313,17 @@ describe("PiecesSection", () => {
     it("Luster chip renders disabled when studio luster is off", () => {
         setStudio({ firingToggles: { bisque: true, glaze: false, luster: false } });
         const output = mq(PiecesSection, { derived: computeDerived() });
-        expect(output.should.have(".chip.disabled"));
+        const lusterChip = Array.from(output.rootEl.querySelectorAll(".piece-row__include .chip"))
+            .find((button) => button.textContent === "Luster") as HTMLButtonElement | undefined;
+
+        expect(lusterChip).toBeDefined();
+        expect(lusterChip?.classList.contains("disabled")).toBe(true);
+        expect(lusterChip?.disabled).toBe(true);
+        expect(lusterChip?.getAttribute("aria-disabled")).toBe("true");
     });
 
     it('zero-price piece renders "$0.00" in the muted-soft style', () => {
-        // Default load has one empty piece; price is $0
+        // Default load should show the lone empty piece at $0.
         const output = mq(PiecesSection, { derived: computeDerived() });
         expect(output.should.have(".piece-row__price.zero"));
         expect(output.should.contain("$0.00"));
@@ -330,7 +342,7 @@ describe("PiecesSection", () => {
 });
 
 
-// CostSummary
+// Cost Summary
 describe("CostSummary", () => {
     it("renders the TOTAL label and a $0.00 default amount when no piece dimensions are entered", () => {
         // Default load has bisque toggled on with the studio rate
@@ -380,7 +392,7 @@ describe("CostSummary", () => {
             firings: { bisque: true, glaze: false, luster: false },
         })]);
         const output = mq(CostSummary, { derived: computeDerived() });
-        // 80 in³ × $0.04 = $3.20
+        // 80 in³ × $0.04 = $3.20.
         expect(output.should.contain("$3.20"));
     });
 

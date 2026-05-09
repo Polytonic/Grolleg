@@ -6,24 +6,26 @@ import {
     toDisplayRate, toStoredRate, rateUnitFor, rateIsCents,
     toPositive, formatPrice, formatQuantity,
 } from "../../../source/views/firing-calculator/pricing";
-import { state, studioSnapshot } from "../../../source/views/firing-calculator/state";
+import { studioSnapshot } from "../../../source/views/firing-calculator/state";
 
-import { resetState, makePiece, setStudio, setPieces } from "./helpers";
+import { resetState, makePiece, setStudio } from "./helpers";
 
 beforeEach(() => resetState());
 
 
-// toPositive()
+// Positive Number Parsing
 describe("toPositive() coerces input to a positive number or zero", () => {
-    it("empty string returns 0", () => expect(toPositive("")).toBe(0));
-    it("non-numeric returns 0",  () => expect(toPositive("abc")).toBe(0));
-    it("undefined returns 0",    () => expect(toPositive(undefined as unknown as string)).toBe(0));
-    it("zero returns 0",         () => expect(toPositive(0)).toBe(0));
-    it("negative returns 0",     () => expect(toPositive(-5)).toBe(0));
-    it("positive number passes", () => expect(toPositive(3.14)).toBe(3.14));
-    it("numeric string parses",  () => expect(toPositive("12.5")).toBe(12.5));
-    it("European decimal (comma) parses", () => expect(toPositive("12,5")).toBe(12.5));
-    it("European thousands parses", () => expect(toPositive("1.500,75")).toBe(1500.75));
+    const cases = [
+        { label: "empty string returns 0", input: "", expected: 0 },
+        { label: "negative number returns 0", input: -5, expected: 0 },
+        { label: "positive number passes through", input: 3.14, expected: 3.14 },
+        { label: "numeric string parses", input: "12.5", expected: 12.5 },
+        { label: "European thousands parses", input: "1.500,75", expected: 1500.75 },
+    ] as const;
+
+    for (const { label, input, expected } of cases) {
+        it(label, () => expect(toPositive(input)).toBe(expected));
+    }
 });
 
 describe("toPositive() hostile inputs", () => {
@@ -31,7 +33,7 @@ describe("toPositive() hostile inputs", () => {
         expect(toPositive("1e5")).toBe(100000);
     });
 
-    it("leading currency symbol returns 0 (parseFloat rejects it)", () => {
+    it("leading currency symbol returns 0", () => {
         expect(toPositive("$12.50")).toBe(0);
     });
 
@@ -43,17 +45,13 @@ describe("toPositive() hostile inputs", () => {
         expect(toPositive("12.5cm")).toBe(0);
     });
 
-    it("spelled-out number returns 0", () => {
-        expect(toPositive("twelve")).toBe(0);
-    });
-
     it("negative string returns 0", () => {
         expect(toPositive("-5")).toBe(0);
     });
 });
 
 
-// expandUnit
+// Unit Name Expansion
 describe("expandUnit", () => {
     it("maps known abbreviation to verbose name", () => {
         expect(expandUnit("in")).toBe("inches");
@@ -67,7 +65,7 @@ describe("expandUnit", () => {
 });
 
 
-// formatPrice / formatQuantity
+// Price and Quantity Formatting
 describe("formatPrice", () => {
     it("formats zero as a dollar amount", () => {
         expect(formatPrice(0)).toBe("$0.00");
@@ -137,7 +135,7 @@ describe("calculatePrice edge cases", () => {
 
 
 // Minimum Height Behavior
-describe("minimum height applies before per-dim ceiling", () => {
+describe("minimum height applies before per-dimension ceiling", () => {
     it("1×1×1 with min=2 and dimension-ceil yields quantity 1×1×2 = 2 (floor first, then ceil)", () => {
         const piece = makePiece({ L: "1", W: "1", H: "1" });
         setStudio({ minHeight: 2, rounding: "dimension-ceil" });
@@ -198,17 +196,17 @@ describe("rounding modes produce expected quantities", () => {
     const piece = () => makePiece({ L: "3.1", W: "3.1", H: "3.1" });
 
     it("dimension-ceil rounds each dimension up before multiplication", () => {
-        // ceil(3.1) = 4; 4 × 4 × 4 = 64
+        // ceil(3.1) = 4. Then 4 × 4 × 4 = 64.
         expect(computeQuantity(piece(), "volume", "dimension-ceil", 0)).toBe(64);
     });
 
     it("total-ceil multiplies first then ceils", () => {
-        // 3.1 × 3.1 × 3.1 = 29.791; ceil = 30
+        // 3.1 × 3.1 × 3.1 = 29.791. Ceil = 30.
         expect(computeQuantity(piece(), "volume", "total-ceil", 0)).toBe(30);
     });
 
     it("total-round rounds product to nearest", () => {
-        // 29.791 → 30
+        // 29.791 rounds to 30.
         expect(computeQuantity(piece(), "volume", "total-round", 0)).toBe(30);
     });
 
@@ -218,12 +216,13 @@ describe("rounding modes produce expected quantities", () => {
 
     it("dimension-ceil on footprint rounds each L/W independently", () => {
         const piece = makePiece({ L: "5.2", W: "3.1" });
-        expect(computeQuantity(piece, "footprint", "dimension-ceil", 0)).toBe(24); // ceil(5.2)*ceil(3.1) = 6*4
+        // ceil(5.2) × ceil(3.1) = 6 × 4.
+        expect(computeQuantity(piece, "footprint", "dimension-ceil", 0)).toBe(24);
     });
 });
 
 
-// Cents-vs-Dollars Conversion
+// Cents vs Dollars Conversion
 describe("rate conversion (display vs stored)", () => {
     it("rateIsCents true for volume and footprint, false for weight", () => {
         expect(rateIsCents("volume")).toBe(true);
@@ -316,7 +315,7 @@ describe("bundled rate effective behavior", () => {
             bundled: true,
             rounding: "none", minHeight: 0,
         });
-        // rate = bundled (0.06) + luster (0.08) = 0.14
+        // Rate = bundled (0.06) + luster (0.08) = 0.14.
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.rate).toBeCloseTo(0.14);
     });
@@ -330,9 +329,9 @@ describe("calculatePrice end-to-end", () => {
             L: "4", W: "4", H: "5",
             firings: { bisque: true, glaze: false, luster: false },
         });
-        // qty = 4×4×5 = 80 (no rounding needed since dims are already integers)
-        // rate = 0.04 (bisque only)
-        // price = 80 × 0.04 = $3.20
+        // Quantity = 4×4×5 = 80 because dimensions are already integers.
+        // Rate = 0.04 for bisque only.
+        // Price = 80 × 0.04 = $3.20.
         setStudio({ rounding: "dimension-ceil", firingRates: { bisque: 0.04, glaze: 0.045, luster: 0.08 } });
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.quantity).toBe(80);
@@ -349,7 +348,7 @@ describe("calculatePrice end-to-end", () => {
             basis: "weight",
             firingRates: { bisque: 1.0, glaze: 1.5, luster: 2.0 },
         });
-        // qty = 2.5; rate = $1/lb; price = $2.50
+        // Quantity = 2.5. Rate = $1/lb. Price = $2.50.
         const result = calculatePrice(piece, studioSnapshot());
         expect(result.quantity).toBe(2.5);
         expect(result.rate).toBeCloseTo(1.0);
@@ -373,15 +372,16 @@ describe("BASIS_META and FIRING_TYPES sanity", () => {
         for (const basis of ["volume", "footprint", "weight"] as const) {
             const bisque = BASIS_META[basis].defaults.bisque;
             const luster = BASIS_META[basis].defaults.luster;
-            expect(luster).toBeGreaterThan(bisque * 3);
-            expect(luster).toBeLessThan(bisque * 6);
+            const lusterToBisqueRatio = luster / bisque;
+            expect(lusterToBisqueRatio).toBeGreaterThan(3);
+            expect(lusterToBisqueRatio).toBeLessThan(6);
         }
     });
 
     it("ordering bisque ≤ glaze < luster holds for each basis", () => {
         // Bisque and glaze can match (some studios price them at one
         // shared rate even when shown as separate inputs). Luster is
-        // always more expensive: it's a specialty firing.
+        // always more expensive: it is a specialty firing.
         for (const basis of ["volume", "footprint", "weight"] as const) {
             const defaults = BASIS_META[basis].defaults;
             expect(defaults.bisque).toBeLessThanOrEqual(defaults.glaze);

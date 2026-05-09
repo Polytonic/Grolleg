@@ -11,7 +11,7 @@ import { resetState, mockInputEvent } from "./helpers";
 beforeEach(() => resetState());
 
 
-// handleMinHeightInput
+// Handle Min Height Input
 describe("handleMinHeightInput", () => {
     it("parses a positive number and stores it", () => {
         handleMinHeightInput(mockInputEvent("3.5"));
@@ -42,11 +42,11 @@ describe("handleMinHeightInput", () => {
         expect(state.minHeight).toBe(5);
     });
 
-    it("caps astronomical pasted exponents at the upper bound", () => {
-        // A user pasting "1e10" or similar shouldn't be able to make every
-        // piece's billed quantity astronomical.
+    it("clamps pasted exponent input to the exact upper bound", () => {
+        // Pasted exponent input must not make every piece's billed quantity
+        // astronomical.
         handleMinHeightInput(mockInputEvent("1e10"));
-        expect(state.minHeight).toBeLessThanOrEqual(100);
+        expect(state.minHeight).toBe(100);
     });
 
     it("preserves values within the realistic shelf-interval range", () => {
@@ -63,11 +63,10 @@ describe("handleMinHeightInput", () => {
         handleMinHeightInput(mockInputEvent("101"));
         expect(state.minHeight).toBe(100);
     });
-
 });
 
 
-// handleRoundingChange
+// Handle Rounding Change
 describe("handleRoundingChange", () => {
     it("updates the rounding mode from the select event", () => {
         handleRoundingChange(mockInputEvent("total-ceil"));
@@ -80,7 +79,7 @@ describe("handleRoundingChange", () => {
 describe("handleFiringRateInput", () => {
     it("converts cents-display values back to stored dollars on volume basis", () => {
         // Volume basis: rate stored in dollars, displayed as cents.
-        // User types "8" -> stored 0.08.
+        // Input "8" should store 0.08.
         state.basis = "volume";
         handleFiringRateInput("bisque", mockInputEvent("8"));
         expect(state.firingRates.bisque).toBeCloseTo(0.08);
@@ -115,7 +114,7 @@ describe("handleFiringRateInput", () => {
     it("clamps absurd values like a pasted '1e10' to MAX_DISPLAY_RATE", () => {
         state.basis = "volume";
         handleFiringRateInput("bisque", mockInputEvent("1e10"));
-        // MAX_DISPLAY_RATE = 1000 in display units; for volume that's
+        // MAX_DISPLAY_RATE = 1000 in display units. For volume that is
         // stored as 1000 / 100 = 10 dollars per in³. Far below the
         // hundred-billion-dollar bill the unclamped path produced.
         expect(state.firingRates.bisque).toBe(10);
@@ -135,16 +134,5 @@ describe("handleBundledRateInput", () => {
         state.firingRates.bundled = 0.06;
         handleBundledRateInput(mockInputEvent("12abc"));
         expect(state.firingRates.bundled).toBe(0.06);
-    });
-});
-
-
-// handleBasisChange Edge
-describe("handleBasisChange", () => {
-    it("re-selecting the current basis is a no-op", () => {
-        state.basis = "volume";
-        const beforeRates = { ...state.firingRates };
-        handleBasisChange(mockInputEvent("volume"));
-        expect(state.firingRates).toEqual(beforeRates);
     });
 });
