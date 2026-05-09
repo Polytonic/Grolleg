@@ -270,10 +270,24 @@ describe("theme runtime", () => {
 describe("first-paint script", () => {
     const readInlineScript = async () => {
         const html = await Bun.file("source/index.html").text();
-        const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
+        let inlineScript = "";
+        let foundInlineScript = false;
+        let captureCurrentScript = false;
 
-        expect(scriptMatch?.[1]).toBeDefined();
-        return scriptMatch![1];
+        new HTMLRewriter()
+            .on("script", {
+                element(element) {
+                    captureCurrentScript = !foundInlineScript && !element.hasAttribute("src");
+                    foundInlineScript ||= captureCurrentScript;
+                },
+                text(text) {
+                    if (captureCurrentScript) inlineScript += text.text;
+                },
+            })
+            .transform(html);
+
+        expect(foundInlineScript).toBe(true);
+        return inlineScript;
     };
 
     const runInlineScript = async ({

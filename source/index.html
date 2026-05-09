@@ -13,23 +13,26 @@
             const darkThemeColor = "#1E211D";
             let preference = "system";
 
+            const isStoredThemeOverride = (value) => value === "light" || value === "dark";
+            const systemTheme = () =>
+                globalThis.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
+            const themeColor = (theme) => theme === "dark" ? darkThemeColor : lightThemeColor;
+
             try {
                 const storedPreference = localStorage.getItem(storageKey);
-                if (storedPreference === "light" || storedPreference === "dark") {
+                if (isStoredThemeOverride(storedPreference)) {
                     preference = storedPreference;
                 }
             } catch {
                 // Blocked storage should leave the first paint on System.
             }
 
-            const resolvedTheme = preference === "system"
-                ? (globalThis.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light")
-                : preference;
+            const resolvedTheme = preference === "system" ? systemTheme() : preference;
 
             document.documentElement.dataset.theme = resolvedTheme;
             document.documentElement.style.colorScheme = resolvedTheme;
             document.querySelector('meta[name="theme-color"]')
-                ?.setAttribute("content", resolvedTheme === "dark" ? darkThemeColor : lightThemeColor);
+                ?.setAttribute("content", themeColor(resolvedTheme));
         })();
     </script>
     <link href="index.css" rel="stylesheet" />

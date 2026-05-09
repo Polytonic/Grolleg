@@ -49,7 +49,7 @@ const defaultEnvironment = (): ThemeEnvironment => ({
 const isThemePreference = (value: string | null): value is ThemePreference =>
     value === "system" || value === "light" || value === "dark";
 
-// Invalid or unavailable storage should preserve the System default.
+// Invalid, blocked, or absent storage should fall back to System.
 const readStoredPreference = ({ storage }: ThemeEnvironment): ThemePreference => {
     try {
         const storedPreference = storage?.getItem(THEME_STORAGE_KEY) ?? null;
@@ -59,7 +59,7 @@ const readStoredPreference = ({ storage }: ThemeEnvironment): ThemePreference =>
     }
 };
 
-// System should remove the override so future visits follow the OS again.
+// Light and Dark should persist as overrides. System should remove storage.
 const writeStoredPreference = (nextPreference: ThemePreference, { storage }: ThemeEnvironment) => {
     try {
         if (nextPreference === "system") {
@@ -143,7 +143,7 @@ const syncSystemListener = () => {
     removeSystemListener();
     if (preference !== "system" || !environment.matchMedia) return;
 
-    // Only System mode should subscribe to OS changes. User overrides must
+    // Only System mode should subscribe to OS changes. User overrides should
     // detach the listener so Light and Dark remain stable.
     systemQuery = environment.matchMedia(DARK_SCHEME_QUERY);
     systemQueryHandler = handleSystemThemeChange;
@@ -182,6 +182,7 @@ export const setThemePreference = (nextPreference: ThemePreference) => {
 export const getThemePreference = (): ThemePreference => preference;
 export const getResolvedTheme = (): ResolvedTheme => resolvedTheme;
 
+// Theme subscriptions should return an unsubscribe callback for component cleanup.
 export const subscribeTheme = (listener: ThemeListener) => {
     listeners.add(listener);
     return () => {

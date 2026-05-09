@@ -8,19 +8,13 @@ import { closePreferencesPopovers } from "./components/preferences-popover";
 import { initializeTheme } from "./theme";
 
 // App Shell
-// Wraps a tool component so document.title updates on every route entry
-// and the Navigation renders on every page. The render method keeps the
-// Navigation stable across route transitions (Mithril diffs it rather than
-// remounting).
+const MAIN_CONTENT_ID = "main-content";
 
-// .app__content persists across routes, so resetting its scroll position in
-// onmatch (before the new view renders) works because the container itself is
-// never replaced.
 const resetContentScroll = () => {
+    // .app__content should reset before the routed view renders because the
+    // container persists across route transitions.
     document.querySelector<HTMLElement>(".app__content")?.scrollTo({ top: 0, behavior: "auto" });
 };
-
-const MAIN_CONTENT_ID = "main-content";
 
 const focusMainContent = () => {
     document.getElementById(MAIN_CONTENT_ID)?.focus({ preventScroll: true });
@@ -45,6 +39,7 @@ const titled = (title: string, component: m.Component): m.RouteResolver => ({
     },
 });
 
+// Routing
 m.route.prefix = "";
 initializeTheme();
 m.route(document.body, "/", {
@@ -54,15 +49,28 @@ m.route(document.body, "/", {
     "/:rest...":      titled("Grolleg • Page Not Found", NotFoundView),
 });
 
-if (process.env.NODE_ENV === "development") {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) =>
-            registrations.forEach((registration) => registration.unregister()),
-        );
-    }
-} else if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register(
+// Service Worker
+const unregisterDevelopmentServiceWorkers = async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+};
+
+const registerProductionServiceWorker = async () => {
+    await navigator.serviceWorker.register(
         new URL("service-worker.ts", import.meta.url),
         { type: "module" },
     );
-}
+};
+
+const syncServiceWorker = async () => {
+    if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV === "development") {
+        await unregisterDevelopmentServiceWorkers();
+        return;
+    }
+
+    await registerProductionServiceWorker();
+};
+
+// Service worker setup should not block the first route render.
+void syncServiceWorker();
