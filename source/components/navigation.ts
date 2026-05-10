@@ -20,6 +20,7 @@ const DRAWER_ID = "mobile-navigation-drawer";
 const TOGGLE_ID = "mobile-navigation-toggle";
 const FIRST_LINK_ID = "mobile-navigation-first-link";
 const BACKDROP_EXIT_MS = 200;
+const ROOT_SCROLL_LOCK_CLASS = "mobile-navigation-scroll-locked";
 
 
 // Drawer State
@@ -44,6 +45,10 @@ const syncContentInert = () => {
     globalThis.document?.querySelector(".app__content")?.toggleAttribute("inert", drawerOpen);
 };
 
+const syncRootScrollLock = () => {
+    globalThis.document?.documentElement?.classList.toggle(ROOT_SCROLL_LOCK_CLASS, drawerOpen);
+};
+
 const syncDrawerAccessibility = (drawerElement?: Element | null) => {
     if (!drawerElement) return;
     const drawerClosed = !drawerOpen;
@@ -59,6 +64,7 @@ const syncDrawerAccessibilityFromDocument = () => {
 const syncDrawerShell = () => {
     syncDrawerAccessibilityFromDocument();
     syncContentInert();
+    syncRootScrollLock();
 };
 
 
@@ -98,6 +104,7 @@ const scheduleBackdropRemoval = () => {
 const setDrawerOpen = (nextDrawerOpen: boolean, focusTargetId?: string) => {
     if (drawerOpen === nextDrawerOpen) {
         if (!drawerOpen) removeBackdrop();
+        syncDrawerShell();
         return;
     }
 
@@ -245,6 +252,7 @@ export const Navigation: m.Component = {
     onremove() {
         drawerOpen = false;
         removeBackdrop();
+        syncDrawerShell();
         if (globalThis.document) {
             document.removeEventListener("keydown", handleDocumentKeydown);
             listenerRegistered = false;

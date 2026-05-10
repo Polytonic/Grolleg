@@ -9,6 +9,8 @@ import { initializeTheme } from "../../source/theme";
 
 const originalGet = m.route.get;
 const originalRedraw = m.redraw;
+const ROOT_SCROLL_LOCK_CLASS = "mobile-navigation-scroll-locked";
+type NavigationOutput = ReturnType<typeof mq> & { onremove: () => void };
 
 // The navigation component references the global document for content inertness
 // and oncreate/onremove keydown listeners.
@@ -16,8 +18,24 @@ const originalRedraw = m.redraw;
 // minimum surface. The stub supports event listener registration so that
 // oncreate's keydown listener works and Escape dispatch can be tested.
 const listeners = new Map<string, Set<EventListener>>();
+const rootClasses = new Set<string>();
+
+const classListFor = (classes: Set<string>) => ({
+    add: (...tokens: string[]) => { tokens.forEach((token) => classes.add(token)); },
+    remove: (...tokens: string[]) => { tokens.forEach((token) => classes.delete(token)); },
+    contains: (token: string) => classes.has(token),
+    toggle: (token: string, force?: boolean) => {
+        const shouldHaveToken = force ?? !classes.has(token);
+        if (shouldHaveToken) classes.add(token);
+        else classes.delete(token);
+        return shouldHaveToken;
+    },
+}) as unknown as DOMTokenList;
 
 const stubDocument = {
+    documentElement: {
+        classList: classListFor(rootClasses),
+    },
     querySelector: () => null,
     getElementById: () => null,
     addEventListener(type: string, handler: EventListener) {
@@ -32,9 +50,9 @@ const stubDocument = {
     },
 } as unknown as Document;
 
-const renderAtRoute = (path: string) => {
+const renderAtRoute = (path: string): NavigationOutput => {
     m.route.get = () => path;
-    return mq(Navigation);
+    return mq(Navigation) as NavigationOutput;
 };
 
 // focusLater schedules with setTimeout(0), so focus assertions wait one macrotask.
@@ -51,6 +69,7 @@ const dispatchDocumentKeydown = (key: string) => {
 };
 
 beforeEach(() => {
+    rootClasses.clear();
     globalThis.document = stubDocument;
     initializeTheme({});
 });
@@ -277,6 +296,28 @@ describe("Navigation mobile toggle", () => {
         card.click();
         output.redraw();
         expect(button.getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("locks root scrolling while the drawer is open and clears on removal", () => {
+        const output = renderAtRoute("/");
+        const button = output.rootEl.querySelector("button.mobile-nav__toggle") as HTMLElement;
+
+        expect(rootClasses.has(ROOT_SCROLL_LOCK_CLASS)).toBe(false);
+
+        button.click();
+        output.redraw();
+        expect(rootClasses.has(ROOT_SCROLL_LOCK_CLASS)).toBe(true);
+
+        button.click();
+        output.redraw();
+        expect(rootClasses.has(ROOT_SCROLL_LOCK_CLASS)).toBe(false);
+
+        button.click();
+        output.redraw();
+        expect(rootClasses.has(ROOT_SCROLL_LOCK_CLASS)).toBe(true);
+
+        output.onremove();
+        expect(rootClasses.has(ROOT_SCROLL_LOCK_CLASS)).toBe(false);
     });
 
     it("does not focus the first link after a card shell pointer click", async () => {

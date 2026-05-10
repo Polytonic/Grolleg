@@ -319,13 +319,29 @@ body {
 }
 
 @media (max-width: 767px) {
+    html,
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    html.mobile-navigation-scroll-locked,
+    html.mobile-navigation-scroll-locked body {
+        overflow: hidden;
+    }
+
     .app {
         grid-template-columns: minmax(0, 1fr);
         max-width: none;
+        height: auto;
+        min-height: 100dvh;
     }
 
     .app__content {
+        height: auto;
+        min-height: 100dvh;
         padding: 2rem 1rem calc(6rem + env(safe-area-inset-bottom, 0px));
+        overflow-y: visible;
     }
 
     .app__content :is(.landing, .shrinkage-calculator, .firing-calculator) .container {

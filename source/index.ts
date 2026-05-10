@@ -11,9 +11,11 @@ import { initializeTheme } from "./theme";
 const MAIN_CONTENT_ID = "main-content";
 
 const resetContentScroll = () => {
-    // .app__content should reset before the routed view renders because the
-    // container persists across route transitions.
-    document.querySelector<HTMLElement>(".app__content")?.scrollTo({ top: 0, behavior: "auto" });
+    // Viewport and app-content scroll positions can persist across route transitions.
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    document.querySelector<HTMLElement>(".app__content")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
 };
 
 const focusMainContent = () => {

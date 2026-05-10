@@ -1,6 +1,9 @@
 import { describe, it, expect } from "bun:test";
+import m from "mithril";
 import mq from "mithril-query";
 import { Tooltip } from "../../source/components/tooltip";
+
+type TooltipOutput = ReturnType<typeof mq> & { onremove: () => void };
 
 const tooltipButton = (output: ReturnType<typeof mq>) =>
     output.rootEl.querySelector("button.tooltip-button") as HTMLElement;
@@ -11,6 +14,44 @@ const triggerWrapper = (output: ReturnType<typeof mq>) =>
 const clickTooltipButton = (output: ReturnType<typeof mq>) => {
     tooltipButton(output).click();
     output.redraw();
+};
+
+const renderTooltip = (): TooltipOutput =>
+    mq(Tooltip, { label: "Basis", text: "Info." }) as TooltipOutput;
+
+const withBrowserGlobals = (run: (browser: { window: Window; document: Document }) => void) => {
+    const environment = mq({ view: () => null }) as TooltipOutput;
+    const testWindow = environment.rootEl.ownerDocument.defaultView;
+    if (!testWindow) throw new Error("Missing test window");
+
+    const hadWindow = "window" in globalThis;
+    const hadDocument = "document" in globalThis;
+    const previousWindow = globalThis.window;
+    const previousDocument = globalThis.document;
+    const previousRedraw = m.redraw;
+    const redraw = (() => {}) as typeof m.redraw;
+    redraw.sync = () => {};
+
+    globalThis.window = testWindow as Window & typeof globalThis;
+    globalThis.document = environment.rootEl.ownerDocument;
+    m.redraw = redraw;
+
+    try {
+        run({ window: testWindow as Window, document: environment.rootEl.ownerDocument });
+    } finally {
+        m.redraw = previousRedraw;
+        if (hadWindow) globalThis.window = previousWindow;
+        else {
+            // @ts-expect-error -- remove the stub so it does not leak to other tests
+            delete globalThis.window;
+        }
+        if (hadDocument) globalThis.document = previousDocument;
+        else {
+            // @ts-expect-error -- remove the stub so it does not leak to other tests
+            delete globalThis.document;
+        }
+        environment.onremove();
+    }
 };
 
 const dispatchTriggerEvent = (
@@ -25,6 +66,12 @@ const dispatchTriggerEvent = (
     });
     triggerWrapper(output).dispatchEvent(event);
     output.redraw();
+};
+
+const createScrollEvent = (document: Document) => {
+    const event = document.createEvent("Event");
+    event.initEvent("scroll", true, true);
+    return event;
 };
 
 
@@ -110,5 +157,46 @@ describe("Tooltip focus interaction", () => {
 
         dispatchTriggerEvent(output, "focusout", { relatedTarget: null });
         expect(output.should.not.have("button.tooltip-button.open"));
+    });
+});
+
+
+// Scroll Interaction
+describe("Tooltip scroll interaction", () => {
+    it("scrolling the window closes an open tooltip", () => {
+        withBrowserGlobals(({ window, document }) => {
+            const output = renderTooltip();
+            try {
+                clickTooltipButton(output);
+                expect(output.should.have("button.tooltip-button.open"));
+
+                window.dispatchEvent(createScrollEvent(document));
+                output.redraw();
+                expect(output.should.not.have("button.tooltip-button.open"));
+            } finally {
+                output.onremove();
+            }
+        });
+    });
+
+    it("scrolling app content closes an open tooltip", () => {
+        withBrowserGlobals(({ document }) => {
+            const content = document.createElement("main");
+            content.className = "app__content";
+            document.body.appendChild(content);
+
+            const output = renderTooltip();
+            try {
+                clickTooltipButton(output);
+                expect(output.should.have("button.tooltip-button.open"));
+
+                content.dispatchEvent(createScrollEvent(document));
+                output.redraw();
+                expect(output.should.not.have("button.tooltip-button.open"));
+            } finally {
+                output.onremove();
+                content.remove();
+            }
+        });
     });
 });

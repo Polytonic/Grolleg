@@ -195,6 +195,7 @@ const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
             m.redraw();
         };
         window.addEventListener("resize", dismissForViewportChange);
+        window.addEventListener("scroll", dismissForViewportChange, { passive: true });
         window.visualViewport?.addEventListener("resize", dismissForViewportChange);
         scrollElement = typeof document === "undefined" ? null : document.querySelector(".app__content");
         scrollElement?.addEventListener("scroll", dismissForViewportChange, { passive: true });
@@ -203,6 +204,7 @@ const TooltipContent: m.ClosureComponent<TooltipContentAttrs> = () => {
     const unmountViewportListeners = () => {
         if (!dismissForViewportChange || typeof window === "undefined") return;
         window.removeEventListener("resize", dismissForViewportChange);
+        window.removeEventListener("scroll", dismissForViewportChange);
         window.visualViewport?.removeEventListener("resize", dismissForViewportChange);
         scrollElement?.removeEventListener("scroll", dismissForViewportChange);
         scrollElement = null;
