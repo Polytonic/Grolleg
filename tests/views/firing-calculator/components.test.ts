@@ -191,7 +191,7 @@ describe("ControlsSection", () => {
 
 // CSS Contracts
 describe("Firing calculator CSS contracts", () => {
-    it("keeps standalone Luster chips out of the full-size button min-height", () => {
+    it("keeps Add Piece and chips compact while pills keep their min-height", () => {
         const styles = readFileSync("styles/views/firing-calculator.css", "utf8");
 
         const sharedButtonBlock = cssBlock(styles, "    :is(.pill, .chip, .add-piece)");
@@ -199,11 +199,14 @@ describe("Firing calculator CSS contracts", () => {
         expect(sharedButtonBlock).toContain("display: inline-flex;");
         expect(sharedButtonBlock).not.toContain("min-height:");
 
-        const fullSizeButtonBlock = cssBlock(styles, "    :is(.pill, .add-piece)");
-        expect(fullSizeButtonBlock).toContain("min-height: 2.75rem;");
+        const pillBlock = cssBlock(styles, "    .pill");
+        expect(pillBlock).toContain("min-height: 2.75rem;");
 
         const chipBlock = cssBlock(styles, "    .chip");
         expect(chipBlock).not.toContain("min-height:");
+
+        const addPieceBlock = cssBlock(styles, "    .add-piece");
+        expect(addPieceBlock).not.toContain("min-height:");
     });
 });
 

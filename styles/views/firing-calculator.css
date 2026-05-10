@@ -95,10 +95,6 @@
         align-items: center;
     }
 
-    :is(.pill, .add-piece) {
-        min-height: 2.75rem;
-    }
-
     :is(.pill, .chip) {
         background: var(--color-control-bg);
         color: var(--color-button-text);
@@ -145,6 +141,7 @@
         font-size: 0.875rem;
         font-weight: 400;
         padding: 0.625rem 0.875rem;
+        min-height: 2.75rem;
         border-radius: 0.625rem;
         line-height: 1;
         justify-content: center;
