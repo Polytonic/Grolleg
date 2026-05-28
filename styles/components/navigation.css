@@ -1,5 +1,9 @@
 /* Sidebar */
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: max(0px, calc((100vw - var(--layout-content-width)) / 2 - var(--layout-sidebar-width)));
+    width: var(--layout-sidebar-width);
     height: 100dvh;
     padding: 12dvh 1rem 2rem 0.75rem;
     border-right: 1px solid var(--color-border-subtle);

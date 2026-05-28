@@ -8,7 +8,10 @@
 
 /* Project-Specific Resets on Top of Normalize */
 *, *::before, *::after { margin: 0; padding: 0; }
-html, body { overflow: hidden; }
+html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
 
 /* Site-Wide Page Styling Shared Across All Tools */
 body {
@@ -307,15 +310,16 @@ body {
     display: grid;
     grid-template-columns: var(--layout-sidebar-width) minmax(0, var(--layout-content-width));
     max-width: var(--layout-shell-width);
-    height: 100dvh;
+    min-height: 100dvh;
     margin-left: max(0px, calc((100vw - var(--layout-content-width)) / 2 - var(--layout-sidebar-width)));
 }
 
 .app__content {
+    grid-column: 2;
     min-width: 0;
-    height: 100dvh;
+    min-height: 100dvh;
     padding: 12dvh 1rem 2rem 2rem;
-    overflow-y: auto;
+    overflow-y: visible;
 }
 
 @media (max-width: 767px) {
@@ -338,6 +342,7 @@ body {
     }
 
     .app__content {
+        grid-column: 1;
         height: auto;
         min-height: 100dvh;
         padding: 2rem 1rem calc(6rem + env(safe-area-inset-bottom, 0px));
