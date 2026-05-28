@@ -17,7 +17,7 @@ html, body {
 body {
     color: var(--color-text);
     background: var(--color-bg);
-    line-height: 1.4;
+    line-height: var(--line-height-body);
     min-height: 100dvh;
 }
 
@@ -123,6 +123,21 @@ body {
     /* Typography */
     --font-sans: system-ui, sans-serif;
     --font-mono: ui-monospace, monospace;
+    --font-size-title: 1.75rem;
+    --font-size-control: 1rem;
+    --font-size-text: 0.875rem;
+    --font-size-field-label: 0.8125rem;
+    --font-size-small: 0.75rem;
+    --font-size-label: 0.6875rem;
+    --font-size-compact: 0.6875rem;
+    --font-weight-regular: 400;
+    --font-weight-emphasis: 600;
+    --font-weight-strong: 700;
+    --line-height-body: 1.4;
+    --line-height-title: 1.2;
+    --line-height-label: 1.2;
+    --letter-spacing-title: 0;
+    --letter-spacing-label: 0.08em;
 
     /* Motion */
     --motion-duration-feedback: 0.12s;
@@ -254,8 +269,8 @@ body {
     border-radius: 0.5rem;
     background: var(--color-action-bg);
     color: var(--color-action-text);
-    font-weight: 600;
-    line-height: 1.2;
+    font-weight: var(--font-weight-emphasis);
+    line-height: var(--line-height-label);
     text-decoration: none;
     transform: translateY(calc(-100% - 1rem));
 }
