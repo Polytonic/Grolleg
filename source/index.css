@@ -148,7 +148,7 @@ body {
     --motion-ease-enter: cubic-bezier(0.2, 0, 0, 1);
 
     /* Layout */
-    --layout-sidebar-width: 200px;
+    --layout-sidebar-width: 15rem;
     --layout-content-width: 1080px;
     --layout-shell-width: calc(var(--layout-sidebar-width) + var(--layout-content-width));
 
